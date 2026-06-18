@@ -288,107 +288,6 @@
     }
     .style-desc { font-size: 0.7rem; line-height: 1.65; color: #7c8199; }
 
-    /* ════════════════════════════════════════════
-       CARROUSEL BOUTIQUE
-    ════════════════════════════════════════════ */
-    #carousel-section {
-      width: 100%; padding: 110px 0;
-      background-color: var(--bg-alt);
-      background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(190,190,215,0.022) 0%, transparent 65%);
-    }
-    .carousel-header {
-      max-width: 1060px; margin: 0 auto 52px;
-      padding: 0 5vw; text-align: center;
-    }
-
-    .carousel-outer {
-      position: relative;
-    }
-    /* Flèches */
-    .carousel-arrow {
-      position: absolute; top: 50%; z-index: 10;
-      transform: translateY(-50%);
-      width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(8,8,12,0.82); border: 1px solid var(--border-mid);
-      color: var(--silver); font-size: 1.1rem; line-height: 1;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.25s;
-      backdrop-filter: blur(8px);
-      user-select: none;
-    }
-    .carousel-arrow:hover { border-color: var(--crimson); color: #c97070; background: rgba(124,21,21,0.18); }
-    .carousel-arrow.prev { left: 16px; }
-    .carousel-arrow.next { right: 16px; }
-
-    /* Piste de défilement */
-    .carousel-track {
-      display: flex; gap: 16px;
-      overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
-      padding: 0 5vw 24px;
-      cursor: grab;
-      -ms-overflow-style: none; scrollbar-width: none;
-    }
-    .carousel-track::-webkit-scrollbar { display: none; }
-    .carousel-track.dragging { cursor: grabbing; scroll-behavior: auto; user-select: none; }
-
-    /* Carte carrousel */
-    .c-card {
-      flex-shrink: 0;
-      width: clamp(160px, 22vw, 240px);
-      scroll-snap-align: start;
-      display: flex; flex-direction: column;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 4px; overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s, transform 0.35s cubic-bezier(0.16,1,0.3,1);
-    }
-    .c-card:hover {
-      border-color: var(--border-mid);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,21,21,0.16);
-      transform: translateY(-4px);
-    }
-    .c-video-wrap {
-      position: relative; aspect-ratio: 9/16; overflow: hidden; background: #0a0a0f;
-    }
-    .c-video {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
-    }
-    .c-card:hover .c-video { transform: scale(1.03); }
-    .c-video-wrap::after {
-      content: ''; position: absolute; inset: auto 0 0 0; height: 45%;
-      background: linear-gradient(to top, rgba(8,8,12,0.75) 0%, transparent 100%);
-      pointer-events: none;
-    }
-    .c-tag {
-      position: absolute; top: 10px; left: 10px;
-      font-size: 0.55rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--silver-dim); background: rgba(8,8,12,0.75);
-      border: 1px solid var(--border-mid); padding: 3px 8px; border-radius: 2px;
-      backdrop-filter: blur(8px);
-    }
-    .c-info { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-    .c-name {
-      font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 400;
-      letter-spacing: 0.08em; color: var(--text);
-    }
-    .c-footer { display: flex; align-items: center; justify-content: space-between; }
-    .c-price {
-      font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;
-      color: var(--silver); letter-spacing: 0.04em;
-    }
-    .c-btn {
-      font-family: 'Cinzel', serif; font-size: 0.54rem; font-weight: 400;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--silver); background: transparent;
-      border: 1px solid var(--silver-dim);
-      padding: 6px 12px; border-radius: 2px;
-      cursor: pointer; transition: all 0.25s;
-    }
-    .c-btn:hover { background: var(--crimson-glow); border-color: var(--crimson); color: #c97070; }
-
-    .carousel-footer {
-      text-align: center; margin-top: 44px; padding: 0 5vw;
-    }
 
     /* ════════════════════════════════════════════
        QUI EST SAINT
@@ -531,7 +430,6 @@
     <a href="#" class="nav-logo">SAINT</a>
     <div class="nav-links">
       <a href="outil.html">L'Outil</a>
-      <a href="boutique.html">Boutique</a>
       <a href="#comment">Comment ça marche</a>
       <a href="#styles">Styles</a>
     </div>
@@ -654,26 +552,7 @@
     </div>
   </div>
 
-  <!-- ════ 4 · CARROUSEL BOUTIQUE ════ -->
-  <section id="carousel-section">
-    <div class="carousel-header">
-      <div class="ornament" aria-hidden="true"><span>☦</span></div>
-      <h2 class="section-heading">Boutique SAINT</h2>
-      <p class="section-sub">Designs originaux créés par nos artistes — fichier haute résolution prêt pour votre tatoueur</p>
-    </div>
-
-    <div class="carousel-outer">
-      <button class="carousel-arrow prev" id="carousel-prev" aria-label="Précédent">&#8249;</button>
-      <div class="carousel-track" id="carousel-track"></div>
-      <button class="carousel-arrow next" id="carousel-next" aria-label="Suivant">&#8250;</button>
-    </div>
-
-    <div class="carousel-footer">
-      <a href="boutique.html" class="btn-outline">Voir toute la boutique →</a>
-    </div>
-  </section>
-
-  <!-- ════ 5 · QUI EST SAINT ════ -->
+  <!-- ════ 4 · QUI EST SAINT ════ -->
   <section class="section-wrap" id="saint">
     <div class="saint-inner">
       <div class="saint-left">
@@ -730,87 +609,6 @@
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 60);
     }, { passive: true });
-
-    // ── Carrousel — données ──────────────────────
-    const CAROUSEL_DESIGNS = [
-      { video: 'videos/video-1.mp4',  nom: 'Serpent Sacré',    prix: 120, tag: 'Japonais'    },
-      { video: 'videos/video-2.mp4',  nom: 'Rose Baroque',     prix: 90,  tag: 'Baroque'     },
-      { video: 'videos/video-3.mp4',  nom: 'Panthère Royale',  prix: 280, tag: 'Réalisme'    },
-      { video: 'videos/video-4.mp4',  nom: 'Mandala Sacré',    prix: 200, tag: 'Géométrique' },
-      { video: 'videos/video-5.mp4',  nom: 'Dragon Céleste',   prix: 320, tag: 'Japonais'    },
-      { video: 'videos/video-6.mp4',  nom: 'Œil Providence',   prix: 150, tag: 'Concept'     },
-      { video: 'videos/video-7.mp4',  nom: 'Crâne Fleuri',     prix: 180, tag: 'Baroque'     },
-      { video: 'videos/video-8.mp4',  nom: 'Loup Nordique',    prix: 350, tag: 'Réalisme'    },
-      { video: 'videos/video-9.mp4',  nom: 'Fleur de Lotus',   prix: 110, tag: 'Géométrique' },
-      { video: 'videos/video-10.mp4', nom: 'Phénix Ascendant', prix: 500, tag: 'Concept'     },
-      { video: 'videos/video-11.mp4', nom: 'Méduse Baroque',   prix: 160, tag: 'Baroque'     },
-      { video: 'videos/video-12.mp4', nom: 'Croix Orthodoxe',  prix: 240, tag: 'Réalisme'    },
-      { video: 'videos/video-13.mp4', nom: 'Ouroboros',        prix: 300, tag: 'Concept'     },
-    ];
-
-    // ── Carrousel — génération HTML ──────────────
-    const track = document.getElementById('carousel-track');
-    CAROUSEL_DESIGNS.forEach((d, i) => {
-      const card = document.createElement('div');
-      card.className = 'c-card';
-      card.innerHTML = `
-        <div class="c-video-wrap">
-          <video class="c-video" loop muted playsinline preload="none"
-                 data-src="${d.video}"></video>
-          <span class="c-tag">${d.tag}</span>
-        </div>
-        <div class="c-info">
-          <p class="c-name">${d.nom}</p>
-          <div class="c-footer">
-            <span class="c-price">${d.prix} $</span>
-            <button class="c-btn" onclick="acheterDesign(event,${i})">Acheter</button>
-          </div>
-        </div>
-      `;
-      track.appendChild(card);
-    });
-
-    function acheterDesign(e, i) {
-      e.stopPropagation();
-      window.location.href = 'boutique.html';
-    }
-
-    // ── Carrousel — lecture lazy ──────────────────
-    const videoObs = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        const v = e.target;
-        if (e.isIntersecting) {
-          if (!v.getAttribute('src')) v.setAttribute('src', v.dataset.src);
-          v.play().catch(() => {});
-        } else {
-          v.pause();
-        }
-      });
-    }, { threshold: 0.2 });
-    document.querySelectorAll('.c-video').forEach(v => videoObs.observe(v));
-
-    // ── Carrousel — flèches ───────────────────────
-    const SCROLL_STEP = 280;
-    document.getElementById('carousel-prev').addEventListener('click', () => {
-      track.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
-    });
-    document.getElementById('carousel-next').addEventListener('click', () => {
-      track.scrollBy({ left:  SCROLL_STEP, behavior: 'smooth' });
-    });
-
-    // ── Carrousel — drag souris ───────────────────
-    let isDragging = false, startX = 0, scrollStart = 0;
-    track.addEventListener('mousedown', e => {
-      isDragging = true; startX = e.pageX; scrollStart = track.scrollLeft;
-      track.classList.add('dragging');
-    });
-    window.addEventListener('mousemove', e => {
-      if (!isDragging) return;
-      track.scrollLeft = scrollStart - (e.pageX - startX);
-    });
-    window.addEventListener('mouseup', () => {
-      isDragging = false; track.classList.remove('dragging');
-    });
 
     // ── Scroll fade-in ────────────────────────────
     const io = new IntersectionObserver((entries) => {
