@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Higgsfield__models_explore",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__claude_ai_Higgsfield__job_display",
+      "PowerShell(\\(Get-Command higgsfield\\).Source)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-Process *!)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Start-Process explorer.exe \"C:\\\\Users\\\\alexg\\\\tattoo-saas\\\\images\")",
+      "PowerShell(Expand-Archive *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\alexg\\\\tattoo-saas\\\\videos\" | Select-Object Name, @{n='Mo';e={[math]::Round\\($_.Length/1MB,1\\)}}, LastWriteTime)",
+      "mcp__claude_ai_Higgsfield__presets_show",
+      "PowerShell(higgsfield generate *)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/outil.html\" -UseBasicParsing -ErrorAction SilentlyContinue; Write-Host \"Status: $\\($r.StatusCode\\)\"; Write-Host \"Bytes: $\\($r.Content.Length\\)\")",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing; $r.Content | Select-String -Pattern \"cta-btn|outil\\\\.html\" | Select-Object -First 10)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/outil.html\" -UseBasicParsing; \\($r.Content -split \"`n\"\\) | Select-String \"btn-generate|btn-body|id=.mode\" | Select-Object -First 10)",
+      "PowerShell(gh *)"
+    ]
+  }
+}

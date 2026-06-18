@@ -1,0 +1,14 @@
+{
+  "name": "tattoo-saas",
+  "version": "1.0.0",
+  "description": "Prototype de prévisualisation de tatouage avec Higgsfield",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^2.1.1"
+  }
+}

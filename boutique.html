@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boutique — SAINT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #080808;
+      --bg-alt:       #0d0d15;
+      --bg-card:      #131318;
+      --silver:       #b0b4c2;
+      --silver-dim:   #484d5e;
+      --silver-glow:  rgba(176,180,194,0.08);
+      --text:         #e0e0e6;
+      --text-muted:   #4e5266;
+      --border:       #1e1e28;
+      --border-mid:   #2a2a38;
+      --crimson:      #7c1515;
+      --crimson-glow: rgba(124,21,21,0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ════════════════════════════════════════════
+       NAV
+    ════════════════════════════════════════════ */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      background: rgba(8,8,10,0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+    .nav-logo {
+      font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 600;
+      letter-spacing: 0.3em; color: var(--text); text-decoration: none;
+      transition: color 0.25s;
+    }
+    .nav-logo::before {
+      content: '☦';
+      font-size: 1.05em; color: var(--crimson); opacity: 0.8;
+      margin-right: 14px; font-family: serif; letter-spacing: 0;
+      vertical-align: -0.05em;
+      transition: opacity 0.25s, text-shadow 0.25s;
+    }
+    .nav-logo:hover { color: var(--crimson); }
+    .nav-logo:hover::before { opacity: 1; text-shadow: 0 0 16px rgba(124,21,21,0.6); }
+    .nav-links {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 36px;
+    }
+    .nav-links a {
+      font-size: 0.68rem; font-weight: 500; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: var(--silver); }
+    .nav-links a.active { border-bottom: 1px solid var(--crimson); padding-bottom: 2px; }
+    .nav-cta {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem; font-weight: 400; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--silver); text-decoration: none;
+      border: 1px solid var(--silver-dim); padding: 8px 18px; border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .nav-cta:hover { background: var(--silver-glow); border-color: var(--silver); }
+
+    /* ════════════════════════════════════════════
+       EN-TÊTE BOUTIQUE
+    ════════════════════════════════════════════ */
+    .shop-hero {
+      padding: 130px 5vw 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background-image: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(124,21,21,0.07) 0%, transparent 70%);
+    }
+    .shop-hero-ornament {
+      font-size: 1.7rem; font-family: serif;
+      color: var(--crimson); opacity: 0.85;
+      text-shadow: 0 0 28px rgba(124,21,21,0.6), 0 0 8px rgba(124,21,21,0.28);
+      margin-bottom: 24px;
+    }
+    .shop-hero h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 400;
+      letter-spacing: 0.18em; color: var(--text);
+      margin-bottom: 16px;
+    }
+    .shop-hero p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 2vw, 1.2rem); font-style: italic;
+      color: #7c8199;
+    }
+
+    /* ════════════════════════════════════════════
+       MANIFESTE
+    ════════════════════════════════════════════ */
+    .shop-manifeste {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-alt);
+      background-image: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(124,21,21,0.06) 0%, transparent 70%);
+      padding: 64px 5vw;
+      text-align: center;
+    }
+    .shop-manifeste-inner {
+      max-width: 680px; margin: 0 auto;
+    }
+    .manifeste-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.85rem; font-style: italic; letter-spacing: 0.2em;
+      color: var(--crimson); opacity: 0.85;
+      margin-bottom: 16px;
+    }
+    .manifeste-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.3rem, 2.8vw, 1.9rem); font-weight: 400;
+      letter-spacing: 0.1em; color: var(--text);
+      margin-bottom: 28px;
+    }
+    .manifeste-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 1.8vw, 1.15rem); font-weight: 300; line-height: 1.9;
+      color: #8890a8;
+      margin-bottom: 16px;
+    }
+    .manifeste-body:last-child { margin-bottom: 0; }
+
+    /* ════════════════════════════════════════════
+       GRILLE
+    ════════════════════════════════════════════ */
+    .shop-wrap {
+      max-width: 1300px; margin: 0 auto;
+      padding: 64px 5vw 100px;
+    }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    /* ════════════════════════════════════════════
+       CARTE DESIGN
+    ════════════════════════════════════════════ */
+    .shop-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .shop-card:hover {
+      border-color: var(--border-mid);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,21,21,0.18);
+      transform: translateY(-4px);
+    }
+
+    .shop-video-wrap {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      background: #0a0a0f;
+    }
+    .shop-video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .shop-card:hover .shop-video {
+      transform: scale(1.03);
+    }
+
+    .shop-tag {
+      position: absolute; top: 12px; left: 12px;
+      font-size: 0.58rem; font-weight: 500; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--silver-dim);
+      background: rgba(8,8,12,0.75);
+      border: 1px solid var(--border-mid);
+      padding: 4px 9px; border-radius: 2px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Overlay gradient au bas de la vidéo */
+    .shop-video-wrap::after {
+      content: '';
+      position: absolute; inset: auto 0 0 0; height: 40%;
+      background: linear-gradient(to top, rgba(8,8,12,0.7) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .shop-info {
+      padding: 16px 18px 18px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .shop-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem; font-weight: 400; letter-spacing: 0.1em;
+      color: var(--text);
+    }
+    .shop-footer {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .shop-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem; font-weight: 400;
+      color: var(--silver);
+      letter-spacing: 0.04em;
+    }
+    .shop-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem; font-weight: 400; letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--silver); background: transparent;
+      border: 1px solid var(--silver-dim);
+      padding: 7px 14px; border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .shop-btn:hover {
+      background: var(--crimson-glow);
+      border-color: var(--crimson);
+      color: #c97070;
+    }
+
+    /* Placeholder quand la vidéo n'est pas encore chargée */
+    .shop-video-wrap .placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: serif; font-size: 3rem;
+      color: var(--crimson); opacity: 0.1;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .shop-video-wrap.loaded .placeholder { opacity: 0; }
+
+    /* ════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════ */
+    footer {
+      padding: 60px 24px 40px;
+      text-align: center; border-top: 1px solid var(--border);
+    }
+    .footer-cross {
+      font-size: 2.4rem; font-family: serif;
+      color: var(--crimson); opacity: 0.72; margin-bottom: 28px;
+      text-shadow: 0 0 32px rgba(124,21,21,0.45);
+    }
+    .footer-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem; letter-spacing: 0.35em; color: var(--silver-dim);
+      margin-bottom: 14px;
+    }
+    .footer-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; font-style: italic; color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .btn-outline {
+      display: inline-block;
+      font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 400;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--silver);
+      border: 1px solid var(--border-mid); padding: 11px 28px; border-radius: 2px;
+      text-decoration: none; margin-bottom: 40px;
+      transition: all 0.3s;
+    }
+    .btn-outline:hover { border-color: var(--crimson); color: #c97070; }
+    .footer-copy {
+      font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.08em;
+    }
+
+    /* ════════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .shop-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    }
+    @media (max-width: 720px) {
+      .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .nav-links { display: none; }
+      #nav { padding: 0 20px; }
+      .shop-hero { padding: 100px 24px 48px; }
+    }
+    @media (max-width: 380px) {
+      .shop-grid { grid-template-columns: 1fr; max-width: 280px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════ NAV ════ -->
+  <nav id="nav">
+    <a href="index.html" class="nav-logo">SAINT</a>
+    <div class="nav-links">
+      <a href="outil.html">L'Outil</a>
+      <a href="boutique.html" class="active">Boutique</a>
+      <a href="index.html#comment">Comment ça marche</a>
+      <a href="index.html#galerie">Galerie</a>
+      <a href="index.html#galerie">Galerie</a>
+    </div>
+    <a href="outil.html" class="nav-cta">Créer →</a>
+  </nav>
+
+  <!-- ════ EN-TÊTE ════ -->
+  <header class="shop-hero">
+    <p class="shop-hero-ornament" aria-hidden="true">☦</p>
+    <h1>Boutique</h1>
+    <p>Designs originaux SAINT — créations uniques, fichier haute résolution</p>
+  </header>
+
+  <!-- ════ MANIFESTE ════ -->
+  <div class="shop-manifeste">
+    <div class="shop-manifeste-inner">
+      <p class="manifeste-eyebrow">L'Art avant tout</p>
+      <h2 class="manifeste-title">Chaque design est une œuvre.</h2>
+      <p class="manifeste-body">
+        Les designs de la Boutique SAINT ne sont pas générés en série. Chacun est
+        conçu et travaillé avec soin par des artistes tatoueurs professionnels —
+        composition, équilibre, lisibilité sur la peau. Ce sont des créations uniques,
+        pensées pour durer et s'affirmer sur la peau de ceux qui choisissent l'excellence.
+      </p>
+      <p class="manifeste-body">
+        En achetant un design SAINT, vous recevez un fichier haute résolution
+        immédiatement prêt à emporter chez votre tatoueur. Qualité de studio,
+        originalité garantie.
+      </p>
+    </div>
+  </div>
+
+  <!-- ════ GRILLE ════ -->
+  <div class="shop-wrap">
+    <div class="shop-grid" id="shop-grid"></div>
+  </div>
+
+  <!-- ════ FOOTER ════ -->
+  <footer>
+    <p class="footer-cross" aria-hidden="true">☦</p>
+    <p class="footer-logo">SAINT</p>
+    <p class="footer-tagline">L'art du tatouage, réinventé par l'intelligence artificielle.</p>
+    <a href="outil.html" class="btn-outline">Créer mon design →</a>
+    <p class="footer-copy">© 2025 SAINT — Tous droits réservés</p>
+  </footer>
+
+  <script>
+    // ═══════════════════════════════════════════════════
+    //  CATALOGUE — modifier ici pour ajouter/changer un design
+    //
+    //  video : chemin vers le fichier vidéo (depuis la racine du site)
+    //  nom   : titre affiché sur la carte
+    //  prix  : prix en dollars (nombre entier)
+    //  tag   : pastille de style
+    // ═══════════════════════════════════════════════════
+    const DESIGNS = [
+      { video: 'videos/video-1.mp4',  nom: 'Serpent Sacré',        prix: 120, tag: 'Japonais'    },
+      { video: 'videos/video-2.mp4',  nom: 'Rose Baroque',         prix: 90,  tag: 'Baroque'     },
+      { video: 'videos/video-3.mp4',  nom: 'Panthère Royale',      prix: 280, tag: 'Réalisme'    },
+      { video: 'videos/video-4.mp4',  nom: 'Mandala Sacré',        prix: 200, tag: 'Géométrique' },
+      { video: 'videos/video-5.mp4',  nom: 'Dragon Céleste',       prix: 320, tag: 'Japonais'    },
+      { video: 'videos/video-6.mp4',  nom: 'Œil Providence',       prix: 150, tag: 'Concept'     },
+      { video: 'videos/video-7.mp4',  nom: 'Crâne Fleuri',         prix: 180, tag: 'Baroque'     },
+      { video: 'videos/video-8.mp4',  nom: 'Loup Nordique',        prix: 350, tag: 'Réalisme'    },
+      { video: 'videos/video-9.mp4',  nom: 'Fleur de Lotus',       prix: 110, tag: 'Géométrique' },
+      { video: 'videos/video-10.mp4', nom: 'Phénix Ascendant',     prix: 500, tag: 'Concept'     },
+      { video: 'videos/video-11.mp4', nom: 'Méduse Baroque',       prix: 160, tag: 'Baroque'     },
+      { video: 'videos/video-12.mp4', nom: 'Croix Orthodoxe',      prix: 240, tag: 'Réalisme'    },
+      { video: 'videos/video-13.mp4', nom: 'Ouroboros',            prix: 300, tag: 'Concept'     },
+    ];
+
+    // Génération des cartes
+    const grid = document.getElementById('shop-grid');
+    DESIGNS.forEach((d, i) => {
+      const card = document.createElement('div');
+      card.className = 'shop-card';
+      card.innerHTML = `
+        <div class="shop-video-wrap">
+          <video class="shop-video" loop muted playsinline preload="none"
+                 data-src="${d.video}"></video>
+          <span class="shop-tag">${d.tag}</span>
+          <span class="placeholder" aria-hidden="true">☦</span>
+        </div>
+        <div class="shop-info">
+          <p class="shop-name">${d.nom}</p>
+          <div class="shop-footer">
+            <span class="shop-price">${d.prix} $</span>
+            <button class="shop-btn" onclick="handleAcheter(event, ${i})">Acheter</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Lecture uniquement dans le viewport (performance)
+    const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        const video = e.target;
+        if (e.isIntersecting) {
+          if (!video.getAttribute('src')) {
+            video.setAttribute('src', video.dataset.src);
+            video.closest('.shop-video-wrap').classList.add('loaded');
+          }
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.shop-video').forEach(v => videoObserver.observe(v));
+
+    // Bouton "Acheter" — à connecter au système de paiement plus tard
+    function handleAcheter(e, index) {
+      e.stopPropagation();
+      // TODO : intégrer Stripe / Gumroad / autre
+      alert('Paiement bientôt disponible — ' + DESIGNS[index].nom);
+    }
+  </script>
+
+</body>
+</html>

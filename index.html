@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAINT — L'Art du Tatouage, Réinventé</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #080808;
+      --bg-alt:       #0d0d15;
+      --bg-card:      #131318;
+      --silver:       #b0b4c2;
+      --silver-dim:   #484d5e;
+      --silver-glow:  rgba(176,180,194,0.08);
+      --text:         #e0e0e6;
+      --text-muted:   #4e5266;
+      --border:       #1e1e28;
+      --border-mid:   #2a2a38;
+      --crimson:      #7c1515;
+      --crimson-glow: rgba(124,21,21,0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ════════════════════════════════════════════
+       NAV
+    ════════════════════════════════════════════ */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      transition: background 0.5s, border-color 0.5s;
+      border-bottom: 1px solid transparent;
+    }
+    #nav.scrolled {
+      background: rgba(8,8,10,0.96);
+      border-bottom-color: var(--border);
+      backdrop-filter: blur(14px);
+    }
+    .nav-logo {
+      font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 600;
+      letter-spacing: 0.3em; color: var(--text); text-decoration: none;
+      transition: color 0.25s;
+    }
+    .nav-logo::before {
+      content: '☦';
+      font-size: 1.05em; color: var(--crimson); opacity: 0.8;
+      margin-right: 14px; font-family: serif; letter-spacing: 0;
+      vertical-align: -0.05em;
+      transition: opacity 0.25s, text-shadow 0.25s;
+    }
+    .nav-logo:hover { color: var(--crimson); }
+    .nav-logo:hover::before { opacity: 1; text-shadow: 0 0 16px rgba(124,21,21,0.6); }
+    .nav-links {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 36px;
+    }
+    .nav-links a {
+      font-size: 0.68rem; font-weight: 500; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--silver); }
+    .nav-cta {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem; font-weight: 400; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--silver); text-decoration: none;
+      border: 1px solid var(--silver-dim); padding: 8px 18px; border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .nav-cta:hover { background: var(--silver-glow); border-color: var(--silver); }
+
+    /* ════════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════════ */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+    #hero::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 90% 70% at 50% 42%, rgba(190,190,210,0.04) 0%, transparent 62%),
+        radial-gradient(ellipse 40% 30% at 50% 42%, rgba(200,200,220,0.025) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 20% at 50% 90%, rgba(80,10,10,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse at bottom, rgba(8,8,12,0.95) 0%, transparent 55%);
+    }
+    #hero::after {
+      content: '☦';
+      position: absolute; bottom: 12%; right: 8%;
+      font-size: clamp(5rem, 9vw, 8rem);
+      font-family: serif; line-height: 1;
+      color: var(--silver); opacity: 0.04;
+      pointer-events: none; z-index: 0;
+      animation: heroFadeIn 3s ease 0.5s both;
+    }
+    .hero-cross {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -54%);
+      width: min(70vw, 580px); height: min(70vw, 580px);
+      pointer-events: none; z-index: 0;
+    }
+    .cross-h {
+      position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+      background: linear-gradient(to right, transparent 0%, var(--silver) 50%, transparent 100%);
+      opacity: 0.07;
+    }
+    .cross-v {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+      background: linear-gradient(to bottom, transparent 0%, var(--silver) 50%, transparent 100%);
+      opacity: 0.07;
+    }
+    .cross-ring { position: absolute; border-radius: 50%; border: 1px solid var(--silver); }
+    .ring-1 { width: 55%; height: 55%; top: 22.5%; left: 22.5%; opacity: 0.04; }
+    .ring-2 { width: 88%; height: 88%; top: 6%;   left: 6%;   opacity: 0.025; }
+    .ring-3 { width: 28%; height: 28%; top: 36%;  left: 36%;  opacity: 0.06; }
+
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem; font-style: italic; letter-spacing: 0.24em;
+      color: #7c8199; margin-bottom: 28px;
+    }
+    .hero-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.2rem, 6.5vw, 5rem);
+      font-weight: 400; line-height: 1.18; letter-spacing: 0.05em;
+      color: var(--text); margin-bottom: 28px;
+    }
+    .hero-title em { font-style: normal; color: var(--crimson); text-shadow: 0 0 60px rgba(124,21,21,0.4); }
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 300; line-height: 1.9;
+      color: #9098b5; margin-bottom: 52px;
+    }
+    .cta-btn {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem; font-weight: 400; letter-spacing: 0.24em;
+      text-transform: uppercase; color: var(--silver);
+      border: 1px solid var(--silver); padding: 18px 52px; border-radius: 2px;
+      text-decoration: none; transition: all 0.35s;
+    }
+    .cta-btn:hover {
+      background: var(--crimson-glow);
+      border-color: var(--crimson);
+      color: #c97070;
+      box-shadow: 0 0 40px rgba(124,21,21,0.2), 0 0 80px rgba(124,21,21,0.08);
+    }
+    .hero-scroll {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      font-size: 0.75rem; color: #7c8199; z-index: 1;
+      animation: heroFadeIn 1s ease 2.2s both, floatY 2.4s ease-in-out 3s infinite;
+    }
+    @keyframes floatY {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
+      50%       { opacity: 1;   transform: translateX(-50%) translateY(8px); }
+    }
+    @keyframes heroFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes heroFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .hero-cross    { animation: heroFadeIn 2.5s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s both; }
+    .hero-eyebrow  { animation: heroFadeUp 1s cubic-bezier(0.22, 0.61, 0.36, 1) 0.4s both; }
+    .hero-title    { animation: heroFadeUp 1.2s cubic-bezier(0.22, 0.61, 0.36, 1) 0.7s both; }
+    .hero-subtitle { animation: heroFadeUp 1s cubic-bezier(0.22, 0.61, 0.36, 1) 1.1s both; }
+    .cta-btn       { animation: heroFadeUp 1s cubic-bezier(0.22, 0.61, 0.36, 1) 1.4s both; }
+
+    /* ════════════════════════════════════════════
+       SECTIONS — COMMUNS
+    ════════════════════════════════════════════ */
+    .section-wrap {
+      width: 100%; padding: 110px 5vw;
+      background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(190,190,215,0.022) 0%, transparent 65%);
+    }
+    .section-wrap.alt {
+      background-color: var(--bg-alt);
+      background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(190,190,215,0.028) 0%, transparent 65%);
+    }
+    .section-inner { max-width: 1060px; margin: 0 auto; }
+    .ornament {
+      display: flex; align-items: center; gap: 20px;
+      margin-bottom: 44px; color: var(--crimson); font-size: 0.8rem;
+    }
+    .ornament span {
+      font-size: 1.7rem; font-family: serif;
+      color: var(--crimson); opacity: 0.88;
+      text-shadow: 0 0 28px rgba(124,21,21,0.6), 0 0 8px rgba(124,21,21,0.28);
+      line-height: 1; flex-shrink: 0;
+    }
+    .ornament::before { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(124,21,21,0.45)); }
+    .ornament::after  { content: ''; flex: 1; height: 1px; background: linear-gradient(to left,  transparent, rgba(124,21,21,0.45)); }
+    .section-heading {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.3rem, 3vw, 2.2rem); font-weight: 400; letter-spacing: 0.14em;
+      color: var(--text); text-align: center; margin-bottom: 10px;
+    }
+    .section-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; font-style: italic; color: #7c8199;
+      text-align: center; margin-bottom: 60px;
+    }
+    .btn-outline {
+      display: inline-block;
+      font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 400;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--silver);
+      border: 1px solid var(--silver-dim); padding: 12px 28px; border-radius: 2px;
+      text-decoration: none; transition: all 0.25s;
+    }
+    .btn-outline:hover { background: var(--crimson-glow); border-color: var(--crimson); color: #c97070; }
+
+    /* ════════════════════════════════════════════
+       COMMENT ÇA MARCHE
+    ════════════════════════════════════════════ */
+    .steps-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      border: 1px solid var(--border);
+    }
+    .step-item {
+      padding: 44px 32px; background: #0c0c13;
+      border-right: 1px solid var(--border);
+    }
+    .step-item:last-child { border-right: none; }
+    .step-roman {
+      font-family: 'Cinzel', serif; font-size: 2.4rem; font-weight: 400;
+      color: var(--crimson); opacity: 0.55; margin-bottom: 22px; letter-spacing: 0.05em; line-height: 1;
+    }
+    .step-title {
+      font-family: 'Cinzel', serif; font-size: 0.82rem; font-weight: 400;
+      letter-spacing: 0.1em; color: var(--text); margin-bottom: 14px;
+    }
+    .step-desc { font-size: 0.84rem; line-height: 1.8; color: #8790a8; }
+
+    /* ════════════════════════════════════════════
+       NOS STYLES
+    ════════════════════════════════════════════ */
+    #styles { text-align: center; }
+    .styles-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 14px; margin-bottom: 52px;
+    }
+    .style-card {
+      display: flex; flex-direction: column;
+      text-decoration: none; cursor: pointer;
+      transition: transform 0.35s;
+    }
+    .style-card:hover { transform: translateY(-5px); }
+    .style-img-wrap {
+      aspect-ratio: 3/4; position: relative;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden; margin-bottom: 14px;
+      transition: border-color 0.35s;
+    }
+    .style-card:hover .style-img-wrap { border-color: var(--crimson); box-shadow: 0 16px 48px rgba(124,21,21,0.18), 0 4px 16px rgba(124,21,21,0.1); }
+    .style-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.6s;
+    }
+    .style-card:hover .style-img-wrap img { transform: scale(1.05); }
+    .style-img-wrap::after {
+      content: 'Essayer →';
+      position: absolute; inset: 0;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 18px;
+      font-family: 'Cinzel', serif; font-size: 0.58rem; letter-spacing: 0.18em;
+      color: var(--silver);
+      background: linear-gradient(to top, rgba(8,8,8,0.75) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.35s;
+    }
+    .style-card:hover .style-img-wrap::after { opacity: 1; }
+    .style-label { text-align: center; }
+    .style-name {
+      font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 400;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text); margin-bottom: 5px;
+    }
+    .style-desc { font-size: 0.7rem; line-height: 1.65; color: #7c8199; }
+
+    /* ════════════════════════════════════════════
+       CARROUSEL BOUTIQUE
+    ════════════════════════════════════════════ */
+    #carousel-section {
+      width: 100%; padding: 110px 0;
+      background-color: var(--bg-alt);
+      background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(190,190,215,0.022) 0%, transparent 65%);
+    }
+    .carousel-header {
+      max-width: 1060px; margin: 0 auto 52px;
+      padding: 0 5vw; text-align: center;
+    }
+
+    .carousel-outer {
+      position: relative;
+    }
+    /* Flèches */
+    .carousel-arrow {
+      position: absolute; top: 50%; z-index: 10;
+      transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(8,8,12,0.82); border: 1px solid var(--border-mid);
+      color: var(--silver); font-size: 1.1rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.25s;
+      backdrop-filter: blur(8px);
+      user-select: none;
+    }
+    .carousel-arrow:hover { border-color: var(--crimson); color: #c97070; background: rgba(124,21,21,0.18); }
+    .carousel-arrow.prev { left: 16px; }
+    .carousel-arrow.next { right: 16px; }
+
+    /* Piste de défilement */
+    .carousel-track {
+      display: flex; gap: 16px;
+      overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+      padding: 0 5vw 24px;
+      cursor: grab;
+      -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-track.dragging { cursor: grabbing; scroll-behavior: auto; user-select: none; }
+
+    /* Carte carrousel */
+    .c-card {
+      flex-shrink: 0;
+      width: clamp(160px, 22vw, 240px);
+      scroll-snap-align: start;
+      display: flex; flex-direction: column;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .c-card:hover {
+      border-color: var(--border-mid);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,21,21,0.16);
+      transform: translateY(-4px);
+    }
+    .c-video-wrap {
+      position: relative; aspect-ratio: 9/16; overflow: hidden; background: #0a0a0f;
+    }
+    .c-video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .c-card:hover .c-video { transform: scale(1.03); }
+    .c-video-wrap::after {
+      content: ''; position: absolute; inset: auto 0 0 0; height: 45%;
+      background: linear-gradient(to top, rgba(8,8,12,0.75) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .c-tag {
+      position: absolute; top: 10px; left: 10px;
+      font-size: 0.55rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--silver-dim); background: rgba(8,8,12,0.75);
+      border: 1px solid var(--border-mid); padding: 3px 8px; border-radius: 2px;
+      backdrop-filter: blur(8px);
+    }
+    .c-info { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .c-name {
+      font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 400;
+      letter-spacing: 0.08em; color: var(--text);
+    }
+    .c-footer { display: flex; align-items: center; justify-content: space-between; }
+    .c-price {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;
+      color: var(--silver); letter-spacing: 0.04em;
+    }
+    .c-btn {
+      font-family: 'Cinzel', serif; font-size: 0.54rem; font-weight: 400;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--silver); background: transparent;
+      border: 1px solid var(--silver-dim);
+      padding: 6px 12px; border-radius: 2px;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .c-btn:hover { background: var(--crimson-glow); border-color: var(--crimson); color: #c97070; }
+
+    .carousel-footer {
+      text-align: center; margin-top: 44px; padding: 0 5vw;
+    }
+
+    /* ════════════════════════════════════════════
+       QUI EST SAINT
+    ════════════════════════════════════════════ */
+    #saint {
+      width: 100%; padding: 120px 5vw;
+      background-image: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(124,21,21,0.07) 0%, transparent 65%);
+    }
+    .saint-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+    .saint-left .ornament { margin-bottom: 32px; }
+    .saint-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.4rem, 2.8vw, 2.1rem); font-weight: 400; letter-spacing: 0.1em;
+      color: var(--text); line-height: 1.35; margin-bottom: 28px;
+    }
+    .saint-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 1.6vw, 1.1rem); font-weight: 300; line-height: 1.95;
+      color: #8890a8; margin-bottom: 18px;
+    }
+    .saint-body:last-of-type { margin-bottom: 36px; }
+    .saint-right {
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .saint-stat {
+      padding: 28px 28px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: border-color 0.3s;
+    }
+    .saint-stat:hover { border-color: var(--border-mid); }
+    .saint-stat-num {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 400;
+      color: var(--crimson); opacity: 0.75; letter-spacing: 0.05em; line-height: 1;
+      margin-bottom: 8px;
+    }
+    .saint-stat-label {
+      font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.08em;
+    }
+
+    /* ════════════════════════════════════════════
+       CTA FINAL
+    ════════════════════════════════════════════ */
+    #cta-final {
+      width: 100%; padding: 130px 5vw;
+      text-align: center;
+      background-color: var(--bg-alt);
+      border-top: 1px solid var(--border);
+      background-image:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124,21,21,0.08) 0%, transparent 65%),
+        radial-gradient(ellipse 80% 55% at 50% 0%, rgba(190,190,215,0.018) 0%, transparent 65%);
+    }
+    .cta-final-ornament {
+      font-size: 1.7rem; font-family: serif;
+      color: var(--crimson); opacity: 0.85;
+      text-shadow: 0 0 28px rgba(124,21,21,0.6);
+      margin-bottom: 32px;
+    }
+    .cta-final-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 4vw, 3rem); font-weight: 400; letter-spacing: 0.1em;
+      color: var(--text); margin-bottom: 20px; line-height: 1.3;
+    }
+    .cta-final-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 1.8vw, 1.2rem); font-style: italic;
+      color: #7c8199; margin-bottom: 52px;
+    }
+
+    /* ════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════ */
+    footer {
+      width: 100%; padding: 80px 5vw 48px;
+      text-align: center; border-top: 1px solid var(--border);
+    }
+    .footer-cross {
+      font-size: 2.4rem; font-family: serif;
+      color: var(--crimson); opacity: 0.72; margin-bottom: 28px;
+      text-shadow: 0 0 32px rgba(124,21,21,0.45);
+    }
+    .footer-logo {
+      font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 600;
+      letter-spacing: 0.32em; color: var(--text); margin-bottom: 14px;
+    }
+    .footer-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem; font-style: italic; color: #7c8199; margin-bottom: 28px;
+    }
+    .footer-copy {
+      margin-top: 40px; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--silver-dim);
+    }
+
+    /* ════════════════════════════════════════════
+       FADE-IN AU SCROLL
+    ════════════════════════════════════════════ */
+    .fade-in {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .ornament.fade-in { transform: translateY(10px); transition-duration: 1.5s; }
+    .section-heading.fade-in { transform: translateY(18px); transition-duration: 1.15s; }
+    .section-sub.fade-in { transform: translateY(16px); transition-duration: 1.1s; }
+
+    /* ════════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      #nav { padding: 0 24px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .step-item:last-child { border-bottom: none; }
+      .styles-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .saint-inner { grid-template-columns: 1fr; gap: 48px; }
+    }
+    @media (max-width: 540px) {
+      #hero { padding: 100px 20px 60px; }
+      .hero-title { font-size: 2rem; letter-spacing: 0.03em; }
+      .section-wrap { padding: 72px 20px; }
+      #carousel-section { padding: 72px 0; }
+      #saint { padding: 72px 20px; }
+      #cta-final { padding: 90px 20px; }
+      .step-item { padding: 32px 24px; }
+      .styles-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════ NAV ════ -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">SAINT</a>
+    <div class="nav-links">
+      <a href="outil.html">L'Outil</a>
+      <a href="boutique.html">Boutique</a>
+      <a href="#comment">Comment ça marche</a>
+      <a href="#styles">Styles</a>
+    </div>
+    <a href="outil.html" class="nav-cta">Créer →</a>
+  </nav>
+
+  <!-- ════ 1 · HERO ════ -->
+  <section id="hero">
+    <div class="hero-cross" aria-hidden="true">
+      <div class="cross-h"></div>
+      <div class="cross-v"></div>
+      <div class="cross-ring ring-1"></div>
+      <div class="cross-ring ring-2"></div>
+      <div class="cross-ring ring-3"></div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">— Intelligence Artificielle &amp; Art Corporel —</p>
+      <h1 class="hero-title">
+        L'Art du Tatouage,<br>
+        <em>Réinventé.</em>
+      </h1>
+      <p class="hero-subtitle">
+        Décris ton idée. L'IA génère un design professionnel sur-mesure.<br>
+        Visualise-le sur ta peau avant même la séance.
+      </p>
+      <a href="outil.html" class="cta-btn">Créer mon design →</a>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">↓</div>
+  </section>
+
+  <!-- ════ 2 · COMMENT ÇA MARCHE ════ -->
+  <div class="section-wrap" id="comment">
+    <div class="section-inner">
+      <div class="ornament" aria-hidden="true"><span>☦</span></div>
+      <h2 class="section-heading">Comment ça marche</h2>
+      <p class="section-sub">Trois étapes, quelques minutes</p>
+
+      <div class="steps-grid">
+        <div class="step-item">
+          <p class="step-roman">I</p>
+          <h3 class="step-title">Décris ton idée</h3>
+          <p class="step-desc">Sujet, style, ambiance, zone du corps. Ajoute une image d'inspiration si tu en as une. En quelques mots, l'IA comprend ta vision.</p>
+        </div>
+        <div class="step-item">
+          <p class="step-roman">II</p>
+          <h3 class="step-title">L'IA crée ton design</h3>
+          <p class="step-desc">Un design professionnel sur-mesure, sur fond blanc, prêt pour ton tatoueur. Génère autant de versions que tu veux jusqu'au résultat parfait.</p>
+        </div>
+        <div class="step-item">
+          <p class="step-roman">III</p>
+          <h3 class="step-title">Vois-le sur ta peau</h3>
+          <p class="step-desc">Uploade une photo de la zone souhaitée. L'IA pose le tatouage sur ta peau avec un rendu photoréaliste — lumière, texture, angle exact. Montre-le à ton tatoueur.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 3 · NOS STYLES ════ -->
+  <div class="section-wrap alt" id="styles">
+    <div class="section-inner">
+      <div class="ornament" aria-hidden="true"><span>☦</span></div>
+      <h2 class="section-heading">Nos Styles</h2>
+      <p class="section-sub">Cinq univers artistiques, une IA au service de ta vision</p>
+
+      <div class="styles-grid">
+
+        <a href="outil.html?style=concept" class="style-card">
+          <div class="style-img-wrap">
+            <img src="images/style-concept.png" alt="Style Concept" />
+          </div>
+          <div class="style-label">
+            <p class="style-name">Concept</p>
+            <p class="style-desc">Personnage central, architecture baroque, géométrie sacrée</p>
+          </div>
+        </a>
+
+        <a href="outil.html?style=baroque" class="style-card">
+          <div class="style-img-wrap">
+            <img src="images/style-baroque.png" alt="Style Baroque" />
+          </div>
+          <div class="style-label">
+            <p class="style-name">Baroque</p>
+            <p class="style-desc">Ornemental, chiaroscuro dramatique, figures religieuses</p>
+          </div>
+        </a>
+
+        <a href="outil.html?style=japonais" class="style-card">
+          <div class="style-img-wrap">
+            <img src="images/style-japonais.png" alt="Style Japonais" />
+          </div>
+          <div class="style-label">
+            <p class="style-name">Japonais</p>
+            <p class="style-desc">Irezumi traditionnel, koi, dragons, fleurs de cerisier</p>
+          </div>
+        </a>
+
+        <a href="outil.html?style=geometrique" class="style-card">
+          <div class="style-img-wrap">
+            <img src="images/style-geometrique.png" alt="Style Géométrique" />
+          </div>
+          <div class="style-label">
+            <p class="style-name">Géométrique</p>
+            <p class="style-desc">Géométrie sacrée, mandala, lignes précises, dotwork</p>
+          </div>
+        </a>
+
+        <a href="outil.html?style=realisme" class="style-card">
+          <div class="style-img-wrap">
+            <img src="images/style-realisme.png" alt="Style Réalisme" />
+          </div>
+          <div class="style-label">
+            <p class="style-name">Réalisme</p>
+            <p class="style-desc">Noir &amp; gris hyperréaliste, portraits, ombres profondes</p>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 4 · CARROUSEL BOUTIQUE ════ -->
+  <section id="carousel-section">
+    <div class="carousel-header">
+      <div class="ornament" aria-hidden="true"><span>☦</span></div>
+      <h2 class="section-heading">Boutique SAINT</h2>
+      <p class="section-sub">Designs originaux créés par nos artistes — fichier haute résolution prêt pour votre tatoueur</p>
+    </div>
+
+    <div class="carousel-outer">
+      <button class="carousel-arrow prev" id="carousel-prev" aria-label="Précédent">&#8249;</button>
+      <div class="carousel-track" id="carousel-track"></div>
+      <button class="carousel-arrow next" id="carousel-next" aria-label="Suivant">&#8250;</button>
+    </div>
+
+    <div class="carousel-footer">
+      <a href="boutique.html" class="btn-outline">Voir toute la boutique →</a>
+    </div>
+  </section>
+
+  <!-- ════ 5 · QUI EST SAINT ════ -->
+  <section class="section-wrap" id="saint">
+    <div class="saint-inner">
+      <div class="saint-left">
+        <div class="ornament" aria-hidden="true"><span>☦</span></div>
+        <h2 class="saint-title">L'IA au service<br>de l'artiste.</h2>
+        <p class="saint-body">
+          SAINT est né d'une conviction simple : chaque tatouage mérite d'être vu, pensé, et
+          décidé avant d'être gravé pour toujours. Nous avons construit un studio virtuel qui
+          met la technologie au service de ton idée — pas l'inverse.
+        </p>
+        <p class="saint-body">
+          Derrière chaque outil, il y a des artistes tatoueurs professionnels qui ont défini les
+          styles, calibré les modèles, et validé les résultats. L'IA exécute. L'humain crée.
+        </p>
+        <a href="outil.html" class="btn-outline">Commencer maintenant →</a>
+      </div>
+      <div class="saint-right">
+        <div class="saint-stat">
+          <p class="saint-stat-num">5</p>
+          <p class="saint-stat-label">Styles artistiques distincts, calibrés par des pros</p>
+        </div>
+        <div class="saint-stat">
+          <p class="saint-stat-num">2K</p>
+          <p class="saint-stat-label">Résolution de sortie — qualité studio, prête pour le tatoueur</p>
+        </div>
+        <div class="saint-stat">
+          <p class="saint-stat-num">∞</p>
+          <p class="saint-stat-label">Générations possibles — jusqu'au design parfait</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 6 · CTA FINAL ════ -->
+  <section id="cta-final">
+    <p class="cta-final-ornament" aria-hidden="true">☦</p>
+    <h2 class="cta-final-title">Ton prochain tatouage<br>commence ici.</h2>
+    <p class="cta-final-sub">Décris ton idée. Vois-la sur ta peau. Montre-la à ton tatoueur.</p>
+    <a href="outil.html" class="cta-btn">Créer mon design maintenant →</a>
+  </section>
+
+  <!-- ════ FOOTER ════ -->
+  <footer>
+    <p class="footer-cross" aria-hidden="true">☦</p>
+    <p class="footer-logo">SAINT</p>
+    <p class="footer-tagline">L'art du tatouage, réinventé par l'intelligence artificielle.</p>
+    <a href="outil.html" class="btn-outline">Créer mon design →</a>
+    <p class="footer-copy">© 2025 SAINT — Tous droits réservés</p>
+  </footer>
+
+  <script>
+    // ── Nav scroll ───────────────────────────────
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    // ── Carrousel — données ──────────────────────
+    const CAROUSEL_DESIGNS = [
+      { video: 'videos/video-1.mp4',  nom: 'Serpent Sacré',    prix: 120, tag: 'Japonais'    },
+      { video: 'videos/video-2.mp4',  nom: 'Rose Baroque',     prix: 90,  tag: 'Baroque'     },
+      { video: 'videos/video-3.mp4',  nom: 'Panthère Royale',  prix: 280, tag: 'Réalisme'    },
+      { video: 'videos/video-4.mp4',  nom: 'Mandala Sacré',    prix: 200, tag: 'Géométrique' },
+      { video: 'videos/video-5.mp4',  nom: 'Dragon Céleste',   prix: 320, tag: 'Japonais'    },
+      { video: 'videos/video-6.mp4',  nom: 'Œil Providence',   prix: 150, tag: 'Concept'     },
+      { video: 'videos/video-7.mp4',  nom: 'Crâne Fleuri',     prix: 180, tag: 'Baroque'     },
+      { video: 'videos/video-8.mp4',  nom: 'Loup Nordique',    prix: 350, tag: 'Réalisme'    },
+      { video: 'videos/video-9.mp4',  nom: 'Fleur de Lotus',   prix: 110, tag: 'Géométrique' },
+      { video: 'videos/video-10.mp4', nom: 'Phénix Ascendant', prix: 500, tag: 'Concept'     },
+      { video: 'videos/video-11.mp4', nom: 'Méduse Baroque',   prix: 160, tag: 'Baroque'     },
+      { video: 'videos/video-12.mp4', nom: 'Croix Orthodoxe',  prix: 240, tag: 'Réalisme'    },
+      { video: 'videos/video-13.mp4', nom: 'Ouroboros',        prix: 300, tag: 'Concept'     },
+    ];
+
+    // ── Carrousel — génération HTML ──────────────
+    const track = document.getElementById('carousel-track');
+    CAROUSEL_DESIGNS.forEach((d, i) => {
+      const card = document.createElement('div');
+      card.className = 'c-card';
+      card.innerHTML = `
+        <div class="c-video-wrap">
+          <video class="c-video" loop muted playsinline preload="none"
+                 data-src="${d.video}"></video>
+          <span class="c-tag">${d.tag}</span>
+        </div>
+        <div class="c-info">
+          <p class="c-name">${d.nom}</p>
+          <div class="c-footer">
+            <span class="c-price">${d.prix} $</span>
+            <button class="c-btn" onclick="acheterDesign(event,${i})">Acheter</button>
+          </div>
+        </div>
+      `;
+      track.appendChild(card);
+    });
+
+    function acheterDesign(e, i) {
+      e.stopPropagation();
+      window.location.href = 'boutique.html';
+    }
+
+    // ── Carrousel — lecture lazy ──────────────────
+    const videoObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        const v = e.target;
+        if (e.isIntersecting) {
+          if (!v.getAttribute('src')) v.setAttribute('src', v.dataset.src);
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('.c-video').forEach(v => videoObs.observe(v));
+
+    // ── Carrousel — flèches ───────────────────────
+    const SCROLL_STEP = 280;
+    document.getElementById('carousel-prev').addEventListener('click', () => {
+      track.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
+    });
+    document.getElementById('carousel-next').addEventListener('click', () => {
+      track.scrollBy({ left:  SCROLL_STEP, behavior: 'smooth' });
+    });
+
+    // ── Carrousel — drag souris ───────────────────
+    let isDragging = false, startX = 0, scrollStart = 0;
+    track.addEventListener('mousedown', e => {
+      isDragging = true; startX = e.pageX; scrollStart = track.scrollLeft;
+      track.classList.add('dragging');
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      track.scrollLeft = scrollStart - (e.pageX - startX);
+    });
+    window.addEventListener('mouseup', () => {
+      isDragging = false; track.classList.remove('dragging');
+    });
+
+    // ── Scroll fade-in ────────────────────────────
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+
+    function watchFade(selector, stagger, baseDelay) {
+      document.querySelectorAll(selector).forEach((el, i) => {
+        el.classList.add('fade-in');
+        const delay = (baseDelay || 0) + (stagger ? i * stagger : 0);
+        if (delay) el.style.transitionDelay = delay + 's';
+        io.observe(el);
+      });
+    }
+
+    watchFade('.ornament');
+    watchFade('.section-heading', 0, 0.05);
+    watchFade('.section-sub', 0, 0.12);
+    watchFade('.steps-grid .step-item', 0.1);
+    watchFade('.styles-grid .style-card', 0.075);
+    watchFade('.saint-stat', 0.1);
+    watchFade('.cta-final-title', 0, 0.05);
+    watchFade('.cta-final-sub', 0, 0.15);
+  </script>
+
+</body>
+</html>

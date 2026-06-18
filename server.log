@@ -1,0 +1,22 @@
+
+✅ Serveur démarré sur http://localhost:3000
+   Ouvre index.html dans ton navigateur pour utiliser l'app.
+   Laisse ce terminal ouvert pendant que tu travailles.
+
+
+🎨 Nouvelle génération demandée
+   Sujet       : je veux le meme style de tattos , si tu peux juste enlever les ecritures
+   Style       : concept / Ambiance : religieux
+   Inspiration : oui
+   Prompt      : Professional tattoo studio concept art, safe for work, non-violent artistic illustration. Draw stron...
+✅ Sortie CLI : [
+  {
+    "id": "e6b50fca-31f7-4867-a53b-b2f95f3cd693",
+    "status": "completed",
+    "display_name": "Nano Banana Pro",
+    "job_set_type": "nano_banana_2",
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EimZnjdFt70NtaoSaEbPReYoqW/hf_20260617_120306_e6b50fca-31f7-4867-a53b-b2f95f3cd693.png",
+    "created_at": 1781697786.190051,
+    "params": {
+      "width": 2048,
+      "height": 
