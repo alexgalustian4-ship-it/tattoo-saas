@@ -125,6 +125,9 @@
       gap: 12px; width: 100%; max-width: 540px;
       margin: 0 auto 56px;
     }
+    .tool-card.full { grid-column: 1 / -1; flex-direction: row; align-items: center; padding: 16px 22px; }
+    .tool-card.full .tool-icon { margin-bottom: 0; margin-right: 16px; flex-shrink: 0; }
+    .tool-card.full .tool-cta { margin-top: 0; margin-left: auto; }
     .tool-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 12px; padding: 22px;
@@ -326,6 +329,7 @@
     <div class="nav-links">
       <a href="#styles">Styles</a>
       <a href="#how">Comment ça marche</a>
+      <a href="outil.html#history-section">Mes projets</a>
     </div>
     <a href="outil.html" class="nav-cta">Créer gratuitement</a>
   </nav>
@@ -355,6 +359,14 @@
           <p class="tool-name">Poser sur ma peau</p>
           <p class="tool-desc">Tu as déjà un design ? Vois-le rendu de façon réaliste sur ta peau, à l'endroit exact voulu.</p>
           <p class="tool-cta">Commencer →</p>
+        </a>
+        <a href="outil.html#history-section" class="tool-card full">
+          <div class="tool-icon">◫</div>
+          <div style="flex:1">
+            <p class="tool-name">Mes projets</p>
+            <p class="tool-desc">Retrouve toutes tes générations, télécharge-les ou retravaille-les.</p>
+          </div>
+          <p class="tool-cta">Voir →</p>
         </a>
       </div>
 
