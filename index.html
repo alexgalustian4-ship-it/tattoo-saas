@@ -9,26 +9,75 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #080808;
-      --bg-card:   #0f0f0f;
-      --bg-input:  #111;
-      --silver:    #b0b4c2;
-      --dim:       #2e2e2e;
-      --text:      #e8e8ec;
-      --muted:     #3a3a3a;
-      --border:    #191919;
-      --border-m:  #242424;
+      --bg:       #080808;
+      --bg-card:  #0f0f0f;
+      --silver:   #b0b4c2;
+      --dim:      #2e2e2e;
+      --text:     #e8e8ec;
+      --muted:    #3a3a3a;
+      --border:   #191919;
+      --border-m: #242424;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
+
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', system-ui, sans-serif;
       overflow-x: hidden;
+      cursor: none;
     }
 
-    /* ── NAV ───────────────────────────────────── */
+    /* ══ GRAIN TEXTURE ══════════════════════════ */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ══ CURSEUR CUSTOM ═════════════════════════ */
+    #cursor-dot {
+      position: fixed; z-index: 10000; pointer-events: none;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--silver);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s, transform 0.15s;
+      mix-blend-mode: difference;
+    }
+    #cursor-ring {
+      position: fixed; z-index: 9999; pointer-events: none;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(176,180,194,0.35);
+      transform: translate(-50%, -50%);
+      transition: width 0.25s, height 0.25s, border-color 0.25s, opacity 0.3s;
+    }
+    body.cursor-hover #cursor-ring {
+      width: 48px; height: 48px;
+      border-color: rgba(176,180,194,0.6);
+    }
+    body.cursor-hidden #cursor-dot,
+    body.cursor-hidden #cursor-ring { opacity: 0; }
+
+    /* ══ SCROLL FADE-UP ═════════════════════════ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.7s cubic-bezier(0.22,1,0.36,1);
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.d1 { transition-delay: 0.08s; }
+    .fade-up.d2 { transition-delay: 0.16s; }
+    .fade-up.d3 { transition-delay: 0.24s; }
+    .fade-up.d4 { transition-delay: 0.32s; }
+    .fade-up.d5 { transition-delay: 0.40s; }
+
+    /* ══ NAV ════════════════════════════════════ */
     #nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -37,9 +86,9 @@
       transition: background 0.4s, border-color 0.4s;
     }
     #nav.scrolled {
-      background: rgba(8,8,8,0.96);
+      background: rgba(8,8,8,0.97);
       border-bottom-color: var(--border);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
     }
     .nav-logo {
       font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800;
@@ -64,85 +113,77 @@
     }
     .nav-cta:hover { border-color: var(--silver); color: var(--silver); }
 
-    /* ── HERO ──────────────────────────────────── */
+    /* ══ HERO ═══════════════════════════════════ */
     #hero {
-      position: relative;
-      min-height: 100vh;
+      position: relative; min-height: 100vh;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      text-align: center;
-      padding: 100px 24px 80px;
+      text-align: center; padding: 100px 24px 80px;
       overflow: hidden;
     }
 
-    /* Canvas d'animation */
-    #tattoo-canvas {
-      position: absolute; inset: 0; z-index: 0;
-      pointer-events: none;
+    /* SVG tattoo flash background */
+    #tattoo-svg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+      overflow: visible;
     }
 
-    /* Dégradé de fond */
     #hero::before {
       content: '';
-      position: absolute; inset: 0; z-index: 1;
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background:
-        radial-gradient(ellipse 70% 60% at 50% 40%, rgba(180,180,200,0.025) 0%, transparent 65%),
-        radial-gradient(ellipse 100% 40% at 50% 100%, rgba(8,8,8,0.95) 0%, transparent 60%);
-      pointer-events: none;
+        radial-gradient(ellipse 65% 55% at 50% 40%, rgba(180,180,200,0.022) 0%, transparent 65%),
+        radial-gradient(ellipse 100% 45% at 50% 105%, rgba(8,8,8,1) 0%, transparent 55%);
     }
 
     .hero-content { position: relative; z-index: 2; max-width: 680px; }
 
     .hero-eyebrow {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 20px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 20px;
       display: flex; align-items: center; justify-content: center; gap: 10px;
     }
-    .hero-eyebrow::before,
-    .hero-eyebrow::after {
+    .hero-eyebrow::before, .hero-eyebrow::after {
       content: ''; display: block; width: 28px; height: 1px; background: var(--dim);
     }
-
     .hero-title {
       font-family: 'Syne', sans-serif;
       font-size: clamp(2.4rem, 6vw, 4.2rem);
-      font-weight: 800; line-height: 1.12;
-      letter-spacing: -0.02em; color: var(--text);
-      margin-bottom: 18px;
+      font-weight: 800; line-height: 1.12; letter-spacing: -0.02em;
+      color: var(--text); margin-bottom: 18px;
     }
     .hero-title em { font-style: normal; color: #555; }
-
     .hero-sub {
       font-size: clamp(0.88rem, 1.5vw, 1rem);
       color: var(--muted); line-height: 1.8;
       margin-bottom: 48px; max-width: 440px; margin-left: auto; margin-right: auto;
     }
 
-    /* ── TOOL CARDS ────────────────────────────── */
+    /* ══ TOOL CARDS ═════════════════════════════ */
     .tools-grid {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px; width: 100%; max-width: 540px;
-      margin: 0 auto 56px;
+      gap: 12px; width: 100%; max-width: 540px; margin: 0 auto 56px;
     }
-    .tool-card.full { grid-column: 1 / -1; flex-direction: row; align-items: center; padding: 16px 22px; }
-    .tool-card.full .tool-icon { margin-bottom: 0; margin-right: 16px; flex-shrink: 0; }
-    .tool-card.full .tool-cta { margin-top: 0; margin-left: auto; }
     .tool-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 12px; padding: 22px;
       text-decoration: none; color: inherit; text-align: left;
       display: flex; flex-direction: column;
       transition: border-color 0.25s, transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
     }
     .tool-card:hover {
-      border-color: var(--border-m);
-      transform: translateY(-3px);
+      border-color: var(--border-m); transform: translateY(-3px);
       box-shadow: 0 16px 48px rgba(0,0,0,0.4);
     }
     .tool-card:first-child { border-color: #232323; }
     .tool-card:first-child:hover { border-color: #3a3a3a; }
+    .tool-card.full {
+      grid-column: 1 / -1; flex-direction: row;
+      align-items: center; padding: 16px 22px;
+    }
+    .tool-card.full .tool-icon { margin-bottom: 0; margin-right: 16px; flex-shrink: 0; }
+    .tool-card.full .tool-cta { margin-top: 0; margin-left: auto; }
 
     .tool-icon {
       width: 38px; height: 38px; border-radius: 8px;
@@ -151,29 +192,22 @@
       font-size: 16px; margin-bottom: 16px; flex-shrink: 0;
     }
     .tool-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 0.88rem; font-weight: 700; letter-spacing: 0.01em;
-      color: var(--text); margin-bottom: 8px;
+      font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
+      letter-spacing: 0.01em; color: var(--text); margin-bottom: 8px;
     }
-    .tool-desc {
-      font-size: 0.76rem; color: #383838; line-height: 1.65; flex: 1;
-    }
+    .tool-desc { font-size: 0.76rem; color: #383838; line-height: 1.65; flex: 1; }
     .tool-cta {
       margin-top: 16px; font-size: 0.7rem; font-weight: 600;
       letter-spacing: 0.08em; color: #2e2e2e;
-      display: flex; align-items: center; gap: 5px;
-      transition: color 0.2s;
+      display: flex; align-items: center; gap: 5px; transition: color 0.2s;
     }
     .tool-card:first-child .tool-cta { color: #505050; }
     .tool-card:hover .tool-cta { color: var(--silver); }
 
-    /* ── PROOF BAR ─────────────────────────────── */
+    /* ══ PROOF BAR ══════════════════════════════ */
     .proof-bar {
-      display: flex; align-items: center; justify-content: center;
-      gap: 0; width: 100%; max-width: 540px;
-      margin: 0 auto 72px;
-      border: 1px solid var(--border); border-radius: 10px;
-      overflow: hidden;
+      display: flex; width: 100%; max-width: 540px; margin: 0 auto 72px;
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
     }
     .proof-item {
       flex: 1; padding: 14px 12px; text-align: center;
@@ -181,103 +215,87 @@
     }
     .proof-item:last-child { border-right: none; }
     .proof-num {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.2rem; font-weight: 800; color: #484848;
-      display: block; line-height: 1; margin-bottom: 4px;
+      font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
+      color: #484848; display: block; line-height: 1; margin-bottom: 4px;
     }
     .proof-label {
       font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
       color: #282828; font-weight: 600;
     }
 
-    /* ── STYLES SECTION ────────────────────────── */
+    /* ══ STYLES ═════════════════════════════════ */
     #styles {
       width: 100%; padding: 80px 5vw;
-      background: #070707;
-      border-top: 1px solid var(--border);
+      background: #070707; border-top: 1px solid var(--border);
     }
     .section-inner { max-width: 1100px; margin: 0 auto; }
-
     .section-label {
       font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 10px; display: block;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block;
     }
     .section-title {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800;
-      letter-spacing: -0.01em; color: var(--text);
-      margin-bottom: 36px;
+      font-family: 'Syne', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-bottom: 36px;
     }
-
     .styles-grid {
       display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
     }
     .style-card {
       display: flex; flex-direction: column;
-      text-decoration: none; cursor: pointer;
+      text-decoration: none; cursor: none;
+      transition: transform 0.35s;
     }
+    .style-card:hover { transform: translateY(-5px); }
     .style-img-wrap {
       aspect-ratio: 3/4; background: var(--bg-card);
       border: 1px solid var(--border); border-radius: 8px;
       overflow: hidden; margin-bottom: 12px; position: relative;
-      transition: border-color 0.3s;
+      transition: border-color 0.35s;
     }
     .style-card:hover .style-img-wrap { border-color: #303030; }
     .style-img-wrap img {
       width: 100%; height: 100%; object-fit: cover; display: block;
-      filter: grayscale(8%);
-      transition: transform 0.5s, filter 0.3s;
+      filter: grayscale(8%); transition: transform 0.5s, filter 0.3s;
     }
     .style-card:hover .style-img-wrap img { transform: scale(1.04); filter: grayscale(0%); }
     .style-img-wrap::after {
-      content: 'Essayer →';
-      position: absolute; inset: 0;
+      content: 'Essayer →'; position: absolute; inset: 0;
       display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 14px;
-      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.16em;
-      color: var(--silver); opacity: 0;
+      padding-bottom: 14px; font-size: 0.58rem; font-weight: 600;
+      letter-spacing: 0.16em; color: var(--silver); opacity: 0;
       background: linear-gradient(to top, rgba(8,8,8,0.7) 0%, transparent 55%);
       transition: opacity 0.3s;
     }
     .style-card:hover .style-img-wrap::after { opacity: 1; }
-
     .style-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 0.78rem; font-weight: 700;
+      font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
       color: #484848; letter-spacing: 0.04em; margin-bottom: 3px;
     }
     .style-desc { font-size: 0.68rem; color: #282828; line-height: 1.5; }
 
-    /* ── HOW IT WORKS ──────────────────────────── */
+    /* ══ HOW ════════════════════════════════════ */
     #how {
-      width: 100%; padding: 80px 5vw;
-      border-top: 1px solid var(--border);
+      width: 100%; padding: 80px 5vw; border-top: 1px solid var(--border);
     }
     .how-grid {
       display: grid; grid-template-columns: 1fr 1fr 1fr;
       gap: 1px; border: 1px solid var(--border);
       margin-top: 36px; background: var(--border);
     }
-    .how-step {
-      background: var(--bg); padding: 36px 28px;
-    }
+    .how-step { background: var(--bg); padding: 36px 28px; }
     .how-num {
-      font-family: 'Syne', sans-serif;
-      font-size: 2.8rem; font-weight: 800;
+      font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800;
       color: #1a1a1a; line-height: 1; margin-bottom: 20px;
     }
     .how-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 0.88rem; font-weight: 700;
+      font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
       color: #484848; margin-bottom: 10px; letter-spacing: 0.02em;
     }
     .how-desc { font-size: 0.8rem; color: #2e2e2e; line-height: 1.75; }
 
-    /* ── CTA FINAL ─────────────────────────────── */
+    /* ══ CTA FINAL ══════════════════════════════ */
     #cta-final {
-      width: 100%; padding: 100px 5vw;
-      text-align: center;
+      width: 100%; padding: 100px 5vw; text-align: center;
       border-top: 1px solid var(--border);
     }
     .cta-final-title {
@@ -289,28 +307,26 @@
       font-size: 0.9rem; color: var(--muted); margin-bottom: 36px; line-height: 1.7;
     }
     .cta-btn {
-      display: inline-block;
-      font-family: 'Syne', sans-serif;
+      display: inline-block; font-family: 'Syne', sans-serif;
       font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--bg);
       background: var(--text); padding: 16px 44px; border-radius: 4px;
-      text-decoration: none; transition: all 0.25s;
+      text-decoration: none; transition: background 0.25s;
     }
     .cta-btn:hover { background: var(--silver); }
 
-    /* ── FOOTER ────────────────────────────────── */
+    /* ══ FOOTER ═════════════════════════════════ */
     footer {
-      padding: 28px 40px;
-      border-top: 1px solid var(--border);
+      padding: 28px 40px; border-top: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
     }
     .footer-logo {
       font-family: 'Syne', sans-serif; font-size: 0.85rem;
       font-weight: 800; letter-spacing: 0.08em; color: #2a2a2a;
     }
-    .footer-copy { font-size: 0.68rem; color: #222; letter-spacing: 0.05em; }
+    .footer-copy { font-size: 0.68rem; color: #1e1e1e; letter-spacing: 0.05em; }
 
-    /* ── RESPONSIVE ────────────────────────────── */
+    /* ══ RESPONSIVE ═════════════════════════════ */
     @media (max-width: 600px) {
       #nav { padding: 0 16px; }
       .nav-links { display: none; }
@@ -318,12 +334,18 @@
       .styles-grid { grid-template-columns: repeat(3, 1fr); }
       .how-grid { grid-template-columns: 1fr; }
       footer { flex-direction: column; gap: 8px; text-align: center; }
+      body { cursor: auto; }
+      #cursor-dot, #cursor-ring { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── NAV ── -->
+  <!-- ══ CURSEUR ══ -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ══ NAV ══ -->
   <nav id="nav">
     <a href="/" class="nav-logo">INK<span>.</span>STUDIO</a>
     <div class="nav-links">
@@ -331,36 +353,200 @@
       <a href="#how">Comment ça marche</a>
       <a href="outil.html#history-section">Mes projets</a>
     </div>
-    <a href="outil.html" class="nav-cta">Créer gratuitement</a>
+    <a href="outil.html" class="nav-cta mag-btn">Créer gratuitement</a>
   </nav>
 
-  <!-- ── HERO ── -->
+  <!-- ══ HERO ══ -->
   <section id="hero">
-    <canvas id="tattoo-canvas"></canvas>
+
+    <!-- SVG tattoo flash animé — se dessine comme sous l'aiguille -->
+    <svg id="tattoo-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"
+         xmlns="http://www.w3.org/2000/svg">
+
+      <!-- Serpent coin haut gauche -->
+      <g transform="translate(160,200)" stroke="rgba(176,180,194,0.18)" stroke-width="0.8" fill="none">
+        <path d="M0,-90 C30,-70 60,-40 50,0 C40,40 5,55 0,95 C-5,135 20,160 30,195 C40,230 30,265 0,280 C-30,295 -55,280 -60,255 C-65,230 -50,205 -38,185 C-26,165 -15,148 -16,125 C-17,102 -32,88 -38,65 C-44,42 -36,10 -18,−10"
+          stroke-dasharray="950" stroke-dashoffset="950">
+          <animate attributeName="stroke-dashoffset" from="950" to="0" dur="6s" begin="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+        </path>
+        <!-- tête -->
+        <path d="M-4,-86 C-14,-100 -22,-112 -16,-124 C-10,-136 4,-136 14,-126 C24,-116 26,-100 18,-88 C12,-80 4,-82 0,-90"
+          stroke-dasharray="110" stroke-dashoffset="110">
+          <animate attributeName="stroke-dashoffset" from="110" to="0" dur="1.2s" begin="6s" fill="freeze"/>
+        </path>
+        <path d="M10,-130 L18,-142 M10,-130 L4,-142" stroke-dasharray="30" stroke-dashoffset="30">
+          <animate attributeName="stroke-dashoffset" from="30" to="0" dur="0.4s" begin="7s" fill="freeze"/>
+        </path>
+        <!-- écailles -->
+        <path d="M0,20 C6,14 12,16 10,24 M0,50 C8,44 14,48 10,56 M-4,80 C4,74 10,78 8,86 M-2,115 C6,109 12,113 10,121"
+          stroke-dasharray="120" stroke-dashoffset="120" opacity="0.7">
+          <animate attributeName="stroke-dashoffset" from="120" to="0" dur="2s" begin="4s" fill="freeze"/>
+        </path>
+      </g>
+
+      <!-- Rose traditionnelle coin haut droit -->
+      <g transform="translate(1280,180)" stroke="rgba(176,180,194,0.16)" stroke-width="0.8" fill="none">
+        <!-- tige -->
+        <path d="M0,140 C-2,120 -5,98 -8,76 C-11,54 -14,32 -10,10"
+          stroke-dasharray="140" stroke-dashoffset="140">
+          <animate attributeName="stroke-dashoffset" from="140" to="0" dur="2s" begin="1s" fill="freeze"/>
+        </path>
+        <!-- feuilles -->
+        <path d="M-9,90 C-26,80 -36,62 -28,48 C-22,40 -10,48 -9,65"
+          stroke-dasharray="80" stroke-dashoffset="80">
+          <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1s" begin="2.5s" fill="freeze"/>
+        </path>
+        <path d="M-8,65 C10,55 22,38 14,24 C8,16 -4,24 -8,40"
+          stroke-dasharray="80" stroke-dashoffset="80">
+          <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1s" begin="2.8s" fill="freeze"/>
+        </path>
+        <!-- pétales extérieurs -->
+        <path d="M-10,10 C-22,-8 -26,-30 -14,-44 C-4,-56 10,-54 16,-40 C22,-26 18,-6 10,4 C4,12 -4,16 -10,10 Z"
+          stroke-dasharray="140" stroke-dashoffset="140">
+          <animate attributeName="stroke-dashoffset" from="140" to="0" dur="2s" begin="3.2s" fill="freeze"/>
+        </path>
+        <path d="M-14,-20 C-30,-28 -36,-48 -26,-60 C-18,-70 -6,-66 -4,-52"
+          stroke-dasharray="70" stroke-dashoffset="70">
+          <animate attributeName="stroke-dashoffset" from="70" to="0" dur="0.9s" begin="4.8s" fill="freeze"/>
+        </path>
+        <path d="M16,-20 C32,-28 38,-48 28,-60 C20,-70 8,-66 6,-52"
+          stroke-dasharray="70" stroke-dashoffset="70">
+          <animate attributeName="stroke-dashoffset" from="70" to="0" dur="0.9s" begin="4.8s" fill="freeze"/>
+        </path>
+        <!-- coeur rose -->
+        <path d="M-6,4 C-10,-8 -10,-22 -2,-28 C6,-34 14,-28 14,-16 C14,-4 6,6 -2,10 C-6,12 -6,8 -6,4"
+          stroke-dasharray="80" stroke-dashoffset="80">
+          <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1.2s" begin="5.4s" fill="freeze"/>
+        </path>
+        <!-- épines -->
+        <path d="M-6,110 L-16,100 M-7,75 L-18,65"
+          stroke-dasharray="35" stroke-dashoffset="35">
+          <animate attributeName="stroke-dashoffset" from="35" to="0" dur="0.5s" begin="6.5s" fill="freeze"/>
+        </path>
+      </g>
+
+      <!-- Compas nautique bas gauche -->
+      <g transform="translate(200,700)" stroke="rgba(176,180,194,0.15)" stroke-width="0.7" fill="none">
+        <circle r="70" stroke-dasharray="440" stroke-dashoffset="440">
+          <animate attributeName="stroke-dashoffset" from="440" to="0" dur="3s" begin="0.3s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+        </circle>
+        <circle r="50" stroke-dasharray="315" stroke-dashoffset="315">
+          <animate attributeName="stroke-dashoffset" from="315" to="0" dur="2.5s" begin="0.8s" fill="freeze"/>
+        </circle>
+        <circle r="18" stroke-dasharray="113" stroke-dashoffset="113">
+          <animate attributeName="stroke-dashoffset" from="113" to="0" dur="1.5s" begin="1.5s" fill="freeze"/>
+        </circle>
+        <!-- 8 branches -->
+        <path d="M0,-70 L0,70 M-70,0 L70,0" stroke-dasharray="280" stroke-dashoffset="280">
+          <animate attributeName="stroke-dashoffset" from="280" to="0" dur="1.5s" begin="2s" fill="freeze"/>
+        </path>
+        <path d="M-49,-49 L49,49 M49,-49 L-49,49" stroke-dasharray="280" stroke-dashoffset="280">
+          <animate attributeName="stroke-dashoffset" from="280" to="0" dur="1.5s" begin="2.3s" fill="freeze"/>
+        </path>
+        <!-- Pointes N/S/E/W -->
+        <polygon points="0,-70 -7,-50 7,-50" stroke-dasharray="60" stroke-dashoffset="60">
+          <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.2s" fill="freeze"/>
+        </polygon>
+        <polygon points="0,70 -7,50 7,50" stroke-dasharray="60" stroke-dashoffset="60">
+          <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.2s" fill="freeze"/>
+        </polygon>
+        <polygon points="-70,0 -50,-7 -50,7" stroke-dasharray="60" stroke-dashoffset="60">
+          <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.4s" fill="freeze"/>
+        </polygon>
+        <polygon points="70,0 50,-7 50,7" stroke-dasharray="60" stroke-dashoffset="60">
+          <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.4s" fill="freeze"/>
+        </polygon>
+        <!-- Graduations -->
+        <path d="M0,-52 L0,-44 M0,44 L0,52 M-52,0 L-44,0 M44,0 L52,0 M-37,-37 L-31,-31 M31,-31 L37,-37 M37,37 L31,31 M-31,31 L-37,37"
+          stroke-dasharray="120" stroke-dashoffset="120">
+          <animate attributeName="stroke-dashoffset" from="120" to="0" dur="1s" begin="3.8s" fill="freeze"/>
+        </path>
+      </g>
+
+      <!-- Poignard bas droit -->
+      <g transform="translate(1260,660)" stroke="rgba(176,180,194,0.14)" stroke-width="0.7" fill="none">
+        <!-- lame -->
+        <path d="M0,-80 L8,40 L0,62 L-8,40 Z" stroke-dasharray="300" stroke-dashoffset="300">
+          <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2.5s" begin="1.5s" fill="freeze"/>
+        </path>
+        <!-- fullers (cannelures) -->
+        <path d="M-2,-60 L-2,35 M2,-60 L2,35"
+          stroke-dasharray="200" stroke-dashoffset="200" opacity="0.5">
+          <animate attributeName="stroke-dashoffset" from="200" to="0" dur="1.5s" begin="3.5s" fill="freeze"/>
+        </path>
+        <!-- garde -->
+        <path d="M-24,40 C-20,36 -12,34 0,34 C12,34 20,36 24,40 C20,44 12,46 0,46 C-12,46 -20,44 -24,40 Z"
+          stroke-dasharray="100" stroke-dashoffset="100">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1s" begin="3.8s" fill="freeze"/>
+        </path>
+        <!-- manche -->
+        <rect x="-10" y="46" width="20" height="50" rx="3"
+          stroke-dasharray="150" stroke-dashoffset="150">
+          <animate attributeName="stroke-dashoffset" from="150" to="0" dur="1.2s" begin="4.5s" fill="freeze"/>
+        </rect>
+        <!-- wrapping manche -->
+        <path d="M-10,54 L10,54 M-10,62 L10,62 M-10,70 L10,70 M-10,78 L10,78 M-10,86 L10,86"
+          stroke-dasharray="100" stroke-dashoffset="100" opacity="0.6">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.8s" begin="5.5s" fill="freeze"/>
+        </path>
+        <!-- pommel -->
+        <circle cx="0" cy="100" r="12" stroke-dasharray="75" stroke-dashoffset="75">
+          <animate attributeName="stroke-dashoffset" from="75" to="0" dur="0.8s" begin="6s" fill="freeze"/>
+        </circle>
+      </g>
+
+      <!-- Eagle wings / aigle — centre haut, très discret -->
+      <g transform="translate(720,80)" stroke="rgba(176,180,194,0.1)" stroke-width="0.7" fill="none">
+        <!-- aile gauche -->
+        <path d="M0,0 C-30,10 -65,5 -95,20 C-125,35 -150,60 -140,85 C-130,110 -100,105 -75,90 C-50,75 -30,55 -10,45 C-20,60 -30,80 -20,95 C-10,110 15,105 30,90"
+          stroke-dasharray="500" stroke-dashoffset="500">
+          <animate attributeName="stroke-dashoffset" from="500" to="0" dur="4s" begin="2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+        </path>
+        <!-- aile droite -->
+        <path d="M0,0 C30,10 65,5 95,20 C125,35 150,60 140,85 C130,110 100,105 75,90 C50,75 30,55 10,45 C20,60 30,80 20,95 C10,110 -15,105 -30,90"
+          stroke-dasharray="500" stroke-dashoffset="500">
+          <animate attributeName="stroke-dashoffset" from="500" to="0" dur="4s" begin="2.2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+        </path>
+        <!-- plumes détails aile gauche -->
+        <path d="M-50,30 C-55,50 -45,65 -35,72 M-80,45 C-82,65 -70,78 -58,82 M-108,65 C-106,84 -94,94 -82,96"
+          stroke-dasharray="200" stroke-dashoffset="200" opacity="0.8">
+          <animate attributeName="stroke-dashoffset" from="200" to="0" dur="2s" begin="5.5s" fill="freeze"/>
+        </path>
+        <path d="M50,30 C55,50 45,65 35,72 M80,45 C82,65 70,78 58,82 M108,65 C106,84 94,94 82,96"
+          stroke-dasharray="200" stroke-dashoffset="200" opacity="0.8">
+          <animate attributeName="stroke-dashoffset" from="200" to="0" dur="2s" begin="5.5s" fill="freeze"/>
+        </path>
+      </g>
+
+      <!-- Lignes de construction très subtiles -->
+      <line x1="0" y1="450" x2="1440" y2="450" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
+      <line x1="720" y1="0" x2="720" y2="900" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
+
+    </svg>
 
     <div class="hero-content">
-      <p class="hero-eyebrow">Studio de tatouage par intelligence artificielle</p>
-      <h1 class="hero-title">
+      <p class="hero-eyebrow fade-up">Studio de tatouage par intelligence artificielle</p>
+      <h1 class="hero-title fade-up d1">
         Vois ton tatouage<br>avant de le <em>graver</em>
       </h1>
-      <p class="hero-sub">
+      <p class="hero-sub fade-up d2">
         Génère un design professionnel sur-mesure, pose-le sur ta peau en situation réelle. Montre-le à ton tatoueur. En moins d'une minute.
       </p>
 
-      <div class="tools-grid">
-        <a href="outil.html?mode=create" class="tool-card">
+      <div class="tools-grid fade-up d3">
+        <a href="outil.html?mode=create" class="tool-card mag-btn">
           <div class="tool-icon">✦</div>
           <p class="tool-name">Créer un design</p>
-          <p class="tool-desc">Décris ton idée. L'IA génère un design dans le style de ton choix, adapté à ta zone corporelle.</p>
+          <p class="tool-desc">L'IA génère un design dans le style de ton choix, adapté à ta zone corporelle.</p>
           <p class="tool-cta">Commencer <span>→</span></p>
         </a>
-        <a href="outil.html?mode=body" class="tool-card">
+        <a href="outil.html?mode=body" class="tool-card mag-btn">
           <div class="tool-icon">◈</div>
           <p class="tool-name">Poser sur ma peau</p>
-          <p class="tool-desc">Tu as déjà un design ? Vois-le rendu de façon réaliste sur ta peau, à l'endroit exact voulu.</p>
+          <p class="tool-desc">Uploade ton design et vois-le rendu de façon réaliste sur ta peau, à l'endroit exact voulu.</p>
           <p class="tool-cta">Commencer →</p>
         </a>
-        <a href="outil.html#history-section" class="tool-card full">
+        <a href="outil.html#history-section" class="tool-card full mag-btn">
           <div class="tool-icon">◫</div>
           <div style="flex:1">
             <p class="tool-name">Mes projets</p>
@@ -370,7 +556,7 @@
         </a>
       </div>
 
-      <div class="proof-bar">
+      <div class="proof-bar fade-up d4">
         <div class="proof-item">
           <span class="proof-num">5</span>
           <span class="proof-label">Styles</span>
@@ -381,51 +567,51 @@
         </div>
         <div class="proof-item">
           <span class="proof-num">&lt;60s</span>
-          <span class="proof-label">Par génération</span>
+          <span class="proof-label">Génération</span>
         </div>
         <div class="proof-item">
           <span class="proof-num">8</span>
-          <span class="proof-label">Zones corps</span>
+          <span class="proof-label">Zones</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── STYLES ── -->
+  <!-- ══ STYLES ══ -->
   <section id="styles">
     <div class="section-inner">
-      <span class="section-label">Styles disponibles</span>
-      <h2 class="section-title">Cinq univers artistiques</h2>
+      <span class="section-label fade-up">Styles disponibles</span>
+      <h2 class="section-title fade-up d1">Cinq univers artistiques</h2>
       <div class="styles-grid">
-        <a href="outil.html?style=concept" class="style-card">
+        <a href="outil.html?style=concept" class="style-card fade-up d1">
           <div class="style-img-wrap">
             <img src="images/style-concept.png" alt="Style Concept" loading="lazy" />
           </div>
           <p class="style-name">Concept</p>
           <p class="style-desc">Architecture, lignes fines, éléments géométriques</p>
         </a>
-        <a href="outil.html?style=baroque" class="style-card">
+        <a href="outil.html?style=baroque" class="style-card fade-up d2">
           <div class="style-img-wrap">
             <img src="images/style-baroque.png" alt="Style Baroque" loading="lazy" />
           </div>
           <p class="style-name">Baroque</p>
           <p class="style-desc">Chiaroscuro, ornements, style des maîtres italiens</p>
         </a>
-        <a href="outil.html?style=japonais" class="style-card">
+        <a href="outil.html?style=japonais" class="style-card fade-up d3">
           <div class="style-img-wrap">
             <img src="images/style-japonais.png" alt="Style Japonais" loading="lazy" />
           </div>
           <p class="style-name">Japonais</p>
           <p class="style-desc">Irezumi, traits forts, vagues, espace négatif</p>
         </a>
-        <a href="outil.html?style=geometrique" class="style-card">
+        <a href="outil.html?style=geometrique" class="style-card fade-up d4">
           <div class="style-img-wrap">
             <img src="images/style-geometrique.png" alt="Style Géométrique" loading="lazy" />
           </div>
           <p class="style-name">Géométrique</p>
           <p class="style-desc">Mandala, dotwork, géométrie sacrée, symétrie</p>
         </a>
-        <a href="outil.html?style=realisme" class="style-card">
+        <a href="outil.html?style=realisme" class="style-card fade-up d5">
           <div class="style-img-wrap">
             <img src="images/style-realisme.png" alt="Style Réalisme" loading="lazy" />
           </div>
@@ -436,23 +622,23 @@
     </div>
   </section>
 
-  <!-- ── HOW IT WORKS ── -->
+  <!-- ══ HOW ══ -->
   <section id="how">
     <div class="section-inner">
-      <span class="section-label">Processus</span>
-      <h2 class="section-title">Comment ça marche</h2>
+      <span class="section-label fade-up">Processus</span>
+      <h2 class="section-title fade-up d1">Comment ça marche</h2>
       <div class="how-grid">
-        <div class="how-step">
+        <div class="how-step fade-up d1">
           <p class="how-num">01</p>
           <p class="how-title">Décris ton idée</p>
           <p class="how-desc">Sujet, style, ambiance, zone du corps, mot à intégrer — plus tu es précis, meilleur est le résultat.</p>
         </div>
-        <div class="how-step">
+        <div class="how-step fade-up d2">
           <p class="how-num">02</p>
           <p class="how-title">L'IA génère</p>
           <p class="how-desc">En moins de 60 secondes, un design professionnel en haute résolution apparaît, calibré pour le style choisi.</p>
         </div>
-        <div class="how-step">
+        <div class="how-step fade-up d3">
           <p class="how-num">03</p>
           <p class="how-title">Vois-le sur ta peau</p>
           <p class="how-desc">Uploade une photo de ta zone et l'IA pose le design dessus de façon réaliste. Montre-le à ton tatoueur.</p>
@@ -461,226 +647,87 @@
     </div>
   </section>
 
-  <!-- ── CTA FINAL ── -->
+  <!-- ══ CTA ══ -->
   <section id="cta-final">
-    <h2 class="cta-final-title">Ton prochain tatouage<br>commence ici.</h2>
-    <p class="cta-final-sub">Décris ton idée. Vois-la sur ta peau. Montre-la à ton tatoueur.</p>
-    <a href="outil.html" class="cta-btn">Créer mon design →</a>
+    <h2 class="cta-final-title fade-up">Ton prochain tatouage<br>commence ici.</h2>
+    <p class="cta-final-sub fade-up d1">Décris ton idée. Vois-la sur ta peau. Montre-la à ton tatoueur.</p>
+    <a href="outil.html" class="cta-btn mag-btn fade-up d2">Créer mon design →</a>
   </section>
 
-  <!-- ── FOOTER ── -->
+  <!-- ══ FOOTER ══ -->
   <footer>
     <p class="footer-logo">INK.STUDIO</p>
     <p class="footer-copy">© 2025 INK.STUDIO — Tous droits réservés</p>
   </footer>
 
   <script>
-    // ── Nav scroll ──
+    // ══ NAV SCROLL ══
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 50);
     }, { passive: true });
 
-    // ── Animation canvas — motifs de tatouage ──
-    const canvas = document.getElementById('tattoo-canvas');
-    const ctx    = canvas.getContext('2d');
+    // ══ CURSEUR CUSTOM ══
+    const dot  = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let ringX = 0, ringY = 0, dotX = 0, dotY = 0;
+    let raf;
 
-    function resize() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
+    document.addEventListener('mousemove', e => {
+      dotX = e.clientX; dotY = e.clientY;
+      dot.style.left  = dotX + 'px';
+      dot.style.top   = dotY + 'px';
+    });
+
+    function animateRing() {
+      ringX += (dotX - ringX) * 0.12;
+      ringY += (dotY - ringY) * 0.12;
+      ring.style.left = ringX + 'px';
+      ring.style.top  = ringY + 'px';
+      raf = requestAnimationFrame(animateRing);
     }
-    resize();
-    window.addEventListener('resize', resize);
+    animateRing();
 
-    const TAU = Math.PI * 2;
+    document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
+    document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-hidden'));
 
-    // Éléments flottants : mandalas, compas, serpents géométriques
-    const elements = [];
+    document.querySelectorAll('a, button, .tool-card, .style-card, .mag-btn').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
 
-    function createMandala(x, y, r, speed, opacity) {
-      return { type: 'mandala', x, y, r, angle: Math.random() * TAU, speed, opacity };
-    }
-    function createCompass(x, y, r, speed, opacity) {
-      return { type: 'compass', x, y, r, angle: Math.random() * TAU, speed, opacity };
-    }
-    function createDots(x, y, r, speed, opacity) {
-      return { type: 'dots', x, y, r, angle: Math.random() * TAU, speed, opacity };
-    }
-    function createGeoPoly(x, y, r, sides, speed, opacity) {
-      return { type: 'poly', x, y, r, sides, angle: Math.random() * TAU, speed, opacity };
-    }
+    // ══ BOUTONS MAGNÉTIQUES ══
+    document.querySelectorAll('.mag-btn').forEach(btn => {
+      btn.addEventListener('mousemove', e => {
+        const r   = btn.getBoundingClientRect();
+        const cx  = r.left + r.width  / 2;
+        const cy  = r.top  + r.height / 2;
+        const dx  = (e.clientX - cx) * 0.18;
+        const dy  = (e.clientY - cy) * 0.18;
+        btn.style.transform = `translate(${dx}px, ${dy}px)`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transform = '';
+      });
+    });
 
-    function spawnElements() {
-      const w = canvas.width, h = canvas.height;
-      elements.length = 0;
-
-      // Grand mandala central
-      elements.push(createMandala(w * 0.5, h * 0.42, Math.min(w, h) * 0.28, 0.00018, 0.028));
-
-      // Mandalas secondaires
-      elements.push(createMandala(w * 0.15, h * 0.2,  Math.min(w, h) * 0.1,  0.00025, 0.018));
-      elements.push(createMandala(w * 0.85, h * 0.65, Math.min(w, h) * 0.12, 0.0002,  0.016));
-
-      // Compas
-      elements.push(createCompass(w * 0.82, h * 0.2,  Math.min(w, h) * 0.09, -0.0003, 0.022));
-      elements.push(createCompass(w * 0.18, h * 0.72, Math.min(w, h) * 0.07,  0.00035, 0.018));
-
-      // Polygones géométriques
-      elements.push(createGeoPoly(w * 0.72, h * 0.15, Math.min(w, h) * 0.05, 6, 0.0004, 0.02));
-      elements.push(createGeoPoly(w * 0.25, h * 0.55, Math.min(w, h) * 0.04, 3, -0.0005, 0.016));
-      elements.push(createGeoPoly(w * 0.9,  h * 0.5,  Math.min(w, h) * 0.035,8, 0.0003, 0.014));
-
-      // Dotwork rings
-      elements.push(createDots(w * 0.5, h * 0.42, Math.min(w, h) * 0.38, -0.0001, 0.02));
-    }
-    spawnElements();
-    window.addEventListener('resize', spawnElements);
-
-    function drawMandala(ctx, el) {
-      const { x, y, r, angle, opacity } = el;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.strokeStyle = `rgba(180,182,200,${opacity})`;
-      ctx.lineWidth = 0.5;
-
-      const rings = 5;
-      for (let ring = 1; ring <= rings; ring++) {
-        const rr = r * (ring / rings);
-        const petals = 6 + ring * 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, rr, 0, TAU);
-        ctx.stroke();
-
-        // Pétales
-        for (let p = 0; p < petals; p++) {
-          const a = (TAU / petals) * p;
-          const pr = rr * 0.38;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.arc(
-            Math.cos(a) * (rr - pr),
-            Math.sin(a) * (rr - pr),
-            pr, a + Math.PI, a
-          );
-          ctx.stroke();
+    // ══ SCROLL FADE-UP ══
+    const fadeEls = document.querySelectorAll('.fade-up');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
         }
-      }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-      // Croix fine centrale
-      ctx.beginPath();
-      ctx.moveTo(-r * 1.05, 0); ctx.lineTo(r * 1.05, 0);
-      ctx.moveTo(0, -r * 1.05); ctx.lineTo(0, r * 1.05);
-      ctx.stroke();
+    fadeEls.forEach(el => io.observe(el));
 
-      ctx.restore();
-    }
-
-    function drawCompass(ctx, el) {
-      const { x, y, r, angle, opacity } = el;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.strokeStyle = `rgba(180,182,200,${opacity})`;
-      ctx.lineWidth = 0.5;
-
-      // Cercles concentriques
-      for (let i = 1; i <= 3; i++) {
-        ctx.beginPath();
-        ctx.arc(0, 0, r * (i / 3), 0, TAU);
-        ctx.stroke();
-      }
-
-      // 8 branches de compas
-      for (let i = 0; i < 8; i++) {
-        const a = (TAU / 8) * i;
-        const inner = (i % 2 === 0) ? r * 0.6 : r * 0.3;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
-        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.stroke();
-        // Pointe
-        if (i % 2 === 0) {
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a - 0.08) * r * 0.82, Math.sin(a - 0.08) * r * 0.82);
-          ctx.lineTo(Math.cos(a) * r * 1.1, Math.sin(a) * r * 1.1);
-          ctx.lineTo(Math.cos(a + 0.08) * r * 0.82, Math.sin(a + 0.08) * r * 0.82);
-          ctx.stroke();
-        }
-      }
-
-      ctx.restore();
-    }
-
-    function drawDots(ctx, el) {
-      const { x, y, r, angle, opacity } = el;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.fillStyle = `rgba(180,182,200,${opacity * 0.7})`;
-
-      const rings = 3;
-      for (let ring = 1; ring <= rings; ring++) {
-        const rr = r * (ring / rings);
-        const count = 24 * ring;
-        for (let i = 0; i < count; i++) {
-          const a = (TAU / count) * i;
-          const dotR = 0.8;
-          ctx.beginPath();
-          ctx.arc(Math.cos(a) * rr, Math.sin(a) * rr, dotR, 0, TAU);
-          ctx.fill();
-        }
-      }
-
-      ctx.restore();
-    }
-
-    function drawPoly(ctx, el) {
-      const { x, y, r, sides, angle, opacity } = el;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.strokeStyle = `rgba(180,182,200,${opacity})`;
-      ctx.lineWidth = 0.5;
-
-      for (let s = 1; s <= 3; s++) {
-        ctx.beginPath();
-        for (let i = 0; i <= sides; i++) {
-          const a = (TAU / sides) * i;
-          const rr = r * (s / 3);
-          i === 0
-            ? ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr)
-            : ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-        }
-        ctx.stroke();
-      }
-
-      // Lignes depuis le centre
-      for (let i = 0; i < sides; i++) {
-        const a = (TAU / sides) * i;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    }
-
-    function animate(ts) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (const el of elements) {
-        el.angle += el.speed;
-        if (el.type === 'mandala') drawMandala(ctx, el);
-        else if (el.type === 'compass') drawCompass(ctx, el);
-        else if (el.type === 'dots')   drawDots(ctx, el);
-        else if (el.type === 'poly')   drawPoly(ctx, el);
-      }
-
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+    // Hero visible immédiatement
+    document.querySelectorAll('#hero .fade-up').forEach(el => {
+      el.classList.add('visible');
+    });
   </script>
 
 </body>
