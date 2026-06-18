@@ -267,6 +267,76 @@
     }
     #mode-back:hover { color: var(--silver); }
 
+    /* ── HISTORIQUE ─────────────────────────── */
+    .hist-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      transition: border-color 0.2s, transform 0.25s;
+    }
+    .hist-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+
+    .hist-img-wrap {
+      position: relative; aspect-ratio: 1/1; overflow: hidden;
+      background: #090909;
+    }
+    .hist-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.4s;
+    }
+    .hist-card:hover .hist-img-wrap img { transform: scale(1.04); }
+
+    .hist-img-wrap.expired img { opacity: 0; }
+    .hist-expired-msg {
+      display: none; position: absolute; inset: 0;
+      align-items: center; justify-content: center;
+      font-size: 0.72rem; color: var(--text-muted); text-align: center; padding: 16px;
+    }
+    .hist-img-wrap.expired .hist-expired-msg { display: flex; }
+
+    .hist-badges {
+      position: absolute; top: 8px; left: 8px;
+      display: flex; gap: 4px; flex-wrap: wrap;
+    }
+    .hist-badge {
+      font-size: 0.5rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--silver);
+      background: rgba(8,8,12,0.82); border: 1px solid var(--border-hover);
+      padding: 3px 7px; border-radius: 3px; backdrop-filter: blur(6px);
+    }
+
+    .hist-info { padding: 12px 14px 14px; }
+    .hist-sujet {
+      font-size: 0.78rem; font-weight: 500; color: var(--text);
+      margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .hist-date { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 12px; }
+
+    .hist-actions { display: flex; gap: 6px; align-items: center; }
+    .hist-btn-primary {
+      flex: 1; padding: 8px 10px; font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      background: transparent; border: 1px solid var(--border-hover);
+      color: var(--silver); border-radius: 5px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hist-btn-primary:hover { border-color: var(--silver); background: rgba(176,180,194,0.06); }
+
+    .hist-btn-dl {
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border-hover);
+      color: var(--text-muted); border-radius: 5px; text-decoration: none;
+      font-size: 0.78rem; transition: all 0.2s;
+    }
+    .hist-btn-dl:hover { border-color: var(--silver); color: var(--silver); }
+
+    .hist-btn-del {
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid transparent;
+      color: #3a3a3a; border-radius: 5px; cursor: pointer;
+      font-size: 0.7rem; transition: all 0.2s;
+    }
+    .hist-btn-del:hover { border-color: #7f1d1d; color: #fca5a5; background: rgba(127,29,29,0.1); }
+
     /* ── RESPONSIVE ──────────────────────────── */
     @media (max-width: 480px) {
       nav { padding: 0 16px; }
@@ -566,6 +636,28 @@
 
   </main>
 
+  <!-- ══════════ MES PROJETS ══════════ -->
+  <section id="history-section" style="display:none; width:100%; padding:64px 24px 80px; border-top:1px solid #1c1c22;">
+    <div style="max-width:1060px; margin:0 auto;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:32px;">
+        <div>
+          <p style="font-size:0.6rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#52566a; margin-bottom:6px;">Historique</p>
+          <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; letter-spacing:-0.01em; color:#e0e0e6;">Mes projets</h2>
+        </div>
+        <button onclick="if(confirm('Effacer tout l\'historique ?')){localStorage.removeItem('ink_projects');renderHistory();}"
+          style="font-size:0.65rem; color:#52566a; background:none; border:none; cursor:pointer; letter-spacing:0.06em; padding:6px 0;">
+          Tout effacer
+        </button>
+      </div>
+
+      <div id="history-empty" style="display:none; text-align:center; padding:48px 0; color:#2e2e3a; font-size:0.82rem; line-height:1.8;">
+        Tes générations apparaîtront ici.<br>Lance ton premier design ci-dessus.
+      </div>
+
+      <div id="history-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;"></div>
+    </div>
+  </section>
+
   <script>
     let designJobId   = null;
     let designImgUrl  = null;
@@ -657,7 +749,7 @@
         fd.append('mot',      motDesign.value.trim());
         fd.append('elements', elementsDesign.value.trim());
         if (inspiInput.files[0]) fd.append('inspiration', inspiInput.files[0]);
-        const resp = await fetch('http://localhost:3000/generate', { method: 'POST', body: fd });
+        const resp = await fetch('/generate', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
         designJobId = data.jobId; designImgUrl = data.imageUrl;
@@ -665,6 +757,18 @@
         designImg.src = data.imageUrl;
         hideStatus(statusDesign); show(designResult);
         indStep1.classList.remove('active'); indStep1.classList.add('done');
+        saveProject({
+          type: 'design',
+          imageUrl: data.imageUrl,
+          params: {
+            sujet:    sujet,
+            style:    styleDesign.value,
+            ambiance: ambianceDesign.value,
+            mot:      motDesign.value.trim(),
+            elements: elementsDesign.value.trim(),
+            zone:     zoneDesign.value,
+          }
+        });
       } catch (err) {
         setError(statusDesign, err.message);
       } finally {
@@ -728,13 +832,25 @@
         fd.append('designUrl', designImgUrl);
         fd.append('zone', selectedZone);
         fd.append('model', selectedModel);
-        const resp = await fetch('http://localhost:3000/generate-on-body', { method: 'POST', body: fd });
+        const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
         bodyResultImg.src = data.imageUrl;
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
         hideStatus(statusBody); show(bodyResult);
+        saveProject({
+          type: 'on-body',
+          imageUrl: data.imageUrl,
+          params: {
+            sujet:    descDesign.value.trim(),
+            style:    styleDesign.value,
+            ambiance: ambianceDesign.value,
+            mot:      motDesign.value.trim(),
+            elements: elementsDesign.value.trim(),
+            zone:     selectedZone,
+          }
+        });
         indStep2.classList.add('done');
         // show(step3Section); indStep3.classList.add('active'); // étape 3 masquée
         bodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -841,7 +957,7 @@
         fd.append('design', m2DesignInput.files[0]);
         fd.append('photo',  m2PhotoInput.files[0]);
         fd.append('zone',   m2SelectedZone);
-        const resp = await fetch('http://localhost:3000/place-uploaded-design', { method: 'POST', body: fd });
+        const resp = await fetch('/place-uploaded-design', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
         m2ResultImg.src = data.imageUrl;
@@ -867,6 +983,117 @@
     // Pré-sélectionne le style et active mode 1 si ?style= présent dans l'URL
     const urlStyle = new URLSearchParams(window.location.search).get('style');
     if (urlStyle && styleDesign) { styleDesign.value = urlStyle; activateMode1(); }
+
+    // Pré-sélectionne le mode si ?mode= présent dans l'URL
+    const urlMode = new URLSearchParams(window.location.search).get('mode');
+    if (urlMode === 'create') activateMode1();
+    if (urlMode === 'body')   activateMode2();
+
+    // ── HISTORIQUE PROJETS (localStorage) ───────────────
+    const STORAGE_KEY = 'ink_projects';
+    const MAX_PROJECTS = 30;
+
+    function saveProject({ type, imageUrl, params }) {
+      const projects = loadProjects();
+      projects.unshift({
+        id:       Date.now(),
+        date:     new Date().toISOString(),
+        type,
+        imageUrl,
+        params,
+      });
+      if (projects.length > MAX_PROJECTS) projects.splice(MAX_PROJECTS);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      renderHistory();
+    }
+
+    function loadProjects() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function deleteProject(id) {
+      const projects = loadProjects().filter(p => p.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      renderHistory();
+    }
+
+    function retoucherProject(params) {
+      descDesign.value    = params.sujet    || '';
+      styleDesign.value   = params.style    || 'concept';
+      ambianceDesign.value= params.ambiance || 'epique';
+      motDesign.value     = params.mot      || '';
+      elementsDesign.value= params.elements || '';
+      if (params.zone) zoneDesign.value = params.zone;
+      btnDesign.disabled = !descDesign.value.trim();
+      activateMode1();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    const STYLE_LABELS = {
+      concept: 'Concept', baroque: 'Baroque', japonais: 'Japonais',
+      geometrique: 'Géométrique', realisme: 'Réalisme'
+    };
+    const ZONE_LABELS = {
+      'avant-bras': 'Avant-bras', 'bras-complet': 'Bras complet',
+      epaule: 'Épaule', dos: 'Dos', pectoral: 'Pectoral',
+      cuisse: 'Cuisse', mollet: 'Mollet', main: 'Main'
+    };
+
+    function renderHistory() {
+      const projects = loadProjects();
+      const section  = document.getElementById('history-section');
+      const grid     = document.getElementById('history-grid');
+      const empty    = document.getElementById('history-empty');
+
+      if (projects.length === 0) {
+        section.style.display = 'block';
+        grid.style.display    = 'none';
+        empty.style.display   = 'block';
+        return;
+      }
+
+      section.style.display = 'block';
+      grid.style.display    = 'grid';
+      empty.style.display   = 'none';
+
+      grid.innerHTML = projects.map(p => {
+        const label = p.type === 'on-body' ? 'Sur le corps' : 'Design';
+        const style = STYLE_LABELS[p.params?.style] || '';
+        const zone  = ZONE_LABELS[p.params?.zone]  || '';
+        const sujet = p.params?.sujet || '';
+        const paramsJson = JSON.stringify(p.params).replace(/"/g, '&quot;');
+        return `
+          <div class="hist-card">
+            <div class="hist-img-wrap">
+              <img src="${p.imageUrl}" alt="${sujet}" loading="lazy"
+                onerror="this.closest('.hist-img-wrap').classList.add('expired')" />
+              <div class="hist-expired-msg">Image expirée — regénère</div>
+              <div class="hist-badges">
+                <span class="hist-badge">${label}</span>
+                ${style ? `<span class="hist-badge">${style}</span>` : ''}
+                ${zone  ? `<span class="hist-badge">${zone}</span>`  : ''}
+              </div>
+            </div>
+            <div class="hist-info">
+              <p class="hist-sujet">${sujet || 'Sans titre'}</p>
+              <p class="hist-date">${formatDate(p.date)}</p>
+              <div class="hist-actions">
+                <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Retoucher →</button>
+                <a class="hist-btn-dl" href="${p.imageUrl}" download="ink-studio-${p.id}.jpg" target="_blank">↓</a>
+                <button class="hist-btn-del" onclick="deleteProject(${p.id})">✕</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    renderHistory();
   </script>
 
 </body>
