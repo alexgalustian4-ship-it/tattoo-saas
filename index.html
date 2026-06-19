@@ -326,53 +326,32 @@
     }
     .footer-copy { font-size: 0.68rem; color: #404048; letter-spacing: 0.05em; }
 
-    /* ══ SCROLL VIDEO ══════════════════════════ */
-    #scroll-video-wrap {
+    /* ══ VIDEO HERO ════════════════════════════ */
+    #video-hero {
       position: relative;
-      height: 220vh;
-    }
-    #scroll-video-sticky {
-      position: sticky;
-      top: 0;
       height: 100vh;
       overflow: hidden;
       background: #000;
     }
-    #scroll-video {
+    #video-hero video {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      opacity: 0.85;
+      opacity: 0.9;
     }
-    #scroll-video-overlay {
+    #video-hero-overlay {
       position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; align-items: flex-end; justify-content: flex-start;
+      padding: 48px 5vw;
+      background: linear-gradient(to top, rgba(8,8,8,0.6) 0%, transparent 50%);
       pointer-events: none;
     }
-    #scroll-video-label {
+    #video-hero-label {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(1.2rem, 3vw, 2.2rem);
-      font-weight: 800; letter-spacing: -0.01em;
-      color: rgba(224,224,230,0);
-      text-align: center;
-      transition: color 0.6s ease;
-      max-width: 600px; padding: 0 24px;
-      text-shadow: 0 2px 40px rgba(0,0,0,0.8);
-    }
-    #scroll-video-label.visible {
-      color: rgba(224,224,230,0.9);
-    }
-    /* Placeholder shown when no video file yet */
-    #scroll-video-placeholder {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: #060606;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    #scroll-video-placeholder p {
-      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.18em;
-      text-transform: uppercase; color: #222;
+      font-size: clamp(0.65rem, 1vw, 0.75rem);
+      font-weight: 600; letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(176,180,194,0.7);
     }
 
     /* ══ RESPONSIVE ═════════════════════════════ */
@@ -404,6 +383,14 @@
     </div>
     <a href="outil.html" class="nav-cta mag-btn">Try for free</a>
   </nav>
+
+  <!-- ══ VIDEO HERO ══ -->
+  <div id="video-hero">
+    <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+    <div id="video-hero-overlay">
+      <p id="video-hero-label">AI-powered tattoo design studio</p>
+    </div>
+  </div>
 
   <!-- ══ HERO ══ -->
   <section id="hero">
@@ -626,18 +613,6 @@
     </div>
   </section>
 
-  <!-- ══ SCROLL VIDEO ══ -->
-  <!-- VIDEO SPECS: MP4 H.264, 10–20s, 1920×1080, no audio, ~15MB max -->
-  <!-- Place your file at: videos/studio-reel.mp4               -->
-  <div id="scroll-video-wrap">
-    <div id="scroll-video-sticky">
-      <video id="scroll-video" muted playsinline preload="auto" src="videos/studio-reel.mp4"></video>
-      <div id="scroll-video-overlay">
-        <p id="scroll-video-label">The art of tattooing, reimagined.</p>
-      </div>
-    </div>
-  </div>
-
   <!-- ══ STYLES ══ -->
   <section id="styles">
     <div class="section-inner">
@@ -790,45 +765,6 @@
       el.classList.add('visible');
     });
 
-    // ══ SCROLL-DRIVEN VIDEO ══
-    const scrollVid   = document.getElementById('scroll-video');
-    const scrollWrap  = document.getElementById('scroll-video-wrap');
-    const scrollLabel = document.getElementById('scroll-video-label');
-
-    // Show placeholder if video src is missing / not loaded
-    scrollVid.addEventListener('error', () => {
-      const ph = document.createElement('div');
-      ph.id = 'scroll-video-placeholder';
-      ph.innerHTML = '<p>Drop your video at videos/studio-reel.mp4</p>';
-      scrollVid.closest('#scroll-video-sticky').appendChild(ph);
-      scrollVid.style.display = 'none';
-    });
-
-    const VIDEO_MAX_SEC = 6; // only scrub through the first N seconds
-
-    function onScrollVideo() {
-      if (!scrollVid.duration) return;
-      const rect     = scrollWrap.getBoundingClientRect();
-      const total    = scrollWrap.offsetHeight - window.innerHeight;
-      const scrolled = Math.max(0, -rect.top);
-      const progress = Math.min(1, scrolled / total);
-
-      const maxT = Math.min(VIDEO_MAX_SEC, scrollVid.duration);
-      scrollVid.currentTime = progress * maxT;
-
-      // Fade label in from 20%→40%, out from 70%→85%
-      let labelOpacity = 0;
-      if (progress > 0.2 && progress < 0.7) {
-        labelOpacity = Math.min(1, (progress - 0.2) / 0.2);
-      } else if (progress >= 0.7 && progress < 0.85) {
-        labelOpacity = 1 - (progress - 0.7) / 0.15;
-      }
-      scrollLabel.classList.toggle('visible', labelOpacity > 0.05);
-      scrollLabel.style.opacity = labelOpacity;
-    }
-
-    window.addEventListener('scroll', onScrollVideo, { passive: true });
-    scrollVid.addEventListener('loadedmetadata', onScrollVideo);
   </script>
 
 </body>
