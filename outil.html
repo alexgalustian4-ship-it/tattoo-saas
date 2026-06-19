@@ -509,7 +509,7 @@
       <a href="index.html#how">How it works</a>
       <a href="index.html">Home</a>
     </div>
-    <div id="user-badge" onclick="showAuthModal('login')">
+    <div id="user-badge" class="visible" onclick="showAuthModal('login')">
       <div id="user-avatar">?</div>
       <span id="user-name">Sign in</span>
     </div>
@@ -1588,6 +1588,7 @@
 
     // Charge l'utilisateur au démarrage
     loadUser();
+    updateUserBadge(); // toujours afficher le badge (Sign in ou nom)
 
     // ── HISTORIQUE PROJETS (localStorage) ───────────────
     const STORAGE_KEY = 'ink_projects';
