@@ -11,17 +11,16 @@ const { execFile } = require('child_process');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Bootstrap Higgsfield CLI credentials from env var ──
+// ── Bootstrap Higgsfield CLI credentials from env vars ──
 (function bootstrapHiggsfieldAuth() {
-  const token = process.env.HIGGSFIELD_API_KEY;
-  if (!token) return;
+  const access  = process.env.HIGGSFIELD_API_KEY;
+  const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+  if (!access) return;
   const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
   const credFile = path.join(credDir, 'credentials.json');
-  if (!fs.existsSync(credFile)) {
-    fs.mkdirSync(credDir, { recursive: true });
-    fs.writeFileSync(credFile, JSON.stringify({ access_token: token, refresh_token: '' }));
-    console.log('✓ Higgsfield credentials written from env var');
-  }
+  fs.mkdirSync(credDir, { recursive: true });
+  fs.writeFileSync(credFile, JSON.stringify({ access_token: access, refresh_token: refresh }));
+  console.log('✓ Higgsfield credentials written from env vars');
 })();
 
 // ─────────────────────────────────────────────────
