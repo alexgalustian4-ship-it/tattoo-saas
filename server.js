@@ -238,19 +238,28 @@ async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 300_000, endpoint =
   const apiKey   = getApiKey();
   const deadline = Date.now() + timeoutMs;
 
-  // Lancement du job
-  const createResp = await fetch(`${HF_BASE}/${endpoint}`, {
-    method:  'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type':  'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  // Lancement du job — retry 3x sur erreurs 5xx (522, 524, 502…)
+  let createResp;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    createResp = await fetch(`${HF_BASE}/${endpoint}`, {
+      method:  'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (createResp.ok || createResp.status < 500) break;
+    if (attempt < 3) await sleep(attempt * 3000); // 3s, 6s entre les tentatives
+  }
 
   if (!createResp.ok) {
     const err = await createResp.json().catch(() => ({}));
-    throw new Error(err.message || err.error || `API Higgsfield : HTTP ${createResp.status}`);
+    const status = createResp.status;
+    if (status === 522 || status === 524) {
+      throw new Error(`Higgsfield API timeout (${status}) — their servers may be overloaded. Please try again in a moment.`);
+    }
+    throw new Error(err.message || err.error || `Higgsfield API error: HTTP ${status}`);
   }
 
   const created = await createResp.json();
