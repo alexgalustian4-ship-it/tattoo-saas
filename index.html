@@ -763,23 +763,16 @@
 
     // ══ VIDEO BG PARALLAX ══
     const videoEl = document.querySelector('#video-bg video');
-    let scrollY = 0, targetY = 0;
 
     function onVideoScroll() {
-      targetY = window.scrollY;
-    }
-
-    function videoRaf() {
-      scrollY += (targetY - scrollY) * 0.08;
       const maxScroll = document.body.scrollHeight - window.innerHeight;
-      const p = maxScroll > 0 ? scrollY / maxScroll : 0; // 0 → 1 sur toute la page
-      const shift = p * window.innerHeight * 0.18; // max 18vh de déplacement
+      const p = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      const shift = p * window.innerHeight * 0.18;
       videoEl.style.transform = `translateY(${shift}px) scale(1.3)`;
-      requestAnimationFrame(videoRaf);
     }
 
     window.addEventListener('scroll', onVideoScroll, { passive: true });
-    videoRaf();
+    onVideoScroll();
   </script>
 
 </body>
