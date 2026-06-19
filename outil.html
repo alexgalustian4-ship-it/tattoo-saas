@@ -337,6 +337,64 @@
     }
     .hist-btn-del:hover { border-color: #7f1d1d; color: #fca5a5; background: rgba(127,29,29,0.1); }
 
+    /* ── QUIZ ───────────────────────────────── */
+    .quiz-progress-wrap {
+      height: 2px; background: var(--border); border-radius: 2px; overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .quiz-progress-bar {
+      height: 100%; background: var(--silver-dim); border-radius: 2px;
+      transition: width 0.4s ease; width: 0%;
+    }
+    .quiz-step { display: none; flex-direction: column; gap: 20px; }
+    .quiz-step.active { display: flex; animation: quizIn 0.28s ease; }
+    @keyframes quizIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .quiz-label {
+      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block;
+    }
+    .quiz-question {
+      font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
+      letter-spacing: -0.01em; color: var(--text); line-height: 1.25;
+    }
+    .quiz-hint { font-size: 0.76rem; color: var(--text-muted); line-height: 1.6; margin-top: -8px; }
+    .quiz-textarea {
+      width: 100%; background: transparent; border: none;
+      border-bottom: 1px solid var(--border-hover);
+      color: var(--text); font-size: 0.95rem; font-family: 'Inter', sans-serif;
+      padding: 10px 0; resize: none; min-height: 72px; transition: border-color 0.2s;
+    }
+    .quiz-textarea:focus { outline: none; border-bottom-color: var(--silver-dim); }
+    .quiz-textarea::placeholder { color: var(--text-muted); font-size: 0.84rem; }
+    .quiz-opts { display: flex; flex-direction: column; gap: 7px; }
+    .quiz-opts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .quiz-opt {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 13px 15px;
+      cursor: pointer; text-align: left; transition: all 0.15s; width: 100%;
+    }
+    .quiz-opt:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.018); }
+    .quiz-opt.selected { border-color: var(--silver-dim); background: rgba(176,180,194,0.06); }
+    .quiz-opt-icon { font-size: 1rem; color: var(--silver-dim); flex-shrink: 0; width: 20px; text-align: center; }
+    .quiz-opt-name {
+      font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+      color: var(--text); letter-spacing: 0.02em;
+    }
+    .quiz-opt-desc { font-size: 0.67rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .quiz-nav {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .quiz-back-btn {
+      font-size: 0.68rem; color: var(--text-muted); background: none; border: none;
+      cursor: pointer; letter-spacing: 0.06em; padding: 8px 0; transition: color 0.2s; white-space: nowrap;
+    }
+    .quiz-back-btn:hover { color: var(--silver); }
+    .quiz-nav .btn { flex: 1; }
+
     /* ── RESPONSIVE ──────────────────────────── */
     @media (max-width: 480px) {
       nav { padding: 0 16px; }
@@ -412,90 +470,129 @@
 
     <div data-hidden class="card" id="mode1-card">
 
-      <!-- ══════════ ÉTAPE 1 ══════════ -->
-      <p class="section-title">Step 1 — Generate your design</p>
+      <!-- QUIZ PROGRESS -->
+      <div class="quiz-progress-wrap"><div class="quiz-progress-bar" id="quiz-bar"></div></div>
 
-      <div class="field">
-        <label for="desc-design">Tattoo subject</label>
-        <textarea id="desc-design" placeholder="E.g. a spartan warrior, a lion, a samurai…" rows="2"></textarea>
-      </div>
-
-      <div class="field">
-        <label for="zone-design">Body placement</label>
-        <div class="select-wrapper">
-          <select id="zone-design">
-            <option value="">— Choose a placement —</option>
-            <option value="avant-bras">Forearm</option>
-            <option value="bras-complet">Full arm (sleeve)</option>
-            <option value="epaule">Shoulder</option>
-            <option value="dos">Back</option>
-            <option value="pectoral">Chest</option>
-            <option value="cuisse">Thigh</option>
-            <option value="mollet">Calf</option>
-            <option value="main">Hand</option>
-          </select>
+      <!-- QUIZ STEP 1 — Subject -->
+      <div class="quiz-step active" id="qs-1">
+        <div>
+          <span class="quiz-label">01 / 04</span>
+          <h2 class="quiz-question">What do you want to tattoo?</h2>
+          <p class="quiz-hint">The more specific you are, the better the result.</p>
+        </div>
+        <textarea id="desc-design" class="quiz-textarea" placeholder="A spartan warrior with a helmet, a roaring lion, a samurai in the rain…" rows="3"></textarea>
+        <div class="quiz-nav">
+          <span></span>
+          <button class="btn btn-primary" id="quiz-next-1" disabled>Continue →</button>
         </div>
       </div>
 
-      <div class="field-row">
+      <!-- QUIZ STEP 2 — Style -->
+      <div class="quiz-step" id="qs-2">
+        <div>
+          <span class="quiz-label">02 / 04</span>
+          <h2 class="quiz-question">Choose your style</h2>
+        </div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-qfield="style" data-qval="concept">
+            <span class="quiz-opt-icon">◆</span>
+            <div><p class="quiz-opt-name">Concept</p><p class="quiz-opt-desc">Fine lines, geometry, architecture</p></div>
+          </button>
+          <button class="quiz-opt" data-qfield="style" data-qval="baroque">
+            <span class="quiz-opt-icon">❧</span>
+            <div><p class="quiz-opt-name">Baroque</p><p class="quiz-opt-desc">Ornaments, chiaroscuro, Italian masters</p></div>
+          </button>
+          <button class="quiz-opt" data-qfield="style" data-qval="japonais">
+            <span class="quiz-opt-icon">波</span>
+            <div><p class="quiz-opt-name">Japanese</p><p class="quiz-opt-desc">Irezumi, bold strokes, waves</p></div>
+          </button>
+          <button class="quiz-opt" data-qfield="style" data-qval="geometrique">
+            <span class="quiz-opt-icon">⬡</span>
+            <div><p class="quiz-opt-name">Geometric</p><p class="quiz-opt-desc">Mandala, dotwork, sacred geometry</p></div>
+          </button>
+          <button class="quiz-opt" data-qfield="style" data-qval="realisme">
+            <span class="quiz-opt-icon">◉</span>
+            <div><p class="quiz-opt-name">Realism</p><p class="quiz-opt-desc">Hyperrealistic black & grey</p></div>
+          </button>
+        </div>
+        <div class="quiz-nav">
+          <button class="quiz-back-btn" onclick="showQuizStep(1)">← Back</button>
+        </div>
+      </div>
+
+      <!-- QUIZ STEP 3 — Mood -->
+      <div class="quiz-step" id="qs-3">
+        <div>
+          <span class="quiz-label">03 / 04</span>
+          <h2 class="quiz-question">What mood?</h2>
+        </div>
+        <div class="quiz-opts quiz-opts-2col">
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="epique"><span class="quiz-opt-icon">⚡</span><div><p class="quiz-opt-name">Epic</p></div></button>
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="sombre"><span class="quiz-opt-icon">◑</span><div><p class="quiz-opt-name">Dark</p></div></button>
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="religieux"><span class="quiz-opt-icon">✦</span><div><p class="quiz-opt-name">Spiritual</p></div></button>
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="doux"><span class="quiz-opt-icon">◌</span><div><p class="quiz-opt-name">Soft</p></div></button>
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="mystique"><span class="quiz-opt-icon">◈</span><div><p class="quiz-opt-name">Mystical</p></div></button>
+          <button class="quiz-opt" data-qfield="ambiance" data-qval="guerrier"><span class="quiz-opt-icon">⚔</span><div><p class="quiz-opt-name">Warrior</p></div></button>
+        </div>
+        <div class="quiz-nav">
+          <button class="quiz-back-btn" onclick="showQuizStep(2)">← Back</button>
+        </div>
+      </div>
+
+      <!-- QUIZ STEP 4 — Placement + Details + Generate -->
+      <div class="quiz-step" id="qs-4">
+        <div>
+          <span class="quiz-label">04 / 04</span>
+          <h2 class="quiz-question">Where on your body?</h2>
+        </div>
+        <div class="quiz-opts quiz-opts-2col">
+          <button class="quiz-opt" data-qfield="zone" data-qval="avant-bras"><div><p class="quiz-opt-name">Forearm</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="bras-complet"><div><p class="quiz-opt-name">Full arm</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="epaule"><div><p class="quiz-opt-name">Shoulder</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="dos"><div><p class="quiz-opt-name">Back</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="pectoral"><div><p class="quiz-opt-name">Chest</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="cuisse"><div><p class="quiz-opt-name">Thigh</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="mollet"><div><p class="quiz-opt-name">Calf</p></div></button>
+          <button class="quiz-opt" data-qfield="zone" data-qval="main"><div><p class="quiz-opt-name">Hand</p></div></button>
+        </div>
+        <hr class="divider" />
         <div class="field">
-          <label for="style-design">Style</label>
-          <div class="select-wrapper">
-            <select id="style-design">
-              <option value="concept">Concept</option>
-              <option value="baroque">Baroque</option>
-              <option value="japonais">Japanese</option>
-              <option value="geometrique">Geometric</option>
-              <option value="realisme">Realism</option>
-            </select>
+          <label for="mot-design">Word or text <span>(optional)</span></label>
+          <input type="text" id="mot-design" placeholder="E.g. Fortis, Memento…" />
+        </div>
+        <div class="field">
+          <label for="elements-design">Elements to add <span>(optional)</span></label>
+          <input type="text" id="elements-design" placeholder="E.g. a sword, eagle wings, flames…" />
+        </div>
+        <div class="field">
+          <label>Reference image <span>(optional)</span></label>
+          <div class="upload-area" id="inspi-upload-area">
+            <input type="file" id="inspi-input" accept="image/*" />
+            <span class="icon">🖼️</span>
+            <p><strong>Add a reference</strong></p>
+            <p>A tattoo you like, a style image…</p>
+          </div>
+          <div data-hidden id="inspi-preview-wrap" class="result-img-wrap" style="margin-top:0">
+            <img id="inspi-preview-img" src="" alt="Inspiration" style="max-height:180px;object-fit:contain;background:#090909;" />
+            <button class="result-change" id="btn-remove-inspi">Remove</button>
           </div>
         </div>
-        <div class="field">
-          <label for="ambiance-design">Mood</label>
-          <div class="select-wrapper">
-            <select id="ambiance-design">
-              <option value="epique">Epic</option>
-              <option value="sombre">Dark</option>
-              <option value="religieux">Spiritual</option>
-              <option value="doux">Soft</option>
-              <option value="mystique">Mystical</option>
-              <option value="guerrier">Warrior</option>
-            </select>
-          </div>
+        <div class="quiz-nav">
+          <button class="quiz-back-btn" onclick="showQuizStep(3)">← Back</button>
+          <button class="btn btn-primary" id="btn-design">Generate →</button>
         </div>
       </div>
 
-      <div class="field">
-        <label for="mot-design">Word or text <span>(optional)</span></label>
-        <input type="text" id="mot-design" placeholder="E.g. Fortis, Memento, "Always standing"…" />
-      </div>
-
-      <div class="field">
-        <label for="elements-design">Elements to include <span>(optional)</span></label>
-        <input type="text" id="elements-design" placeholder="E.g. a sword, eagle wings, flames…" />
-      </div>
-
-      <div class="field">
-        <label>Reference image <span>(optional)</span></label>
-        <div class="upload-area" id="inspi-upload-area">
-          <input type="file" id="inspi-input" accept="image/*" />
-          <span class="icon">🖼️</span>
-          <p><strong>Add a reference</strong></p>
-          <p>A tattoo you like, a style image…</p>
-        </div>
-        <div data-hidden id="inspi-preview-wrap" class="result-img-wrap" style="margin-top:0">
-          <img id="inspi-preview-img" src="" alt="Inspiration" style="max-height:180px;object-fit:contain;background:#090909;" />
-          <button class="result-change" id="btn-remove-inspi">Remove</button>
-        </div>
-      </div>
-
-      <button class="btn btn-primary" id="btn-design" disabled>Generate design</button>
+      <!-- Hidden inputs synced by quiz -->
+      <input type="hidden" id="style-design" value="concept" />
+      <input type="hidden" id="ambiance-design" value="epique" />
+      <input type="hidden" id="zone-design" value="" />
 
       <div class="status" id="status-design"></div>
 
       <div data-hidden id="design-result">
         <div class="result-img-wrap" style="margin-bottom:16px">
-          <img id="design-img" src="" alt="Design généré" />
+          <img id="design-img" src="" alt="Generated design" />
           <button class="result-change" id="btn-redesign">Regenerate</button>
         </div>
         <button class="btn btn-secondary" id="btn-goto-step2">
@@ -719,8 +816,31 @@
     }
     function hideStatus(el) { el.style.display = 'none'; }
 
+    // ── QUIZ NAVIGATION ──────────────────────────
+    const quizNext1 = document.getElementById('quiz-next-1');
+    const quizBar   = document.getElementById('quiz-bar');
+
+    function showQuizStep(n) {
+      document.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('qs-' + n).classList.add('active');
+      quizBar.style.width = ((n - 1) / 3 * 100) + '%';
+    }
+
     descDesign.addEventListener('input', () => {
-      btnDesign.disabled = !descDesign.value.trim();
+      quizNext1.disabled = !descDesign.value.trim();
+    });
+    quizNext1.addEventListener('click', () => showQuizStep(2));
+
+    document.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.qfield;
+        const val   = btn.dataset.qval;
+        document.querySelectorAll(`.quiz-opt[data-qfield="${field}"]`).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById(field + '-design').value = val;
+        const next = { style: 3, ambiance: 4, zone: null };
+        if (next[field]) setTimeout(() => showQuizStep(next[field]), 260);
+      });
     });
 
     inspiInput.addEventListener('change', () => {
@@ -1019,13 +1139,21 @@
     }
 
     function retoucherProject(params) {
-      descDesign.value    = params.sujet    || '';
-      styleDesign.value   = params.style    || 'concept';
-      ambianceDesign.value= params.ambiance || 'epique';
-      motDesign.value     = params.mot      || '';
-      elementsDesign.value= params.elements || '';
+      descDesign.value     = params.sujet    || '';
+      styleDesign.value    = params.style    || 'concept';
+      ambianceDesign.value = params.ambiance || 'epique';
+      motDesign.value      = params.mot      || '';
+      elementsDesign.value = params.elements || '';
       if (params.zone) zoneDesign.value = params.zone;
-      btnDesign.disabled = !descDesign.value.trim();
+      // Pre-select quiz options visually
+      ['style', 'ambiance', 'zone'].forEach(field => {
+        const val = document.getElementById(field + '-design').value;
+        document.querySelectorAll(`.quiz-opt[data-qfield="${field}"]`).forEach(b => {
+          b.classList.toggle('selected', b.dataset.qval === val);
+        });
+      });
+      quizNext1.disabled = !descDesign.value.trim();
+      showQuizStep(1);
       activateMode1();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
