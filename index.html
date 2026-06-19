@@ -326,32 +326,28 @@
     }
     .footer-copy { font-size: 0.68rem; color: #404048; letter-spacing: 0.05em; }
 
-    /* ══ VIDEO HERO ════════════════════════════ */
+    /* ══ VIDEO SCROLL ══════════════════════════ */
     #video-hero {
       position: relative;
+      height: 500vh;
+    }
+    #video-hero-sticky {
+      position: sticky;
+      top: 0;
       height: 100vh;
       overflow: hidden;
       background: #000;
     }
-    #video-hero video {
+    #video-hero-sticky video {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      opacity: 0.9;
+      opacity: 0.92;
     }
     #video-hero-overlay {
       position: absolute; inset: 0;
-      display: flex; align-items: flex-end; justify-content: flex-start;
-      padding: 48px 5vw;
-      background: linear-gradient(to top, rgba(8,8,8,0.6) 0%, transparent 50%);
       pointer-events: none;
-    }
-    #video-hero-label {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(0.65rem, 1vw, 0.75rem);
-      font-weight: 600; letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(176,180,194,0.7);
+      background: linear-gradient(to top, rgba(8,8,8,0.5) 0%, transparent 40%);
     }
 
     /* ══ RESPONSIVE ═════════════════════════════ */
@@ -386,9 +382,9 @@
 
   <!-- ══ VIDEO HERO ══ -->
   <div id="video-hero">
-    <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
-    <div id="video-hero-overlay">
-      <p id="video-hero-label">AI-powered tattoo design studio</p>
+    <div id="video-hero-sticky">
+      <video id="scroll-vid" muted playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+      <div id="video-hero-overlay"></div>
     </div>
   </div>
 
@@ -765,6 +761,25 @@
       el.classList.add('visible');
     });
 
+    // ══ SCROLL VIDEO ══
+    const vid  = document.getElementById('scroll-vid');
+    const wrap = document.getElementById('video-hero');
+    let targetTime = 0, currentTime = 0;
+
+    function scrub() {
+      if (!vid.duration) { requestAnimationFrame(scrub); return; }
+      const rect     = wrap.getBoundingClientRect();
+      const total    = wrap.offsetHeight - window.innerHeight;
+      const scrolled = Math.max(0, -rect.top);
+      targetTime = Math.min(1, scrolled / total) * vid.duration;
+      currentTime += (targetTime - currentTime) * 0.12;
+      if (Math.abs(targetTime - currentTime) > 0.01) {
+        vid.currentTime = currentTime;
+      }
+      requestAnimationFrame(scrub);
+    }
+    vid.addEventListener('loadedmetadata', scrub);
+    vid.load();
   </script>
 
 </body>
