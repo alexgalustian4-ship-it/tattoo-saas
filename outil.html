@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INK.STUDIO — Créer mon tatouage</title>
+  <title>INK.STUDIO — Design your tattoo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
@@ -358,15 +358,15 @@
     <a href="index.html" class="nav-logo">INK<span>.</span>STUDIO</a>
     <div class="nav-links">
       <a href="index.html#styles">Styles</a>
-      <a href="index.html#how">Comment ça marche</a>
-      <a href="index.html">Accueil</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html">Home</a>
     </div>
   </nav>
 
   <main>
     <div class="tool-header">
       <p class="tool-eyebrow">— Studio —</p>
-      <h1 class="tool-title">Crée ton tatouage</h1>
+      <h1 class="tool-title">Design your tattoo</h1>
     </div>
 
     <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
@@ -374,22 +374,22 @@
       <button class="mode-card" id="btn-mode1">
         <div class="mode-card-icon">✦</div>
         <div class="mode-card-text">
-          <p class="mode-card-title">Créer mon design</p>
-          <p class="mode-card-desc">L'IA génère un design sur-mesure d'après ta description, puis le pose sur ton corps.</p>
+          <p class="mode-card-title">Generate my design</p>
+          <p class="mode-card-desc">AI creates a custom design from your description, then places it on your body.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
       <button class="mode-card" id="btn-mode2">
         <div class="mode-card-icon">🖼</div>
         <div class="mode-card-text">
-          <p class="mode-card-title">J'ai déjà mon design</p>
-          <p class="mode-card-desc">Uploade directement ton design et vois-le posé sur ta peau en quelques secondes.</p>
+          <p class="mode-card-title">I already have my design</p>
+          <p class="mode-card-desc">Upload your design directly and see it placed on your skin in seconds.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
     </div>
 
-    <button data-hidden id="mode-back">← Changer de parcours</button>
+    <button data-hidden id="mode-back">← Change mode</button>
 
     <div data-hidden class="steps">
       <div class="step active" id="ind-step1">
@@ -399,7 +399,7 @@
       <span class="step-arrow">›</span>
       <div class="step" id="ind-step2">
         <div class="step-num">2</div>
-        <span>Sur mon corps</span>
+        <span>On my body</span>
       </div>
       <!-- ÉTAPE 3 masquée (réactiver quand la vidéo sera au point)
       <span class="step-arrow">›</span>
@@ -413,26 +413,26 @@
     <div data-hidden class="card" id="mode1-card">
 
       <!-- ══════════ ÉTAPE 1 ══════════ -->
-      <p class="section-title">Étape 1 — Génère ton design</p>
+      <p class="section-title">Step 1 — Generate your design</p>
 
       <div class="field">
-        <label for="desc-design">Sujet du tatouage</label>
-        <textarea id="desc-design" placeholder="Ex : un guerrier spartiate, un lion, un samouraï…" rows="2"></textarea>
+        <label for="desc-design">Tattoo subject</label>
+        <textarea id="desc-design" placeholder="E.g. a spartan warrior, a lion, a samurai…" rows="2"></textarea>
       </div>
 
       <div class="field">
-        <label for="zone-design">Endroit du corps</label>
+        <label for="zone-design">Body placement</label>
         <div class="select-wrapper">
           <select id="zone-design">
-            <option value="">— Choisir une zone —</option>
-            <option value="avant-bras">Avant-bras</option>
-            <option value="bras-complet">Bras complet (manche)</option>
-            <option value="epaule">Épaule</option>
-            <option value="dos">Dos</option>
-            <option value="pectoral">Pectoral</option>
-            <option value="cuisse">Cuisse</option>
-            <option value="mollet">Mollet</option>
-            <option value="main">Main</option>
+            <option value="">— Choose a placement —</option>
+            <option value="avant-bras">Forearm</option>
+            <option value="bras-complet">Full arm (sleeve)</option>
+            <option value="epaule">Shoulder</option>
+            <option value="dos">Back</option>
+            <option value="pectoral">Chest</option>
+            <option value="cuisse">Thigh</option>
+            <option value="mollet">Calf</option>
+            <option value="main">Hand</option>
           </select>
         </div>
       </div>
@@ -444,89 +444,89 @@
             <select id="style-design">
               <option value="concept">Concept</option>
               <option value="baroque">Baroque</option>
-              <option value="japonais">Japonais</option>
-              <option value="geometrique">Géométrique</option>
-              <option value="realisme">Réalisme</option>
+              <option value="japonais">Japanese</option>
+              <option value="geometrique">Geometric</option>
+              <option value="realisme">Realism</option>
             </select>
           </div>
         </div>
         <div class="field">
-          <label for="ambiance-design">Ambiance</label>
+          <label for="ambiance-design">Mood</label>
           <div class="select-wrapper">
             <select id="ambiance-design">
-              <option value="epique">Épique</option>
-              <option value="sombre">Sombre</option>
-              <option value="religieux">Religieux</option>
-              <option value="doux">Doux</option>
-              <option value="mystique">Mystique</option>
-              <option value="guerrier">Guerrier</option>
+              <option value="epique">Epic</option>
+              <option value="sombre">Dark</option>
+              <option value="religieux">Spiritual</option>
+              <option value="doux">Soft</option>
+              <option value="mystique">Mystical</option>
+              <option value="guerrier">Warrior</option>
             </select>
           </div>
         </div>
       </div>
 
       <div class="field">
-        <label for="mot-design">Mot ou texte <span>(optionnel)</span></label>
-        <input type="text" id="mot-design" placeholder="Ex : Fortis, Memento, « Toujours debout »…" />
+        <label for="mot-design">Word or text <span>(optional)</span></label>
+        <input type="text" id="mot-design" placeholder="E.g. Fortis, Memento, "Always standing"…" />
       </div>
 
       <div class="field">
-        <label for="elements-design">Éléments à inclure <span>(optionnel)</span></label>
-        <input type="text" id="elements-design" placeholder="Ex : une épée, des ailes d'aigle, des flammes…" />
+        <label for="elements-design">Elements to include <span>(optional)</span></label>
+        <input type="text" id="elements-design" placeholder="E.g. a sword, eagle wings, flames…" />
       </div>
 
       <div class="field">
-        <label>Image d'inspiration <span>(optionnel)</span></label>
+        <label>Reference image <span>(optional)</span></label>
         <div class="upload-area" id="inspi-upload-area">
           <input type="file" id="inspi-input" accept="image/*" />
           <span class="icon">🖼️</span>
-          <p><strong>Ajoute une référence</strong></p>
-          <p>Un tatouage qui te plaît, une image de style…</p>
+          <p><strong>Add a reference</strong></p>
+          <p>A tattoo you like, a style image…</p>
         </div>
         <div data-hidden id="inspi-preview-wrap" class="result-img-wrap" style="margin-top:0">
           <img id="inspi-preview-img" src="" alt="Inspiration" style="max-height:180px;object-fit:contain;background:#090909;" />
-          <button class="result-change" id="btn-remove-inspi">Supprimer</button>
+          <button class="result-change" id="btn-remove-inspi">Remove</button>
         </div>
       </div>
 
-      <button class="btn btn-primary" id="btn-design" disabled>Générer le concept</button>
+      <button class="btn btn-primary" id="btn-design" disabled>Generate design</button>
 
       <div class="status" id="status-design"></div>
 
       <div data-hidden id="design-result">
         <div class="result-img-wrap" style="margin-bottom:16px">
           <img id="design-img" src="" alt="Design généré" />
-          <button class="result-change" id="btn-redesign">Regénérer</button>
+          <button class="result-change" id="btn-redesign">Regenerate</button>
         </div>
         <button class="btn btn-secondary" id="btn-goto-step2">
-          Poser ce design sur mon corps &rsaquo;
+          Place this design on my body &rsaquo;
         </button>
       </div>
 
       <!-- ══════════ ÉTAPE 2 ══════════ -->
       <div data-hidden id="step2-section">
         <hr class="divider" />
-        <p class="section-title" style="margin-bottom:16px">Étape 2 — Uploade ta photo</p>
+        <p class="section-title" style="margin-bottom:16px">Step 2 — Upload your photo</p>
 
         <div class="design-thumb">
           <img id="design-thumb-img" src="" alt="Design" />
           <div class="design-thumb-info">
-            <strong>Design sélectionné</strong>
-            Ce design sera posé sur ta photo
+            <strong>Selected design</strong>
+            This design will be placed on your photo
           </div>
         </div>
 
         <div style="margin-top:16px">
-          <span class="zone-label">Zone du tatouage</span>
+          <span class="zone-label">Tattoo placement</span>
           <div class="zone-grid">
-            <button class="zone-btn" data-zone="avant-bras">Avant-bras</button>
-            <button class="zone-btn" data-zone="bras-complet">Bras complet</button>
-            <button class="zone-btn" data-zone="epaule">Épaule</button>
-            <button class="zone-btn" data-zone="dos">Dos</button>
-            <button class="zone-btn" data-zone="pectoral">Pectoral</button>
-            <button class="zone-btn" data-zone="cuisse">Cuisse</button>
-            <button class="zone-btn" data-zone="mollet">Mollet</button>
-            <button class="zone-btn" data-zone="main">Main</button>
+            <button class="zone-btn" data-zone="avant-bras">Forearm</button>
+            <button class="zone-btn" data-zone="bras-complet">Full arm</button>
+            <button class="zone-btn" data-zone="epaule">Shoulder</button>
+            <button class="zone-btn" data-zone="dos">Back</button>
+            <button class="zone-btn" data-zone="pectoral">Chest</button>
+            <button class="zone-btn" data-zone="cuisse">Thigh</button>
+            <button class="zone-btn" data-zone="mollet">Calf</button>
+            <button class="zone-btn" data-zone="main">Hand</button>
           </div>
         </div>
 
@@ -534,17 +534,17 @@
           <div class="upload-area" id="upload-area">
             <input type="file" id="file-input" accept="image/*" />
             <span class="icon">📷</span>
-            <p><strong>Appuie ici</strong> pour ajouter ta photo</p>
-            <p>Prendre une photo · Choisir dans la galerie</p>
+            <p><strong>Tap here</strong> to add your photo</p>
+            <p>Take a photo · Choose from gallery</p>
           </div>
           <div data-hidden id="body-preview-wrap" class="result-img-wrap" style="margin-top:0">
-            <img id="body-preview-img" src="" alt="Ta photo" />
-            <button class="result-change" id="btn-change-photo">Changer</button>
+            <img id="body-preview-img" src="" alt="Your photo" />
+            <button class="result-change" id="btn-change-photo">Change</button>
           </div>
         </div>
 
         <button class="btn btn-primary" id="btn-body" disabled style="margin-top:16px">
-          Voir le rendu sur mon corps
+          See the render on my body
         </button>
 
         <div class="status" id="status-body" style="margin-top:12px"></div>
@@ -579,51 +579,51 @@
 
     <!-- ══════════ MODE 2 — J'AI MON DESIGN ══════════ -->
     <div data-hidden class="card" id="mode2-card">
-      <p class="section-title">Poser mon design sur ma peau</p>
+      <p class="section-title">Place my design on my skin</p>
 
       <div class="field">
-        <label>Mon design <span>(PNG ou JPG, fond blanc)</span></label>
+        <label>My design <span>(PNG or JPG, white background)</span></label>
         <div class="upload-area" id="m2-design-area">
           <input type="file" id="m2-design-input" accept="image/*" />
           <span class="icon">🎨</span>
-          <p><strong>Appuie ici</strong> pour ajouter ton design</p>
-          <p>PNG, JPG — fond blanc recommandé</p>
+          <p><strong>Tap here</strong> to add your design</p>
+          <p>PNG, JPG — white background recommended</p>
         </div>
         <div data-hidden id="m2-design-preview-wrap" class="result-img-wrap" style="margin-top:8px">
-          <img id="m2-design-preview-img" src="" alt="Ton design" style="max-height:200px;object-fit:contain;background:#0a0a0a;" />
-          <button class="result-change" id="m2-btn-remove-design">Changer</button>
+          <img id="m2-design-preview-img" src="" alt="Your design" style="max-height:200px;object-fit:contain;background:#0a0a0a;" />
+          <button class="result-change" id="m2-btn-remove-design">Change</button>
         </div>
       </div>
 
       <div>
-        <span class="zone-label">Zone du tatouage</span>
+        <span class="zone-label">Tattoo placement</span>
         <div class="zone-grid">
-          <button class="zone-btn" data-zone2="avant-bras">Avant-bras</button>
-          <button class="zone-btn" data-zone2="bras-complet">Bras complet</button>
-          <button class="zone-btn" data-zone2="epaule">Épaule</button>
-          <button class="zone-btn" data-zone2="dos">Dos</button>
-          <button class="zone-btn" data-zone2="pectoral">Pectoral</button>
-          <button class="zone-btn" data-zone2="cuisse">Cuisse</button>
-          <button class="zone-btn" data-zone2="mollet">Mollet</button>
-          <button class="zone-btn" data-zone2="main">Main</button>
+          <button class="zone-btn" data-zone2="avant-bras">Forearm</button>
+          <button class="zone-btn" data-zone2="bras-complet">Full arm</button>
+          <button class="zone-btn" data-zone2="epaule">Shoulder</button>
+          <button class="zone-btn" data-zone2="dos">Back</button>
+          <button class="zone-btn" data-zone2="pectoral">Chest</button>
+          <button class="zone-btn" data-zone2="cuisse">Thigh</button>
+          <button class="zone-btn" data-zone2="mollet">Calf</button>
+          <button class="zone-btn" data-zone2="main">Hand</button>
         </div>
       </div>
 
       <div class="field">
-        <label>Ma photo <span>(la zone choisie doit être visible)</span></label>
+        <label>My photo <span>(the chosen area must be visible)</span></label>
         <div class="upload-area" id="m2-photo-area">
           <input type="file" id="m2-photo-input" accept="image/*" />
           <span class="icon">📷</span>
-          <p><strong>Appuie ici</strong> pour ajouter ta photo</p>
-          <p>Prendre une photo · Choisir dans la galerie</p>
+          <p><strong>Tap here</strong> to add your photo</p>
+          <p>Take a photo · Choose from gallery</p>
         </div>
         <div data-hidden id="m2-photo-preview-wrap" class="result-img-wrap" style="margin-top:8px">
-          <img id="m2-photo-preview-img" src="" alt="Ta photo" />
-          <button class="result-change" id="m2-btn-remove-photo">Changer</button>
+          <img id="m2-photo-preview-img" src="" alt="Your photo" />
+          <button class="result-change" id="m2-btn-remove-photo">Change</button>
         </div>
       </div>
 
-      <button class="btn btn-primary" id="m2-btn-place" disabled>Voir sur ma peau →</button>
+      <button class="btn btn-primary" id="m2-btn-place" disabled>See on my skin →</button>
 
       <div class="status" id="m2-status"></div>
 
@@ -641,17 +641,17 @@
     <div style="max-width:1060px; margin:0 auto;">
       <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:32px;">
         <div>
-          <p style="font-size:0.6rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#52566a; margin-bottom:6px;">Historique</p>
-          <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; letter-spacing:-0.01em; color:#e0e0e6;">Mes projets</h2>
+          <p style="font-size:0.6rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#52566a; margin-bottom:6px;">History</p>
+          <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; letter-spacing:-0.01em; color:#e0e0e6;">My projects</h2>
         </div>
-        <button onclick="if(confirm('Effacer tout l\'historique ?')){localStorage.removeItem('ink_projects');renderHistory();}"
+        <button onclick="if(confirm('Clear all history?')){localStorage.removeItem('ink_projects');renderHistory();}"
           style="font-size:0.65rem; color:#52566a; background:none; border:none; cursor:pointer; letter-spacing:0.06em; padding:6px 0;">
-          Tout effacer
+          Clear all
         </button>
       </div>
 
       <div id="history-empty" style="display:none; text-align:center; padding:48px 0; color:#2e2e3a; font-size:0.82rem; line-height:1.8;">
-        Tes générations apparaîtront ici.<br>Lance ton premier design ci-dessus.
+        Your generations will appear here.<br>Launch your first design above.
       </div>
 
       <div id="history-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;"></div>
@@ -714,7 +714,7 @@
     function setError(el, msg) {
       el.className = 'status error'; el.style.display = 'block';
       el.textContent = msg.includes('Failed to fetch')
-        ? '❌ Serveur inaccessible.\nLance node server.js dans un terminal.'
+        ? '❌ Server unreachable. Run node server.js in a terminal.'
         : '❌ ' + msg;
     }
     function hideStatus(el) { el.style.display = 'none'; }
@@ -737,7 +737,7 @@
 
     async function genererDesign() {
       const sujet = descDesign.value.trim();
-      setLoading(statusDesign, 'Génération du design… (30–60 s)');
+      setLoading(statusDesign, 'Generating design… (30–60 s)');
       btnDesign.disabled = true;
       hide(designResult);
       try {
@@ -751,7 +751,7 @@
         if (inspiInput.files[0]) fd.append('inspiration', inspiInput.files[0]);
         const resp = await fetch('/generate', { method: 'POST', body: fd });
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
         designJobId = data.jobId; designImgUrl = data.imageUrl;
         if (data.zone) selectedZone = data.zone;
         designImg.src = data.imageUrl;
@@ -824,7 +824,7 @@
     }
 
     btnBody.addEventListener('click', async () => {
-      setLoading(statusBody, 'Application du tatouage sur ta photo… (peut prendre 1–2 min)');
+      setLoading(statusBody, 'Applying tattoo to your photo… (may take 1–2 min)');
       btnBody.disabled = true; hide(bodyResult);
       try {
         const fd = new FormData();
@@ -834,7 +834,7 @@
         fd.append('model', selectedModel);
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
         bodyResultImg.src = data.imageUrl;
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
@@ -950,7 +950,7 @@
     });
 
     m2BtnPlace.addEventListener('click', async () => {
-      setLoading(m2Status, 'Application du tatouage sur ta photo… (1–2 min)');
+      setLoading(m2Status, 'Applying tattoo to your photo… (1–2 min)');
       m2BtnPlace.disabled = true; hide(m2Result);
       try {
         const fd = new FormData();
@@ -959,7 +959,7 @@
         fd.append('zone',   m2SelectedZone);
         const resp = await fetch('/place-uploaded-design', { method: 'POST', body: fd });
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Erreur serveur.');
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
         m2ResultImg.src = data.imageUrl;
         hideStatus(m2Status); show(m2Result);
         m2Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1032,17 +1032,17 @@
 
     function formatDate(iso) {
       const d = new Date(iso);
-      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+      return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
     const STYLE_LABELS = {
-      concept: 'Concept', baroque: 'Baroque', japonais: 'Japonais',
-      geometrique: 'Géométrique', realisme: 'Réalisme'
+      concept: 'Concept', baroque: 'Baroque', japonais: 'Japanese',
+      geometrique: 'Geometric', realisme: 'Realism'
     };
     const ZONE_LABELS = {
-      'avant-bras': 'Avant-bras', 'bras-complet': 'Bras complet',
-      epaule: 'Épaule', dos: 'Dos', pectoral: 'Pectoral',
-      cuisse: 'Cuisse', mollet: 'Mollet', main: 'Main'
+      'avant-bras': 'Forearm', 'bras-complet': 'Full arm',
+      epaule: 'Shoulder', dos: 'Back', pectoral: 'Chest',
+      cuisse: 'Thigh', mollet: 'Calf', main: 'Hand'
     };
 
     function renderHistory() {
@@ -1063,7 +1063,7 @@
       empty.style.display   = 'none';
 
       grid.innerHTML = projects.map(p => {
-        const label = p.type === 'on-body' ? 'Sur le corps' : 'Design';
+        const label = p.type === 'on-body' ? 'On body' : 'Design';
         const style = STYLE_LABELS[p.params?.style] || '';
         const zone  = ZONE_LABELS[p.params?.zone]  || '';
         const sujet = p.params?.sujet || '';
@@ -1073,7 +1073,7 @@
             <div class="hist-img-wrap">
               <img src="${p.imageUrl}" alt="${sujet}" loading="lazy"
                 onerror="this.closest('.hist-img-wrap').classList.add('expired')" />
-              <div class="hist-expired-msg">Image expirée — regénère</div>
+              <div class="hist-expired-msg">Image expired — regenerate</div>
               <div class="hist-badges">
                 <span class="hist-badge">${label}</span>
                 ${style ? `<span class="hist-badge">${style}</span>` : ''}
@@ -1081,10 +1081,10 @@
               </div>
             </div>
             <div class="hist-info">
-              <p class="hist-sujet">${sujet || 'Sans titre'}</p>
+              <p class="hist-sujet">${sujet || 'Untitled'}</p>
               <p class="hist-date">${formatDate(p.date)}</p>
               <div class="hist-actions">
-                <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Retoucher →</button>
+                <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>
                 <a class="hist-btn-dl" href="${p.imageUrl}" download="ink-studio-${p.id}.jpg" target="_blank">↓</a>
                 <button class="hist-btn-del" onclick="deleteProject(${p.id})">✕</button>
               </div>
