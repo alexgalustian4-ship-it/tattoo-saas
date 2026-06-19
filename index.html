@@ -329,7 +329,7 @@
     /* ══ SCROLL VIDEO ══════════════════════════ */
     #scroll-video-wrap {
       position: relative;
-      height: 350vh;
+      height: 220vh;
     }
     #scroll-video-sticky {
       position: sticky;
@@ -804,6 +804,8 @@
       scrollVid.style.display = 'none';
     });
 
+    const VIDEO_MAX_SEC = 6; // only scrub through the first N seconds
+
     function onScrollVideo() {
       if (!scrollVid.duration) return;
       const rect     = scrollWrap.getBoundingClientRect();
@@ -811,7 +813,8 @@
       const scrolled = Math.max(0, -rect.top);
       const progress = Math.min(1, scrolled / total);
 
-      scrollVid.currentTime = progress * scrollVid.duration;
+      const maxT = Math.min(VIDEO_MAX_SEC, scrollVid.duration);
+      scrollVid.currentTime = progress * maxT;
 
       // Fade label in from 20%→40%, out from 70%→85%
       let labelOpacity = 0;
