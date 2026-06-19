@@ -771,7 +771,10 @@
 
     function videoRaf() {
       scrollY += (targetY - scrollY) * 0.08;
-      videoEl.style.transform = `translateY(${scrollY * 0.25}px) scale(1.3)`;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const p = maxScroll > 0 ? scrollY / maxScroll : 0; // 0 → 1 sur toute la page
+      const shift = p * window.innerHeight * 0.18; // max 18vh de déplacement
+      videoEl.style.transform = `translateY(${shift}px) scale(1.3)`;
       requestAnimationFrame(videoRaf);
     }
 
