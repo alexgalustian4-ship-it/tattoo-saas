@@ -385,7 +385,7 @@
 
   <!-- ══ VIDEO BG ══ -->
   <div id="video-bg">
-    <video muted playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+    <video muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
   </div>
 
   <!-- ══ HERO ══ -->
@@ -763,25 +763,31 @@
 
     // ══ VIDEO SCROLL-DRIVEN ══
     const videoEl = document.querySelector('#video-bg video');
-    let scrollTimeout;
-
-    videoEl.addEventListener('loadedmetadata', () => {
-      videoEl.currentTime = 0;
-    });
-
     let lastScrollY = window.scrollY;
+    let lastScrollT = performance.now();
+    let stopTimer;
+
+    // Démarre en pause
+    videoEl.pause();
+    videoEl.currentTime = 0;
 
     window.addEventListener('scroll', () => {
-      const dy = window.scrollY - lastScrollY;
+      const now = performance.now();
+      const dy  = window.scrollY - lastScrollY;
+      const dt  = Math.max(1, now - lastScrollT);
+      const vel = dy / dt; // px/ms
+
       lastScrollY = window.scrollY;
+      lastScrollT = now;
 
-      // Avance ou recule selon la direction du scroll
-      const target = videoEl.currentTime + dy * (videoEl.duration / (document.body.scrollHeight - window.innerHeight));
-      videoEl.currentTime = Math.max(0, Math.min(videoEl.duration || 9, target));
+      // Vitesse de lecture proportionnelle à la vitesse de scroll
+      const rate = Math.min(Math.abs(vel) * 8, 4);
+      videoEl.playbackRate = Math.max(0.5, rate);
+      videoEl.play();
 
-      // Pause quand le scroll s'arrête
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {}, 100);
+      // Pause 200ms après l'arrêt du scroll
+      clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => videoEl.pause(), 200);
     }, { passive: true });
   </script>
 
