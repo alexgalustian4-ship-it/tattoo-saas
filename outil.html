@@ -1037,7 +1037,7 @@
     function m2UpdateBtn() {
       const hasDesign = m2DesignInput.files?.[0];
       const hasPhoto  = m2PhotoInput.files?.[0];
-      m2BtnPlace.disabled = !hasDesign || !hasPhoto || !m2SelectedZone;
+      m2BtnPlace.disabled = !hasDesign || !hasPhoto;
     }
 
     m2DesignInput.addEventListener('change', () => {
