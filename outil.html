@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg:          #080808;
@@ -408,6 +409,95 @@
       .zone-btn { padding: 12px 4px; }
       .upload-area { padding: 32px 16px; }
     }
+
+    /* ── AUTH MODAL ───────────────────────────── */
+    #auth-overlay {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #auth-overlay.open { display: flex; }
+    #auth-modal {
+      background: #0f0f0f; border: 1px solid #222;
+      border-radius: 16px; padding: 40px 36px;
+      width: 100%; max-width: 400px; position: relative;
+      animation: modalIn 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    #auth-modal .modal-close {
+      position: absolute; top: 16px; right: 18px;
+      background: none; border: none; color: #555; font-size: 1.2rem;
+      cursor: pointer; transition: color 0.2s;
+    }
+    #auth-modal .modal-close:hover { color: #999; }
+    .modal-logo {
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800;
+      letter-spacing: 0.1em; color: #888; margin-bottom: 24px;
+    }
+    .modal-title {
+      font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+      color: #e8e8ec; margin-bottom: 8px; line-height: 1.3;
+    }
+    .modal-sub {
+      font-size: 0.8rem; color: #555; margin-bottom: 28px; line-height: 1.6;
+    }
+    .btn-google {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 13px; border-radius: 8px;
+      background: #fff; color: #111; font-size: 0.85rem; font-weight: 600;
+      border: none; cursor: pointer; transition: background 0.2s, transform 0.2s;
+      margin-bottom: 16px;
+    }
+    .btn-google:hover { background: #f0f0f0; transform: translateY(-1px); }
+    .btn-google svg { flex-shrink: 0; }
+    .auth-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px; color: #333; font-size: 0.72rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: #1e1e1e;
+    }
+    .auth-input {
+      width: 100%; background: #080808; border: 1px solid #1e1e1e;
+      border-radius: 8px; padding: 12px 14px; color: #e8e8ec;
+      font-size: 0.85rem; font-family: inherit; margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .auth-input:focus { outline: none; border-color: #333; }
+    .auth-input::placeholder { color: #383840; }
+    .btn-auth-submit {
+      width: 100%; padding: 13px; border-radius: 8px;
+      background: #e8e8ec; color: #080808; font-size: 0.85rem;
+      font-weight: 700; border: none; cursor: pointer; font-family: 'Syne', sans-serif;
+      letter-spacing: 0.06em; transition: background 0.2s, transform 0.2s;
+      margin-bottom: 14px;
+    }
+    .btn-auth-submit:hover { background: #fff; transform: translateY(-1px); }
+    .auth-toggle {
+      text-align: center; font-size: 0.75rem; color: #444;
+    }
+    .auth-toggle a { color: #666; cursor: pointer; text-decoration: underline; }
+    .auth-error {
+      font-size: 0.75rem; color: #e05555; margin-bottom: 10px;
+      display: none; padding: 8px 12px; background: rgba(224,85,85,0.08);
+      border-radius: 6px;
+    }
+    /* User badge in nav */
+    #user-badge {
+      display: none; align-items: center; gap: 8px;
+      font-size: 0.72rem; color: #666; cursor: pointer;
+    }
+    #user-badge.visible { display: flex; }
+    #user-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #1e1e1e; border: 1px solid #2a2a2a;
+      object-fit: cover; display: flex; align-items: center;
+      justify-content: center; font-size: 0.65rem; color: #888;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -419,7 +509,39 @@
       <a href="index.html#how">How it works</a>
       <a href="index.html">Home</a>
     </div>
+    <div id="user-badge" onclick="showAuthModal('login')">
+      <div id="user-avatar">?</div>
+      <span id="user-name">Sign in</span>
+    </div>
   </nav>
+
+  <!-- ══ AUTH MODAL ══ -->
+  <div id="auth-overlay">
+    <div id="auth-modal">
+      <button class="modal-close" id="auth-close">✕</button>
+      <p class="modal-logo">INK.STUDIO</p>
+      <h2 class="modal-title" id="auth-title">Unlock unlimited downloads</h2>
+      <p class="modal-sub" id="auth-sub">Create a free account to download all your designs without limits.</p>
+
+      <!-- Google -->
+      <button class="btn-google" id="btn-google-signin">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">or</div>
+
+      <!-- Formulaire signup / login -->
+      <div id="auth-error" class="auth-error"></div>
+      <input class="auth-input" id="auth-email" type="email" placeholder="Email address" autocomplete="email" />
+      <input class="auth-input" id="auth-password" type="password" placeholder="Password" autocomplete="current-password" />
+      <input class="auth-input" id="auth-name" type="text" placeholder="Your name" style="display:none" autocomplete="name" />
+      <button class="btn-auth-submit" id="auth-submit">Create my free account</button>
+      <p class="auth-toggle" id="auth-toggle-text">
+        Already have an account? <a id="auth-toggle-link">Sign in</a>
+      </p>
+    </div>
+  </div>
 
   <main>
     <div class="tool-header">
@@ -1266,7 +1388,7 @@
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m3DesignUrl = data.imageUrl;
         m3ResultImg.src = data.imageUrl;
-        m3BtnDl.href = `/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo.jpg`;
+        m3BtnDl.onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo.jpg`, 'pet-tattoo.jpg');
         hideStatus(m3Status); show(m3Result);
         m3Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
         saveProject({ type: 'pet', imageUrl: data.imageUrl, params: { sujet: 'Pet tattoo', style: m3Style } });
@@ -1323,6 +1445,149 @@
         m3BtnPlaceGo.disabled = false;
       }
     });
+
+    // ── AUTH SYSTEM ─────────────────────────────────────
+    const GOOGLE_CLIENT_ID = '1055204918844-a5kshvsbciibcak84plhf007trpc0k59.apps.googleusercontent.com';
+    const FREE_DOWNLOADS   = 1; // nombre de téléchargements gratuits avant auth
+
+    let currentUser = null;
+    let authPendingCallback = null;
+    let authMode = 'signup'; // 'signup' | 'login'
+
+    function getDownloadCount() {
+      return parseInt(localStorage.getItem('ink_dl_count') || '0');
+    }
+    function incrementDownloadCount() {
+      localStorage.setItem('ink_dl_count', getDownloadCount() + 1);
+    }
+    function loadUser() {
+      const u = localStorage.getItem('ink_user');
+      if (u) { currentUser = JSON.parse(u); updateUserBadge(); }
+    }
+    function saveUser(user) {
+      currentUser = user;
+      localStorage.setItem('ink_user', JSON.stringify(user));
+      updateUserBadge();
+    }
+    function updateUserBadge() {
+      const badge  = document.getElementById('user-badge');
+      const avatar = document.getElementById('user-avatar');
+      const name   = document.getElementById('user-name');
+      if (currentUser) {
+        badge.classList.add('visible');
+        name.textContent = currentUser.name || currentUser.email.split('@')[0];
+        if (currentUser.picture) {
+          avatar.innerHTML = `<img src="${currentUser.picture}" style="width:100%;height:100%;object-fit:cover" />`;
+        } else {
+          avatar.textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+        }
+      } else {
+        badge.classList.add('visible');
+        name.textContent = 'Sign in';
+        avatar.textContent = '?';
+      }
+    }
+
+    // Intercepte le téléchargement
+    function gatedDownload(url, filename, callback) {
+      if (currentUser || getDownloadCount() < FREE_DOWNLOADS) {
+        incrementDownloadCount();
+        if (callback) callback();
+        else { const a = document.createElement('a'); a.href = url; a.download = filename || 'ink-studio.jpg'; a.click(); }
+      } else {
+        authPendingCallback = () => {
+          if (callback) callback();
+          else { const a = document.createElement('a'); a.href = url; a.download = filename || 'ink-studio.jpg'; a.click(); }
+        };
+        showAuthModal('signup');
+      }
+    }
+
+    function showAuthModal(mode) {
+      authMode = mode || 'signup';
+      const overlay = document.getElementById('auth-overlay');
+      const title   = document.getElementById('auth-title');
+      const sub     = document.getElementById('auth-sub');
+      const submit  = document.getElementById('auth-submit');
+      const nameEl  = document.getElementById('auth-name');
+      const toggleTxt = document.getElementById('auth-toggle-text');
+      const err     = document.getElementById('auth-error');
+      err.style.display = 'none';
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-password').value = '';
+      if (authMode === 'signup') {
+        title.textContent    = 'Unlock unlimited downloads';
+        sub.textContent      = 'Create a free account to download all your designs without limits.';
+        submit.textContent   = 'Create my free account';
+        nameEl.style.display = 'block';
+        toggleTxt.innerHTML  = 'Already have an account? <a id="auth-toggle-link">Sign in</a>';
+      } else {
+        title.textContent    = 'Welcome back';
+        sub.textContent      = 'Sign in to access your account and download your designs.';
+        submit.textContent   = 'Sign in';
+        nameEl.style.display = 'none';
+        toggleTxt.innerHTML  = 'No account yet? <a id="auth-toggle-link">Create one</a>';
+      }
+      document.getElementById('auth-toggle-link').addEventListener('click', () => {
+        showAuthModal(authMode === 'signup' ? 'login' : 'signup');
+      });
+      overlay.classList.add('open');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-overlay').classList.remove('open');
+      authPendingCallback = null;
+    }
+
+    function onAuthSuccess(user) {
+      saveUser(user);
+      closeAuthModal();
+      if (authPendingCallback) { authPendingCallback(); authPendingCallback = null; }
+    }
+
+    // Google Sign-In
+    document.getElementById('btn-google-signin').addEventListener('click', () => {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => {
+          const payload = JSON.parse(atob(response.credential.split('.')[1]));
+          onAuthSuccess({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
+        }
+      });
+      google.accounts.id.prompt();
+    });
+
+    // Email signup/login
+    document.getElementById('auth-submit').addEventListener('click', () => {
+      const email    = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const name     = document.getElementById('auth-name').value.trim();
+      const err      = document.getElementById('auth-error');
+
+      if (!email || !password) { err.textContent = 'Please fill in all fields.'; err.style.display = 'block'; return; }
+      if (!/\S+@\S+\.\S+/.test(email)) { err.textContent = 'Invalid email address.'; err.style.display = 'block'; return; }
+      if (password.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+
+      if (authMode === 'signup') {
+        const existing = localStorage.getItem('ink_account_' + email);
+        if (existing) { err.textContent = 'An account already exists with this email. Sign in instead.'; err.style.display = 'block'; return; }
+        const user = { name: name || email.split('@')[0], email, provider: 'email' };
+        localStorage.setItem('ink_account_' + email, JSON.stringify({ password, ...user }));
+        onAuthSuccess(user);
+      } else {
+        const stored = localStorage.getItem('ink_account_' + email);
+        if (!stored) { err.textContent = 'No account found with this email.'; err.style.display = 'block'; return; }
+        const account = JSON.parse(stored);
+        if (account.password !== password) { err.textContent = 'Incorrect password.'; err.style.display = 'block'; return; }
+        onAuthSuccess({ name: account.name, email: account.email, provider: 'email' });
+      }
+    });
+
+    document.getElementById('auth-close').addEventListener('click', closeAuthModal);
+    document.getElementById('auth-overlay').addEventListener('click', e => { if (e.target.id === 'auth-overlay') closeAuthModal(); });
+
+    // Charge l'utilisateur au démarrage
+    loadUser();
 
     // ── HISTORIQUE PROJETS (localStorage) ───────────────
     const STORAGE_KEY = 'ink_projects';
@@ -1428,7 +1693,7 @@
               <p class="hist-date">${formatDate(p.date)}</p>
               <div class="hist-actions">
                 <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>
-                <a class="hist-btn-dl" href="/download?url=${encodeURIComponent(p.imageUrl)}&filename=ink-studio-${p.id}.jpg">↓</a>
+                <a class="hist-btn-dl" href="#" onclick="event.preventDefault();gatedDownload('/download?url=${encodeURIComponent(p.imageUrl)}&filename=ink-studio-${p.id}.jpg','ink-studio-${p.id}.jpg')">↓</a>
                 <button class="hist-btn-del" onclick="deleteProject(${p.id})">✕</button>
               </div>
             </div>
