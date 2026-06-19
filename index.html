@@ -385,7 +385,7 @@
 
   <!-- ══ VIDEO BG ══ -->
   <div id="video-bg">
-    <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+    <video muted playsinline preload="auto" src="videos/studio-reel.mp4"></video>
   </div>
 
   <!-- ══ HERO ══ -->
@@ -761,17 +761,28 @@
       el.classList.add('visible');
     });
 
-    // ══ VIDEO BG PARALLAX ══
+    // ══ VIDEO SCROLL-DRIVEN ══
     const videoEl = document.querySelector('#video-bg video');
+    let scrollTimeout;
 
-    function onVideoScroll() {
-      // On monte la vidéo quand on descend → effet parallax visible
-      const shift = window.scrollY * 0.3;
-      videoEl.style.transform = `translateY(-${shift}px) scale(1.35)`;
-    }
+    videoEl.addEventListener('loadedmetadata', () => {
+      videoEl.currentTime = 0;
+    });
 
-    window.addEventListener('scroll', onVideoScroll, { passive: true });
-    onVideoScroll();
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+      const dy = window.scrollY - lastScrollY;
+      lastScrollY = window.scrollY;
+
+      // Avance ou recule selon la direction du scroll
+      const target = videoEl.currentTime + dy * (videoEl.duration / (document.body.scrollHeight - window.innerHeight));
+      videoEl.currentTime = Math.max(0, Math.min(videoEl.duration || 9, target));
+
+      // Pause quand le scroll s'arrête
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {}, 100);
+    }, { passive: true });
   </script>
 
 </body>
