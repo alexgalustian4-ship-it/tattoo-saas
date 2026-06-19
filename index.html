@@ -326,28 +326,29 @@
     }
     .footer-copy { font-size: 0.68rem; color: #404048; letter-spacing: 0.05em; }
 
-    /* ══ VIDEO SCROLL ══════════════════════════ */
-    #video-hero {
+    /* ══ VIDEO HERO ════════════════════════════ */
+    #video-wrap {
       position: relative;
-      height: 500vh;
+      height: 200vh;
     }
-    #video-hero-sticky {
+    #video-sticky {
       position: sticky;
       top: 0;
       height: 100vh;
       overflow: hidden;
       background: #000;
     }
-    #video-hero-sticky video {
+    #video-sticky video {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      opacity: 0.92;
+      will-change: transform;
     }
-    #video-hero-overlay {
+    #video-sticky::after {
+      content: '';
       position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,0.7) 0%, transparent 50%);
       pointer-events: none;
-      background: linear-gradient(to top, rgba(8,8,8,0.5) 0%, transparent 40%);
     }
 
     /* ══ RESPONSIVE ═════════════════════════════ */
@@ -381,10 +382,9 @@
   </nav>
 
   <!-- ══ VIDEO HERO ══ -->
-  <div id="video-hero">
-    <div id="video-hero-sticky">
-      <video id="scroll-vid" muted playsinline preload="auto" src="videos/studio-reel.mp4"></video>
-      <div id="video-hero-overlay"></div>
+  <div id="video-wrap">
+    <div id="video-sticky">
+      <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
     </div>
   </div>
 
@@ -761,25 +761,24 @@
       el.classList.add('visible');
     });
 
-    // ══ SCROLL VIDEO ══
-    const vid  = document.getElementById('scroll-vid');
-    const wrap = document.getElementById('video-hero');
-    let targetTime = 0, currentTime = 0;
+    // ══ VIDEO PARALLAX FADE ══
+    const videoWrap   = document.getElementById('video-wrap');
+    const videoSticky = document.getElementById('video-sticky');
+    const videoEl     = videoSticky.querySelector('video');
 
-    function scrub() {
-      if (!vid.duration) { requestAnimationFrame(scrub); return; }
-      const rect     = wrap.getBoundingClientRect();
-      const total    = wrap.offsetHeight - window.innerHeight;
+    function onVideoScroll() {
+      const rect     = videoWrap.getBoundingClientRect();
+      const total    = videoWrap.offsetHeight - window.innerHeight;
       const scrolled = Math.max(0, -rect.top);
-      targetTime = Math.min(1, scrolled / total) * vid.duration;
-      currentTime += (targetTime - currentTime) * 0.12;
-      if (Math.abs(targetTime - currentTime) > 0.01) {
-        vid.currentTime = currentTime;
-      }
-      requestAnimationFrame(scrub);
+      const p        = Math.min(1, scrolled / total); // 0 → 1
+
+      // Video: scale up slightly + fade out in the 2nd half
+      videoEl.style.transform = `scale(${1 + p * 0.08})`;
+      videoEl.style.opacity   = 1 - Math.max(0, (p - 0.4) / 0.6);
     }
-    vid.addEventListener('loadedmetadata', scrub);
-    vid.load();
+
+    window.addEventListener('scroll', onVideoScroll, { passive: true });
+    onVideoScroll();
   </script>
 
 </body>
