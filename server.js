@@ -5,11 +5,24 @@ const multer  = require('multer');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
+const os      = require('os');
+const { execFile } = require('child_process');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-const HF_BASE = 'https://api.higgsfield.ai/v1';
+// ── Bootstrap Higgsfield CLI credentials from env var ──
+(function bootstrapHiggsfieldAuth() {
+  const token = process.env.HIGGSFIELD_API_KEY;
+  if (!token) return;
+  const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
+  const credFile = path.join(credDir, 'credentials.json');
+  if (!fs.existsSync(credFile)) {
+    fs.mkdirSync(credDir, { recursive: true });
+    fs.writeFileSync(credFile, JSON.stringify({ access_token: token, refresh_token: '' }));
+    console.log('✓ Higgsfield credentials written from env var');
+  }
+})();
 
 // ─────────────────────────────────────────────────
 // Recettes de style — une par style de tatouage.
@@ -221,84 +234,58 @@ async function urlToBase64(url) {
   return `data:image/jpeg;base64,${buffer.toString('base64')}`;
 }
 
-function getApiKey() {
-  const key = process.env.HIGGSFIELD_API_KEY;
-  if (!key) throw new Error('Variable d\'environnement HIGGSFIELD_API_KEY non définie.');
-  return key;
-}
+// ─────────────────────────────────────────────────
+// Higgsfield via CLI (plus fiable que l'API REST)
+// ─────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────
-// Appel REST Higgsfield + polling jusqu'au résultat
-// payload  — body JSON envoyé à l'API
-// nsfwMsg  — message d'erreur si le filtre bloque
-// timeoutMs — délai max en millisecondes (défaut 5 min)
-// endpoint — "generation/image" ou "generation/video"
-// ─────────────────────────────────────────────────
+const MODEL_MAP = {
+  'image_auto':               'gpt_image_2',
+  'nano_banana_2':            'nano_banana_2',
+  'cinematic_studio_video_3_5': 'seedance_2_0',
+};
+
 async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 300_000, endpoint = 'generation/image') {
-  const apiKey   = getApiKey();
-  const deadline = Date.now() + timeoutMs;
+  const model  = MODEL_MAP[payload.model] || payload.model || 'gpt_image_2';
+  const prompt = payload.prompt || '';
+  const tmpFiles = [];
 
-  // Lancement du job — retry 3x sur erreurs 5xx (522, 524, 502…)
-  let createResp;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    createResp = await fetch(`${HF_BASE}/${endpoint}`, {
-      method:  'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (createResp.ok || createResp.status < 500) break;
-    if (attempt < 3) await sleep(attempt * 3000); // 3s, 6s entre les tentatives
-  }
+  try {
+    const args = ['generate', 'create', model, '--prompt', prompt, '--wait',
+                  '--wait-timeout', Math.round(timeoutMs / 1000) + 's'];
 
-  if (!createResp.ok) {
-    const err = await createResp.json().catch(() => ({}));
-    const status = createResp.status;
-    if (status === 522 || status === 524) {
-      throw new Error(`Higgsfield API timeout (${status}) — their servers may be overloaded. Please try again in a moment.`);
+    // Images base64 → fichiers temporaires
+    if (Array.isArray(payload.images)) {
+      for (const b64 of payload.images) {
+        const data = b64.replace(/^data:image\/\w+;base64,/, '');
+        const tmp  = path.join(os.tmpdir(), `hf-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`);
+        fs.writeFileSync(tmp, Buffer.from(data, 'base64'));
+        tmpFiles.push(tmp);
+        args.push('--image', tmp);
+      }
     }
-    throw new Error(err.message || err.error || `Higgsfield API error: HTTP ${status}`);
+
+    if (payload.resolution) args.push('--resolution', payload.resolution);
+
+    const imageUrl = await runCLI(args, timeoutMs);
+    return { imageUrl, jobId: null };
+
+  } finally {
+    tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch {} });
   }
-
-  const created = await createResp.json();
-
-  // Résultat immédiat (mode synchrone)
-  if (created.status === 'completed') {
-    return extractResult(created, nsfwMsg);
-  }
-  if (created.status === 'nsfw') {
-    throw new Error(nsfwMsg);
-  }
-
-  // Job asynchrone : on poll jusqu'à ce qu'il soit terminé
-  const jobId = created.id;
-  if (!jobId) throw new Error(`Réponse inattendue de l'API Higgsfield : ${JSON.stringify(created).slice(0, 200)}`);
-
-  while (Date.now() < deadline) {
-    await sleep(4_000);
-
-    const pollResp = await fetch(`${HF_BASE}/jobs/${jobId}`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-    });
-    if (!pollResp.ok) continue; // erreur réseau transitoire — on réessaie
-
-    const job = await pollResp.json();
-
-    if (job.status === 'nsfw')      throw new Error(nsfwMsg);
-    if (job.status === 'failed')    throw new Error('La génération a échoué côté Higgsfield.');
-    if (job.status === 'completed') return extractResult(job, nsfwMsg, jobId);
-  }
-
-  throw new Error('Timeout : la génération a pris trop de temps (> ' + Math.round(timeoutMs / 60000) + ' min).');
 }
 
-function extractResult(data, nsfwMsg, fallbackJobId = null) {
-  if (data.status === 'nsfw') throw new Error(nsfwMsg);
-  const imageUrl = data.result_url || data.url;
-  if (!imageUrl) throw new Error('URL manquante dans la réponse Higgsfield.');
-  return { imageUrl, jobId: data.id || fallbackJobId };
+function runCLI(args, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const hfBin = path.join(__dirname, 'node_modules', '.bin', 'higgsfield');
+    const bin   = fs.existsSync(hfBin) ? hfBin : 'higgsfield';
+
+    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) return reject(new Error(stderr || err.message || 'Higgsfield CLI error'));
+      const url = stdout.trim().split('\n').filter(l => l.startsWith('http')).pop();
+      if (!url) return reject(new Error('No URL in CLI output: ' + stdout.slice(0, 200)));
+      resolve(url);
+    });
+  });
 }
 
 function sleep(ms) {
