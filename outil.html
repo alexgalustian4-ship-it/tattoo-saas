@@ -575,6 +575,14 @@
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
+      <button class="mode-card" id="btn-mode4">
+        <div class="mode-card-icon">⚡</div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Merge designs into one</p>
+          <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into a single unique masterpiece.</p>
+        </div>
+        <span class="mode-card-arrow">›</span>
+      </button>
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
@@ -857,6 +865,74 @@
       <div data-hidden id="m2-result">
         <div class="result-img-wrap">
           <img id="m2-result-img" src="" alt="Résultat" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE 4 — MERGE DESIGNS ══════════ -->
+    <div data-hidden class="card" id="mode4-card">
+      <p class="section-title">Merge designs into one masterpiece</p>
+
+      <div class="field">
+        <label>Your tattoo designs <span>(2 to 4 images)</span></label>
+        <div id="m4-dropzone" style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;">
+          <input type="file" id="m4-file-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
+          <span style="font-size:2rem;">⚡</span>
+          <p style="margin:8px 0 4px;font-weight:600;">Tap to add your designs</p>
+          <p style="font-size:0.78rem;color:var(--text-muted);">2 minimum — 4 maximum</p>
+        </div>
+        <div id="m4-previews" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+      </div>
+
+      <div class="field">
+        <label>Fusion style</label>
+        <div class="zone-grid">
+          <button class="zone-btn selected" data-m4style="seamless">Seamless blend</button>
+          <button class="zone-btn" data-m4style="collage">Artistic collage</button>
+          <button class="zone-btn" data-m4style="blackgrey">Black &amp; grey</button>
+          <button class="zone-btn" data-m4style="fineline">Fine line</button>
+          <button class="zone-btn" data-m4style="traditional">Traditional bold</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Creative direction <span>(optional)</span></label>
+        <textarea id="m4-details" rows="3" placeholder="e.g. connect them with flowers, keep the wolf as the centerpiece, add geometric background…" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);font-size:0.85rem;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="m4-btn-generate" disabled>Fuse my designs →</button>
+      <div class="status" id="m4-status"></div>
+
+      <div data-hidden id="m4-result" style="margin-top:16px">
+        <div class="result-img-wrap" style="margin-bottom:16px">
+          <img id="m4-result-img" src="" alt="Merged tattoo design" />
+          <a id="m4-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
+        </div>
+        <button class="btn btn-secondary" id="m4-btn-place">Place on my skin →</button>
+      </div>
+
+      <!-- Étape 2 — placement sur le corps -->
+      <div data-hidden id="m4-step2">
+        <hr class="divider" />
+        <p class="section-title" style="margin-bottom:16px">Step 2 — Place on your skin</p>
+        <div class="field">
+          <label>Your photo <span>(the area must be visible)</span></label>
+          <div class="upload-area" id="m4-body-area">
+            <input type="file" id="m4-body-input" accept="image/*" />
+            <span class="icon">📷</span>
+            <p><strong>Tap here</strong> to add your photo</p>
+          </div>
+          <div data-hidden id="m4-body-preview-wrap" class="result-img-wrap" style="margin-top:8px">
+            <img id="m4-body-preview-img" src="" alt="Your photo" />
+            <button class="result-change" id="m4-btn-remove-body">Change</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="m4-btn-place-go" disabled>See it on my skin →</button>
+        <div class="status" id="m4-status2"></div>
+        <div data-hidden id="m4-body-result" style="margin-top:16px">
+          <div class="result-img-wrap">
+            <img id="m4-body-result-img" src="" alt="Result" />
+          </div>
         </div>
       </div>
     </div>
@@ -1217,12 +1293,19 @@
       show(mode3Card); show(modeBack);
     }
 
+    const mode4Card = document.getElementById('mode4-card');
+    function activateMode4() {
+      hide(modeSelector);
+      show(mode4Card); show(modeBack);
+    }
+
     document.getElementById('btn-mode1').addEventListener('click', activateMode1);
     document.getElementById('btn-mode2').addEventListener('click', activateMode2);
     document.getElementById('btn-mode3').addEventListener('click', activateMode3);
+    document.getElementById('btn-mode4').addEventListener('click', activateMode4);
 
     modeBack.addEventListener('click', () => {
-      hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(modeBack);
+      hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
       resetMode2();
       show(modeSelector);
     });
@@ -1443,6 +1526,136 @@
         m3Status2.style.color = 'var(--error)';
       } finally {
         m3BtnPlaceGo.disabled = false;
+      }
+    });
+
+    // ── MODE 4 — MERGE DESIGNS ────────────────────────────
+    let m4Style = 'seamless';
+    let m4DesignUrl = '';
+    let m4Files = [];
+
+    const m4FileInput     = document.getElementById('m4-file-input');
+    const m4Previews      = document.getElementById('m4-previews');
+    const m4BtnGenerate   = document.getElementById('m4-btn-generate');
+    const m4Status        = document.getElementById('m4-status');
+    const m4Result        = document.getElementById('m4-result');
+    const m4ResultImg     = document.getElementById('m4-result-img');
+    const m4BtnDl         = document.getElementById('m4-btn-dl');
+    const m4BtnPlace      = document.getElementById('m4-btn-place');
+    const m4Step2         = document.getElementById('m4-step2');
+    const m4BodyArea      = document.getElementById('m4-body-area');
+    const m4BodyInput     = document.getElementById('m4-body-input');
+    const m4BodyPreviewWrap = document.getElementById('m4-body-preview-wrap');
+    const m4BodyPreviewImg  = document.getElementById('m4-body-preview-img');
+    const m4BtnRemoveBody   = document.getElementById('m4-btn-remove-body');
+    const m4BtnPlaceGo    = document.getElementById('m4-btn-place-go');
+    const m4Status2       = document.getElementById('m4-status2');
+    const m4BodyResult    = document.getElementById('m4-body-result');
+    const m4BodyResultImg = document.getElementById('m4-body-result-img');
+
+    document.querySelectorAll('[data-m4style]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-m4style]').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        m4Style = btn.dataset.m4style;
+      });
+    });
+
+    function renderM4Previews() {
+      m4Previews.innerHTML = '';
+      m4Files.forEach((file, i) => {
+        const url = URL.createObjectURL(file);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);';
+        wrap.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" />
+          <button onclick="m4RemoveFile(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:18px;padding:0;">✕</button>`;
+        m4Previews.appendChild(wrap);
+      });
+      m4BtnGenerate.disabled = m4Files.length < 2;
+    }
+
+    window.m4RemoveFile = function(i) {
+      m4Files.splice(i, 1);
+      renderM4Previews();
+    };
+
+    m4FileInput.addEventListener('change', () => {
+      const newFiles = Array.from(m4FileInput.files);
+      const remaining = 4 - m4Files.length;
+      m4Files = m4Files.concat(newFiles.slice(0, remaining));
+      if (m4Files.length > 4) m4Files = m4Files.slice(0, 4);
+      m4FileInput.value = '';
+      renderM4Previews();
+    });
+
+    m4BtnGenerate.addEventListener('click', async () => {
+      if (m4Files.length < 2) return;
+      setLoading(m4Status, 'Fusing your designs into one masterpiece… (under 90s)');
+      m4BtnGenerate.disabled = true; hide(m4Result); hide(m4Step2);
+      try {
+        const fd = new FormData();
+        m4Files.forEach((f, i) => fd.append(`design${i}`, f));
+        fd.append('style',   m4Style);
+        fd.append('details', document.getElementById('m4-details').value.trim());
+        fd.append('count',   m4Files.length);
+        const resp = await fetch('/merge-tattoos', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
+        m4DesignUrl = data.imageUrl;
+        m4ResultImg.src = data.imageUrl;
+        m4BtnDl.onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=merged-tattoo.jpg`, 'merged-tattoo.jpg');
+        hideStatus(m4Status); show(m4Result);
+        m4Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        saveProject({ type: 'merge', imageUrl: data.imageUrl, params: { style: m4Style } });
+      } catch (err) {
+        m4Status.textContent = '❌ Error: ' + err.message;
+        m4Status.style.color = 'var(--error)';
+      } finally {
+        m4BtnGenerate.disabled = m4Files.length < 2;
+      }
+    });
+
+    m4BtnPlace.addEventListener('click', () => {
+      show(m4Step2);
+      m4Step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    m4BodyInput.addEventListener('change', () => {
+      const file = m4BodyInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = e => {
+        m4BodyPreviewImg.src = e.target.result;
+        hide(m4BodyArea); show(m4BodyPreviewWrap);
+        m4BtnPlaceGo.disabled = false;
+      };
+      r.readAsDataURL(file);
+    });
+
+    m4BtnRemoveBody.addEventListener('click', () => {
+      m4BodyInput.value = ''; m4BodyPreviewImg.src = '';
+      show(m4BodyArea); hide(m4BodyPreviewWrap);
+      m4BtnPlaceGo.disabled = true;
+    });
+
+    m4BtnPlaceGo.addEventListener('click', async () => {
+      setLoading(m4Status2, 'Applying tattoo to your photo… (1–2 min)');
+      m4BtnPlaceGo.disabled = true; hide(m4BodyResult);
+      try {
+        const fd = new FormData();
+        fd.append('photo',     m4BodyInput.files[0]);
+        fd.append('designUrl', m4DesignUrl);
+        fd.append('zone',      'dos');
+        const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
+        m4BodyResultImg.src = data.imageUrl;
+        hideStatus(m4Status2); show(m4BodyResult);
+        m4BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        m4Status2.textContent = '❌ Error: ' + err.message;
+        m4Status2.style.color = 'var(--error)';
+      } finally {
+        m4BtnPlaceGo.disabled = false;
       }
     });
 

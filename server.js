@@ -554,6 +554,75 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
+// POST /merge-tattoos — Mode 4 : fusionner plusieurs designs
+// Files : design0, design1, design2, design3 (2–4 images)
+// Body  : style, details, count
+// Retour: { imageUrl }
+// ─────────────────────────────────────────────────
+app.post('/merge-tattoos', upload.fields([
+  { name: 'design0', maxCount: 1 },
+  { name: 'design1', maxCount: 1 },
+  { name: 'design2', maxCount: 1 },
+  { name: 'design3', maxCount: 1 },
+]), async (req, res) => {
+  const count  = parseInt(req.body.count || '2');
+  const style  = (req.body.style   || 'seamless').trim();
+  const details= (req.body.details || '').trim();
+
+  const tmpFiles = [];
+  const base64Images = [];
+
+  for (let i = 0; i < count; i++) {
+    const key = `design${i}`;
+    if (!req.files[key] || !req.files[key][0]) continue;
+    const f = req.files[key][0];
+    const p = f.path + '.jpg';
+    fs.renameSync(f.path, p);
+    tmpFiles.push(p);
+    base64Images.push(fileToBase64(p));
+  }
+
+  if (base64Images.length < 2) {
+    tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch {} });
+    return res.status(400).json({ error: 'Please upload at least 2 designs.' });
+  }
+
+  const stylePrompts = {
+    seamless:    'seamlessly blended into one cohesive tattoo composition, unified style and flow, harmonious design',
+    collage:     'artistic collage tattoo, each element distinct but visually connected through shared space and linework',
+    blackgrey:   'unified black and grey tattoo, smooth gradients, fine shading, all elements merged in monochromatic style',
+    fineline:    'fine line tattoo fusion, delicate single-needle linework connecting all elements into one elegant composition',
+    traditional: 'bold traditional tattoo style, thick outlines, all designs merged with classic flash art aesthetic',
+  };
+  const styleDesc = stylePrompts[style] || stylePrompts.seamless;
+
+  const prompt =
+    `You are a master tattoo artist. Fuse the ${base64Images.length} tattoo designs provided into a single unique tattoo masterpiece. ` +
+    `The result must be ${styleDesc}. ` +
+    `Incorporate the key visual elements from every design into one cohesive artwork. ` +
+    (details ? `Creative direction: ${details}. ` : '') +
+    `White background, professional tattoo flash art composition, high resolution, ready to tattoo.`;
+
+  try {
+    console.log(`\n⚡ Merge tattoos — ${base64Images.length} designs, style: ${style}`);
+
+    const { imageUrl } = await fetchHiggsfield({
+      model:      'nano_banana_2',
+      prompt,
+      images:     base64Images,
+      resolution: '2k',
+    }, 'One of the designs was blocked by the content filter. Try with different images.');
+
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('❌ /merge-tattoos :', err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch {} });
+  }
+});
+
+// ─────────────────────────────────────────────────
 // POST /generate-video — ÉTAPE 3 (masquée dans l'UI)
 // Body  : sourceUrl (URL de l'image de prévisualisation corps)
 // Retour: { videoUrl }
