@@ -63,19 +63,36 @@
     body.cursor-hidden #cursor-dot,
     body.cursor-hidden #cursor-ring { opacity: 0; }
 
-    /* ══ SCROLL FADE-UP ═════════════════════════ */
+    /* ══ ANIMATIONS ENTRÉE ══════════════════════ */
     .fade-up {
       opacity: 0;
-      transform: translateY(28px);
-      transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
-                  transform 0.7s cubic-bezier(0.22,1,0.36,1);
+      transform: translateY(32px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
     }
     .fade-up.visible { opacity: 1; transform: translateY(0); }
-    .fade-up.d1 { transition-delay: 0.08s; }
-    .fade-up.d2 { transition-delay: 0.16s; }
-    .fade-up.d3 { transition-delay: 0.24s; }
-    .fade-up.d4 { transition-delay: 0.32s; }
-    .fade-up.d5 { transition-delay: 0.40s; }
+
+    .fade-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    .fade-left.visible { opacity: 1; transform: translateX(0); }
+
+    .fade-right {
+      opacity: 0;
+      transform: translateX(28px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    .fade-right.visible { opacity: 1; transform: translateX(0); }
+
+    .d1 { transition-delay: 0.08s; }
+    .d2 { transition-delay: 0.16s; }
+    .d3 { transition-delay: 0.24s; }
+    .d4 { transition-delay: 0.32s; }
+    .d5 { transition-delay: 0.40s; }
 
     /* ══ NAV ════════════════════════════════════ */
     #nav {
@@ -109,9 +126,12 @@
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
       text-transform: uppercase; color: var(--text); text-decoration: none;
       border: 1px solid var(--border-m); padding: 7px 18px; border-radius: 20px;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
-    .nav-cta:hover { border-color: var(--silver); color: var(--silver); }
+    .nav-cta:hover {
+      border-color: var(--silver); color: var(--silver);
+      box-shadow: 0 0 18px rgba(176,180,194,0.08);
+    }
 
     /* ══ HERO ═══════════════════════════════════ */
     #hero {
@@ -122,11 +142,9 @@
       overflow: hidden;
     }
 
-    /* SVG tattoo flash background */
     #tattoo-svg {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      z-index: 0; pointer-events: none;
-      overflow: visible;
+      z-index: 0; pointer-events: none; overflow: visible;
     }
 
     #hero::before {
@@ -163,18 +181,27 @@
     /* ══ TOOL CARDS ═════════════════════════════ */
     .tools-grid {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px; width: 100%; max-width: 540px; margin: 0 auto 56px;
+      gap: 12px; width: 100%; max-width: 540px; margin: 0 auto 40px;
     }
     .tool-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 12px; padding: 22px;
       text-decoration: none; color: inherit; text-align: left;
       display: flex; flex-direction: column;
-      transition: border-color 0.25s, transform 0.3s, box-shadow 0.3s;
+      transition: border-color 0.3s, transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s;
+      position: relative; overflow: hidden;
     }
+    .tool-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 60% 0%, rgba(176,180,194,0.04) 0%, transparent 70%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .tool-card:hover::before { opacity: 1; }
     .tool-card:hover {
-      border-color: var(--border-m); transform: translateY(-3px);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      border-color: var(--border-m);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 56px rgba(0,0,0,0.5);
     }
     .tool-card:first-child { border-color: #232323; }
     .tool-card:first-child:hover { border-color: #3a3a3a; }
@@ -190,7 +217,9 @@
       background: var(--bg); border: 1px solid var(--border-m);
       display: flex; align-items: center; justify-content: center;
       font-size: 16px; margin-bottom: 16px; flex-shrink: 0;
+      transition: border-color 0.3s;
     }
+    .tool-card:hover .tool-icon { border-color: #383838; }
     .tool-name {
       font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
       letter-spacing: 0.01em; color: var(--text); margin-bottom: 8px;
@@ -199,35 +228,49 @@
     .tool-cta {
       margin-top: 16px; font-size: 0.7rem; font-weight: 600;
       letter-spacing: 0.08em; color: #606070;
-      display: flex; align-items: center; gap: 5px; transition: color 0.2s;
+      display: flex; align-items: center; gap: 5px; transition: color 0.2s, gap 0.2s;
     }
-    .tool-card:first-child .tool-cta { color: #505050; }
-    .tool-card:hover .tool-cta { color: var(--silver); }
+    .tool-card:hover .tool-cta { color: var(--silver); gap: 8px; }
 
     /* ══ PROOF BAR ══════════════════════════════ */
     .proof-bar {
-      display: flex; width: 100%; max-width: 540px; margin: 0 auto 72px;
+      display: flex; width: 100%; max-width: 540px; margin: 0 auto 56px;
       border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
     }
     .proof-item {
-      flex: 1; padding: 14px 12px; text-align: center;
+      flex: 1; padding: 16px 12px; text-align: center;
       border-right: 1px solid var(--border);
+      transition: background 0.3s;
     }
     .proof-item:last-child { border-right: none; }
+    .proof-item:hover { background: rgba(255,255,255,0.015); }
     .proof-num {
-      font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
-      color: #484848; display: block; line-height: 1; margin-bottom: 4px;
+      font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+      color: var(--text); display: block; line-height: 1; margin-bottom: 5px;
     }
     .proof-label {
       font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: #606070; font-weight: 600;
+      color: var(--muted); font-weight: 600;
     }
+
+    /* ══ TRUST STRIP ════════════════════════════ */
+    .trust-strip {
+      display: flex; align-items: center; justify-content: center;
+      gap: 28px; flex-wrap: wrap;
+      padding: 18px 24px; max-width: 540px; margin: 0 auto;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.65rem; color: var(--dim); font-weight: 500;
+      letter-spacing: 0.06em;
+    }
+    .trust-item svg { opacity: 0.5; flex-shrink: 0; }
 
     /* ══ STYLES ═════════════════════════════════ */
     #styles {
-      width: 100%; padding: 80px 5vw;
-      background: rgba(8,8,8,0.82); border-top: 1px solid var(--border);
-      backdrop-filter: blur(2px);
+      width: 100%; padding: 90px 5vw;
+      background: rgba(8,8,8,0.85); border-top: 1px solid var(--border);
+      backdrop-filter: blur(4px);
     }
     .section-inner { max-width: 1100px; margin: 0 auto; }
     .section-label {
@@ -236,131 +279,226 @@
     }
     .section-title {
       font-family: 'Syne', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem);
-      font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-bottom: 36px;
+      font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-bottom: 40px;
     }
     .styles-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
     }
     .style-card {
       display: flex; flex-direction: column;
       text-decoration: none; cursor: none;
-      transition: transform 0.35s;
+      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
     }
-    .style-card:hover { transform: translateY(-5px); }
+    .style-card:hover { transform: translateY(-6px); }
     .style-img-wrap {
       aspect-ratio: 3/4; background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 8px;
+      border: 1px solid var(--border); border-radius: 10px;
       overflow: hidden; margin-bottom: 12px; position: relative;
-      transition: border-color 0.35s;
+      transition: border-color 0.35s, box-shadow 0.35s;
     }
-    .style-card:hover .style-img-wrap { border-color: #303030; }
+    .style-card:hover .style-img-wrap {
+      border-color: #303030;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
     .style-img-wrap img {
       width: 100%; height: 100%; object-fit: cover; display: block;
       filter: grayscale(8%); transition: transform 0.5s, filter 0.3s;
     }
-    .style-card:hover .style-img-wrap img { transform: scale(1.04); filter: grayscale(0%); }
+    .style-card:hover .style-img-wrap img { transform: scale(1.05); filter: grayscale(0%); }
     .style-img-wrap::after {
       content: 'Try →'; position: absolute; inset: 0;
       display: flex; align-items: flex-end; justify-content: center;
       padding-bottom: 14px; font-size: 0.58rem; font-weight: 600;
       letter-spacing: 0.16em; color: var(--silver); opacity: 0;
-      background: linear-gradient(to top, rgba(8,8,8,0.7) 0%, transparent 55%);
+      background: linear-gradient(to top, rgba(8,8,8,0.75) 0%, transparent 55%);
       transition: opacity 0.3s;
     }
     .style-card:hover .style-img-wrap::after { opacity: 1; }
     .style-name {
       font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
-      color: #909098; letter-spacing: 0.04em; margin-bottom: 3px;
+      color: var(--silver); letter-spacing: 0.04em; margin-bottom: 3px;
+      transition: color 0.2s;
     }
     .style-desc { font-size: 0.68rem; color: #666672; line-height: 1.5; }
 
     /* ══ HOW ════════════════════════════════════ */
     #how {
-      width: 100%; padding: 80px 5vw; border-top: 1px solid var(--border);
-      background: rgba(8,8,8,0.82); backdrop-filter: blur(2px);
+      width: 100%; padding: 90px 5vw; border-top: 1px solid var(--border);
+      background: rgba(8,8,8,0.85); backdrop-filter: blur(4px);
     }
     .how-grid {
       display: grid; grid-template-columns: 1fr 1fr 1fr;
       gap: 1px; border: 1px solid var(--border);
-      margin-top: 36px; background: var(--border);
+      margin-top: 40px; background: var(--border);
     }
-    .how-step { background: var(--bg); padding: 36px 28px; }
+    .how-step {
+      background: var(--bg); padding: 40px 32px;
+      transition: background 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .how-step::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(176,180,194,0.15), transparent);
+      transform: scaleX(0); transition: transform 0.4s;
+    }
+    .how-step:hover { background: #0c0c0c; }
+    .how-step:hover::after { transform: scaleX(1); }
     .how-num {
-      font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800;
-      color: #242428; line-height: 1; margin-bottom: 20px;
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+      color: #1e1e22; line-height: 1; margin-bottom: 24px;
+      transition: color 0.3s;
     }
+    .how-step:hover .how-num { color: #2a2a30; }
     .how-title {
-      font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
-      color: #909098; margin-bottom: 10px; letter-spacing: 0.02em;
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
+      color: var(--silver); margin-bottom: 12px; letter-spacing: 0.02em;
     }
-    .how-desc { font-size: 0.8rem; color: #666672; line-height: 1.75; }
+    .how-desc { font-size: 0.8rem; color: #666672; line-height: 1.8; }
+
+    /* ══ SOCIAL PROOF ═══════════════════════════ */
+    #social-proof {
+      width: 100%; padding: 70px 5vw; border-top: 1px solid var(--border);
+      background: rgba(8,8,8,0.88); backdrop-filter: blur(4px);
+    }
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .testimonial-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px 24px;
+      transition: border-color 0.3s, transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+    .testimonial-card:hover { border-color: var(--border-m); transform: translateY(-3px); }
+    .testimonial-text {
+      font-size: 0.82rem; color: var(--muted); line-height: 1.8;
+      margin-bottom: 20px; font-style: italic;
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .testimonial-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--border-m); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--muted); font-weight: 600;
+      flex-shrink: 0;
+    }
+    .testimonial-name {
+      font-size: 0.72rem; font-weight: 600; color: var(--text);
+      letter-spacing: 0.04em;
+    }
+    .testimonial-role {
+      font-size: 0.65rem; color: var(--dim); margin-top: 1px;
+    }
+    .stars {
+      font-size: 0.6rem; color: #666; letter-spacing: 2px; margin-bottom: 14px;
+    }
 
     /* ══ CTA FINAL ══════════════════════════════ */
     #cta-final {
-      width: 100%; padding: 100px 5vw; text-align: center;
+      width: 100%; padding: 120px 5vw; text-align: center;
       border-top: 1px solid var(--border);
+      background: rgba(8,8,8,0.9);
+      position: relative; overflow: hidden;
+    }
+    #cta-final::before {
+      content: '';
+      position: absolute; top: -40%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(176,180,194,0.03) 0%, transparent 70%);
+      pointer-events: none;
     }
     .cta-final-title {
       font-family: 'Syne', sans-serif;
-      font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800;
-      letter-spacing: -0.02em; color: var(--text); margin-bottom: 14px;
+      font-size: clamp(1.8rem, 4vw, 3.2rem); font-weight: 800;
+      letter-spacing: -0.02em; color: var(--text); margin-bottom: 16px;
+      position: relative;
     }
     .cta-final-sub {
-      font-size: 0.9rem; color: var(--muted); margin-bottom: 36px; line-height: 1.7;
+      font-size: 0.9rem; color: var(--muted); margin-bottom: 40px; line-height: 1.7;
+      max-width: 420px; margin-left: auto; margin-right: auto;
     }
     .cta-btn {
-      display: inline-block; font-family: 'Syne', sans-serif;
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
       font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--bg);
       background: var(--text); padding: 16px 44px; border-radius: 4px;
-      text-decoration: none; transition: background 0.25s;
+      text-decoration: none;
+      transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
     }
-    .cta-btn:hover { background: var(--silver); }
+    .cta-btn:hover {
+      background: var(--silver);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(176,180,194,0.15);
+    }
+    .cta-note {
+      margin-top: 18px; font-size: 0.65rem; color: var(--dim);
+      letter-spacing: 0.06em;
+    }
 
     /* ══ FOOTER ═════════════════════════════════ */
     footer {
-      padding: 28px 40px; border-top: 1px solid var(--border);
+      padding: 36px 40px; border-top: 1px solid var(--border);
+      background: rgba(8,8,8,0.95); backdrop-filter: blur(4px);
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(8,8,8,0.82); backdrop-filter: blur(2px);
     }
+    .footer-left { display: flex; flex-direction: column; gap: 8px; }
     .footer-logo {
-      font-family: 'Syne', sans-serif; font-size: 0.85rem;
-      font-weight: 800; letter-spacing: 0.08em; color: #505058;
+      font-family: 'Syne', sans-serif; font-size: 0.88rem;
+      font-weight: 800; letter-spacing: 0.08em; color: #606068;
     }
-    .footer-copy { font-size: 0.68rem; color: #404048; letter-spacing: 0.05em; }
+    .footer-copy { font-size: 0.65rem; color: #383840; letter-spacing: 0.05em; }
+    .footer-links {
+      display: flex; gap: 24px;
+    }
+    .footer-links a {
+      font-size: 0.65rem; color: var(--dim); text-decoration: none;
+      letter-spacing: 0.06em; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--muted); }
 
     /* ══ VIDEO BG ══════════════════════════════ */
     #video-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
     }
     #video-bg video {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      will-change: transform;
     }
     #video-bg::after {
       content: '';
       position: absolute; inset: 0;
-      background: rgba(8,8,8,0.55);
+      background: rgba(8,8,8,0.58);
       pointer-events: none;
     }
-    /* All page sections sit above the fixed video */
-    #nav, #hero, #styles, #how, #cta-section, footer {
-      position: relative;
-      z-index: 1;
+    #nav, #hero, #styles, #how, #social-proof, #cta-final, footer {
+      position: relative; z-index: 1;
     }
 
     /* ══ RESPONSIVE ═════════════════════════════ */
+    @media (max-width: 900px) {
+      .styles-grid { grid-template-columns: repeat(3, 1fr); }
+      .testimonials-grid { grid-template-columns: 1fr 1fr; }
+    }
     @media (max-width: 600px) {
-      #nav { padding: 0 16px; }
+      #nav { padding: 0 20px; }
       .nav-links { display: none; }
       .tools-grid { grid-template-columns: 1fr; }
-      .styles-grid { grid-template-columns: repeat(3, 1fr); }
+      .styles-grid { grid-template-columns: repeat(2, 1fr); }
       .how-grid { grid-template-columns: 1fr; }
-      footer { flex-direction: column; gap: 8px; text-align: center; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .testimonial-card:nth-child(3) { display: none; }
+      footer { padding: 28px 20px; }
+      .footer-inner { flex-direction: column; gap: 20px; text-align: center; }
+      .footer-links { justify-content: center; }
+      .trust-strip { gap: 16px; }
       body { cursor: auto; }
       #cursor-dot, #cursor-ring { display: none; }
     }
@@ -385,13 +523,12 @@
 
   <!-- ══ VIDEO BG ══ -->
   <div id="video-bg">
-    <video muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+    <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
   </div>
 
   <!-- ══ HERO ══ -->
   <section id="hero">
 
-    <!-- SVG tattoo flash animé — se dessine comme sous l'aiguille -->
     <svg id="tattoo-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"
          xmlns="http://www.w3.org/2000/svg">
 
@@ -401,7 +538,6 @@
           stroke-dasharray="950" stroke-dashoffset="950">
           <animate attributeName="stroke-dashoffset" from="950" to="0" dur="6s" begin="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
         </path>
-        <!-- tête -->
         <path d="M-4,-86 C-14,-100 -22,-112 -16,-124 C-10,-136 4,-136 14,-126 C24,-116 26,-100 18,-88 C12,-80 4,-82 0,-90"
           stroke-dasharray="110" stroke-dashoffset="110">
           <animate attributeName="stroke-dashoffset" from="110" to="0" dur="1.2s" begin="6s" fill="freeze"/>
@@ -409,7 +545,6 @@
         <path d="M10,-130 L18,-142 M10,-130 L4,-142" stroke-dasharray="30" stroke-dashoffset="30">
           <animate attributeName="stroke-dashoffset" from="30" to="0" dur="0.4s" begin="7s" fill="freeze"/>
         </path>
-        <!-- écailles -->
         <path d="M0,20 C6,14 12,16 10,24 M0,50 C8,44 14,48 10,56 M-4,80 C4,74 10,78 8,86 M-2,115 C6,109 12,113 10,121"
           stroke-dasharray="120" stroke-dashoffset="120" opacity="0.7">
           <animate attributeName="stroke-dashoffset" from="120" to="0" dur="2s" begin="4s" fill="freeze"/>
@@ -418,12 +553,10 @@
 
       <!-- Rose traditionnelle coin haut droit -->
       <g transform="translate(1280,180)" stroke="rgba(176,180,194,0.16)" stroke-width="0.8" fill="none">
-        <!-- tige -->
         <path d="M0,140 C-2,120 -5,98 -8,76 C-11,54 -14,32 -10,10"
           stroke-dasharray="140" stroke-dashoffset="140">
           <animate attributeName="stroke-dashoffset" from="140" to="0" dur="2s" begin="1s" fill="freeze"/>
         </path>
-        <!-- feuilles -->
         <path d="M-9,90 C-26,80 -36,62 -28,48 C-22,40 -10,48 -9,65"
           stroke-dasharray="80" stroke-dashoffset="80">
           <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1s" begin="2.5s" fill="freeze"/>
@@ -432,7 +565,6 @@
           stroke-dasharray="80" stroke-dashoffset="80">
           <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1s" begin="2.8s" fill="freeze"/>
         </path>
-        <!-- pétales extérieurs -->
         <path d="M-10,10 C-22,-8 -26,-30 -14,-44 C-4,-56 10,-54 16,-40 C22,-26 18,-6 10,4 C4,12 -4,16 -10,10 Z"
           stroke-dasharray="140" stroke-dashoffset="140">
           <animate attributeName="stroke-dashoffset" from="140" to="0" dur="2s" begin="3.2s" fill="freeze"/>
@@ -445,12 +577,10 @@
           stroke-dasharray="70" stroke-dashoffset="70">
           <animate attributeName="stroke-dashoffset" from="70" to="0" dur="0.9s" begin="4.8s" fill="freeze"/>
         </path>
-        <!-- coeur rose -->
         <path d="M-6,4 C-10,-8 -10,-22 -2,-28 C6,-34 14,-28 14,-16 C14,-4 6,6 -2,10 C-6,12 -6,8 -6,4"
           stroke-dasharray="80" stroke-dashoffset="80">
           <animate attributeName="stroke-dashoffset" from="80" to="0" dur="1.2s" begin="5.4s" fill="freeze"/>
         </path>
-        <!-- épines -->
         <path d="M-6,110 L-16,100 M-7,75 L-18,65"
           stroke-dasharray="35" stroke-dashoffset="35">
           <animate attributeName="stroke-dashoffset" from="35" to="0" dur="0.5s" begin="6.5s" fill="freeze"/>
@@ -468,14 +598,12 @@
         <circle r="18" stroke-dasharray="113" stroke-dashoffset="113">
           <animate attributeName="stroke-dashoffset" from="113" to="0" dur="1.5s" begin="1.5s" fill="freeze"/>
         </circle>
-        <!-- 8 branches -->
         <path d="M0,-70 L0,70 M-70,0 L70,0" stroke-dasharray="280" stroke-dashoffset="280">
           <animate attributeName="stroke-dashoffset" from="280" to="0" dur="1.5s" begin="2s" fill="freeze"/>
         </path>
         <path d="M-49,-49 L49,49 M49,-49 L-49,49" stroke-dasharray="280" stroke-dashoffset="280">
           <animate attributeName="stroke-dashoffset" from="280" to="0" dur="1.5s" begin="2.3s" fill="freeze"/>
         </path>
-        <!-- Pointes N/S/E/W -->
         <polygon points="0,-70 -7,-50 7,-50" stroke-dasharray="60" stroke-dashoffset="60">
           <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.2s" fill="freeze"/>
         </polygon>
@@ -488,7 +616,6 @@
         <polygon points="70,0 50,-7 50,7" stroke-dasharray="60" stroke-dashoffset="60">
           <animate attributeName="stroke-dashoffset" from="60" to="0" dur="0.5s" begin="3.4s" fill="freeze"/>
         </polygon>
-        <!-- Graduations -->
         <path d="M0,-52 L0,-44 M0,44 L0,52 M-52,0 L-44,0 M44,0 L52,0 M-37,-37 L-31,-31 M31,-31 L37,-37 M37,37 L31,31 M-31,31 L-37,37"
           stroke-dasharray="120" stroke-dashoffset="120">
           <animate attributeName="stroke-dashoffset" from="120" to="0" dur="1s" begin="3.8s" fill="freeze"/>
@@ -497,49 +624,38 @@
 
       <!-- Poignard bas droit -->
       <g transform="translate(1260,660)" stroke="rgba(176,180,194,0.14)" stroke-width="0.7" fill="none">
-        <!-- lame -->
         <path d="M0,-80 L8,40 L0,62 L-8,40 Z" stroke-dasharray="300" stroke-dashoffset="300">
           <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2.5s" begin="1.5s" fill="freeze"/>
         </path>
-        <!-- fullers (cannelures) -->
-        <path d="M-2,-60 L-2,35 M2,-60 L2,35"
-          stroke-dasharray="200" stroke-dashoffset="200" opacity="0.5">
+        <path d="M-2,-60 L-2,35 M2,-60 L2,35" stroke-dasharray="200" stroke-dashoffset="200" opacity="0.5">
           <animate attributeName="stroke-dashoffset" from="200" to="0" dur="1.5s" begin="3.5s" fill="freeze"/>
         </path>
-        <!-- garde -->
         <path d="M-24,40 C-20,36 -12,34 0,34 C12,34 20,36 24,40 C20,44 12,46 0,46 C-12,46 -20,44 -24,40 Z"
           stroke-dasharray="100" stroke-dashoffset="100">
           <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1s" begin="3.8s" fill="freeze"/>
         </path>
-        <!-- manche -->
-        <rect x="-10" y="46" width="20" height="50" rx="3"
-          stroke-dasharray="150" stroke-dashoffset="150">
+        <rect x="-10" y="46" width="20" height="50" rx="3" stroke-dasharray="150" stroke-dashoffset="150">
           <animate attributeName="stroke-dashoffset" from="150" to="0" dur="1.2s" begin="4.5s" fill="freeze"/>
         </rect>
-        <!-- wrapping manche -->
         <path d="M-10,54 L10,54 M-10,62 L10,62 M-10,70 L10,70 M-10,78 L10,78 M-10,86 L10,86"
           stroke-dasharray="100" stroke-dashoffset="100" opacity="0.6">
           <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.8s" begin="5.5s" fill="freeze"/>
         </path>
-        <!-- pommel -->
         <circle cx="0" cy="100" r="12" stroke-dasharray="75" stroke-dashoffset="75">
           <animate attributeName="stroke-dashoffset" from="75" to="0" dur="0.8s" begin="6s" fill="freeze"/>
         </circle>
       </g>
 
-      <!-- Eagle wings / aigle — centre haut, très discret -->
+      <!-- Eagle wings -->
       <g transform="translate(720,80)" stroke="rgba(176,180,194,0.1)" stroke-width="0.7" fill="none">
-        <!-- aile gauche -->
         <path d="M0,0 C-30,10 -65,5 -95,20 C-125,35 -150,60 -140,85 C-130,110 -100,105 -75,90 C-50,75 -30,55 -10,45 C-20,60 -30,80 -20,95 C-10,110 15,105 30,90"
           stroke-dasharray="500" stroke-dashoffset="500">
           <animate attributeName="stroke-dashoffset" from="500" to="0" dur="4s" begin="2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
         </path>
-        <!-- aile droite -->
         <path d="M0,0 C30,10 65,5 95,20 C125,35 150,60 140,85 C130,110 100,105 75,90 C50,75 30,55 10,45 C20,60 30,80 20,95 C10,110 -15,105 -30,90"
           stroke-dasharray="500" stroke-dashoffset="500">
           <animate attributeName="stroke-dashoffset" from="500" to="0" dur="4s" begin="2.2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
         </path>
-        <!-- plumes détails aile gauche -->
         <path d="M-50,30 C-55,50 -45,65 -35,72 M-80,45 C-82,65 -70,78 -58,82 M-108,65 C-106,84 -94,94 -82,96"
           stroke-dasharray="200" stroke-dashoffset="200" opacity="0.8">
           <animate attributeName="stroke-dashoffset" from="200" to="0" dur="2s" begin="5.5s" fill="freeze"/>
@@ -550,10 +666,8 @@
         </path>
       </g>
 
-      <!-- Lignes de construction très subtiles -->
       <line x1="0" y1="450" x2="1440" y2="450" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
       <line x1="720" y1="0" x2="720" y2="900" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
-
     </svg>
 
     <div class="hero-content">
@@ -590,7 +704,7 @@
 
       <div class="proof-bar fade-up d4">
         <div class="proof-item">
-          <span class="proof-num">5</span>
+          <span class="proof-num" data-target="5">5</span>
           <span class="proof-label">Styles</span>
         </div>
         <div class="proof-item">
@@ -602,9 +716,28 @@
           <span class="proof-label">Generation</span>
         </div>
         <div class="proof-item">
-          <span class="proof-num">8</span>
+          <span class="proof-num" data-target="8">8</span>
           <span class="proof-label">Placements</span>
         </div>
+      </div>
+
+      <div class="trust-strip fade-up d5">
+        <span class="trust-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4.5H11L8.5 6.5L9.5 10L6 8L2.5 10L3.5 6.5L1 4.5H4.5L6 1Z" stroke="currentColor" stroke-width="0.8"/></svg>
+          Free to use
+        </span>
+        <span class="trust-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor" stroke-width="0.8"/><path d="M4 5V3.5a2 2 0 014 0V5" stroke="currentColor" stroke-width="0.8"/></svg>
+          No account required
+        </span>
+        <span class="trust-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="0.8"/><path d="M6 3.5v2.5l1.5 1.5" stroke="currentColor" stroke-width="0.8" stroke-linecap="round"/></svg>
+          Result in under 60s
+        </span>
+        <span class="trust-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 9l2.5-2.5 2 2L10 4" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          2K high resolution
+        </span>
       </div>
     </div>
   </section>
@@ -660,7 +793,7 @@
       <span class="section-label fade-up">Process</span>
       <h2 class="section-title fade-up d1">How it works</h2>
       <div class="how-grid">
-        <div class="how-step fade-up d1">
+        <div class="how-step fade-left d1">
           <p class="how-num">01</p>
           <p class="how-title">Describe your idea</p>
           <p class="how-desc">Subject, style, mood, body placement, word to include — the more specific you are, the better the result.</p>
@@ -670,10 +803,52 @@
           <p class="how-title">AI generates</p>
           <p class="how-desc">In under 60 seconds, a professional high-resolution design appears, calibrated to your chosen style.</p>
         </div>
-        <div class="how-step fade-up d3">
+        <div class="how-step fade-right d3">
           <p class="how-num">03</p>
           <p class="how-title">See it on your skin</p>
           <p class="how-desc">Upload a photo of your placement area and AI renders the design on it realistically. Show it to your artist.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SOCIAL PROOF ══ -->
+  <section id="social-proof">
+    <div class="section-inner">
+      <span class="section-label fade-up" style="text-align:center;display:block;margin-bottom:40px;">What people say</span>
+      <div class="testimonials-grid">
+        <div class="testimonial-card fade-left d1">
+          <p class="stars">★★★★★</p>
+          <p class="testimonial-text">"I showed the result to my tattoo artist and he was genuinely impressed. It saved me two consultations."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">ML</div>
+            <div>
+              <p class="testimonial-name">Marc L.</p>
+              <p class="testimonial-role">First tattoo, geometric style</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-up d2">
+          <p class="stars">★★★★★</p>
+          <p class="testimonial-text">"The placement feature is insane. Seeing the design on my forearm before committing changed everything for me."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SR</div>
+            <div>
+              <p class="testimonial-name">Sofia R.</p>
+              <p class="testimonial-role">Japanese sleeve concept</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-right d3">
+          <p class="stars">★★★★★</p>
+          <p class="testimonial-text">"As a tattoo artist myself, I recommend this to all my clients before the first session. The quality is there."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">TK</div>
+            <div>
+              <p class="testimonial-name">Thomas K.</p>
+              <p class="testimonial-role">Professional tattoo artist</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -684,12 +859,22 @@
     <h2 class="cta-final-title fade-up">Your next tattoo<br>starts here.</h2>
     <p class="cta-final-sub fade-up d1">Describe your idea. See it on your skin. Show it to your artist.</p>
     <a href="outil.html" class="cta-btn mag-btn fade-up d2">Create my design →</a>
+    <p class="cta-note fade-up d3">Free · No account required · 2K resolution</p>
   </section>
 
   <!-- ══ FOOTER ══ -->
   <footer>
-    <p class="footer-logo">INK.STUDIO</p>
-    <p class="footer-copy">© 2025 INK.STUDIO — All rights reserved</p>
+    <div class="footer-inner">
+      <div class="footer-left">
+        <p class="footer-logo">INK.STUDIO</p>
+        <p class="footer-copy">© 2025 INK.STUDIO — All rights reserved</p>
+      </div>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
   </footer>
 
   <script>
@@ -703,7 +888,6 @@
     const dot  = document.getElementById('cursor-dot');
     const ring = document.getElementById('cursor-ring');
     let ringX = 0, ringY = 0, dotX = 0, dotY = 0;
-    let raf;
 
     document.addEventListener('mousemove', e => {
       dotX = e.clientX; dotY = e.clientY;
@@ -711,14 +895,13 @@
       dot.style.top   = dotY + 'px';
     });
 
-    function animateRing() {
+    (function animateRing() {
       ringX += (dotX - ringX) * 0.12;
       ringY += (dotY - ringY) * 0.12;
       ring.style.left = ringX + 'px';
       ring.style.top  = ringY + 'px';
-      raf = requestAnimationFrame(animateRing);
-    }
-    animateRing();
+      requestAnimationFrame(animateRing);
+    })();
 
     document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
     document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-hidden'));
@@ -731,20 +914,16 @@
     // ══ BOUTONS MAGNÉTIQUES ══
     document.querySelectorAll('.mag-btn').forEach(btn => {
       btn.addEventListener('mousemove', e => {
-        const r   = btn.getBoundingClientRect();
-        const cx  = r.left + r.width  / 2;
-        const cy  = r.top  + r.height / 2;
-        const dx  = (e.clientX - cx) * 0.18;
-        const dy  = (e.clientY - cy) * 0.18;
+        const r  = btn.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2))  * 0.18;
+        const dy = (e.clientY - (r.top  + r.height / 2)) * 0.18;
         btn.style.transform = `translate(${dx}px, ${dy}px)`;
       });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transform = '';
-      });
+      btn.addEventListener('mouseleave', () => btn.style.transform = '');
     });
 
-    // ══ SCROLL FADE-UP ══
-    const fadeEls = document.querySelectorAll('.fade-up');
+    // ══ SCROLL FADE ANIMATIONS ══
+    const animEls = document.querySelectorAll('.fade-up, .fade-left, .fade-right');
     const io = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
@@ -752,43 +931,25 @@
           io.unobserve(e.target);
         }
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-    fadeEls.forEach(el => io.observe(el));
+    animEls.forEach(el => io.observe(el));
 
     // Hero visible immédiatement
-    document.querySelectorAll('#hero .fade-up').forEach(el => {
+    document.querySelectorAll('#hero .fade-up, #hero .fade-left, #hero .fade-right').forEach(el => {
       el.classList.add('visible');
     });
 
-    // ══ VIDEO SCROLL-DRIVEN ══
+    // ══ VIDEO BG PARALLAX ══
     const videoEl = document.querySelector('#video-bg video');
-    let lastScrollY = window.scrollY;
-    let lastScrollT = performance.now();
-    let stopTimer;
-
-    // Démarre en pause
-    videoEl.pause();
-    videoEl.currentTime = 0;
-
-    window.addEventListener('scroll', () => {
-      const now = performance.now();
-      const dy  = window.scrollY - lastScrollY;
-      const dt  = Math.max(1, now - lastScrollT);
-      const vel = dy / dt; // px/ms
-
-      lastScrollY = window.scrollY;
-      lastScrollT = now;
-
-      // Vitesse de lecture proportionnelle à la vitesse de scroll
-      const rate = Math.min(Math.abs(vel) * 8, 4);
-      videoEl.playbackRate = Math.max(0.5, rate);
-      videoEl.play();
-
-      // Pause 200ms après l'arrêt du scroll
-      clearTimeout(stopTimer);
-      stopTimer = setTimeout(() => videoEl.pause(), 200);
-    }, { passive: true });
+    function onVideoScroll() {
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const p = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      const shift = p * window.innerHeight * 0.2;
+      videoEl.style.transform = `translateY(-${shift}px) scale(1.35)`;
+    }
+    window.addEventListener('scroll', onVideoScroll, { passive: true });
+    onVideoScroll();
   </script>
 
 </body>
