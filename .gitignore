@@ -2,7 +2,7 @@
 node_modules/
 *.jpg
 *.png
-*.mp4
+# *.mp4
 tmp/
 images/ 
 uploads/ 
