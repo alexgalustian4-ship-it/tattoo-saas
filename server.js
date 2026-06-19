@@ -311,6 +311,21 @@ function sleep(ms) {
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
+// ── Download proxy (cross-origin image download) ──
+app.get('/download', async (req, res) => {
+  const { url, filename = 'ink-studio.jpg' } = req.query;
+  if (!url || !url.startsWith('https://')) return res.status(400).send('Invalid URL');
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return res.status(502).send('Failed to fetch image');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', r.headers.get('content-type') || 'image/jpeg');
+    r.body.pipe(res);
+  } catch (e) {
+    res.status(500).send('Download error');
+  }
+});
+
 const upload = multer({ dest: 'uploads/' });
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 

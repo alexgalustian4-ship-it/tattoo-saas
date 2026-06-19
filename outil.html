@@ -1213,7 +1213,7 @@
               <p class="hist-date">${formatDate(p.date)}</p>
               <div class="hist-actions">
                 <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>
-                <a class="hist-btn-dl" href="${p.imageUrl}" download="ink-studio-${p.id}.jpg" target="_blank">↓</a>
+                <a class="hist-btn-dl" href="/download?url=${encodeURIComponent(p.imageUrl)}&filename=ink-studio-${p.id}.jpg">↓</a>
                 <button class="hist-btn-del" onclick="deleteProject(${p.id})">✕</button>
               </div>
             </div>
