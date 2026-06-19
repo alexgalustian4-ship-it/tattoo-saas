@@ -445,6 +445,14 @@
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
+      <button class="mode-card" id="btn-mode3">
+        <div class="mode-card-icon">🐾</div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Pet portrait tattoo</p>
+          <p class="mode-card-desc">Upload a photo of your animal — AI turns it into a professional tattoo design.</p>
+        </div>
+        <span class="mode-card-arrow">›</span>
+      </button>
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
@@ -731,6 +739,81 @@
       </div>
     </div>
 
+    <!-- ══════════ MODE 3 — ANIMAL PORTRAIT ══════════ -->
+    <div data-hidden class="card" id="mode3-card">
+      <p class="section-title">Pet portrait tattoo</p>
+
+      <!-- Photo de l'animal -->
+      <div class="field">
+        <label>Photo of your animal <span>(clear, well-lit)</span></label>
+        <div class="upload-area" id="m3-photo-area">
+          <input type="file" id="m3-photo-input" accept="image/*" />
+          <span class="icon">🐾</span>
+          <p><strong>Tap here</strong> to add a photo</p>
+          <p>Dog, cat, bird, horse… any animal</p>
+        </div>
+        <div data-hidden id="m3-photo-preview-wrap" class="result-img-wrap" style="margin-top:8px">
+          <img id="m3-photo-preview-img" src="" alt="Your animal" style="max-height:220px;object-fit:contain;background:#0a0a0a;" />
+          <button class="result-change" id="m3-btn-remove-photo">Change</button>
+        </div>
+      </div>
+
+      <!-- Style -->
+      <div class="field">
+        <label>Tattoo style</label>
+        <div class="zone-grid">
+          <button class="zone-btn selected" data-m3style="realism">Realism</button>
+          <button class="zone-btn" data-m3style="fineline">Fine line</button>
+          <button class="zone-btn" data-m3style="geometric">Geometric</button>
+          <button class="zone-btn" data-m3style="watercolor">Watercolor</button>
+          <button class="zone-btn" data-m3style="traditional">Traditional</button>
+        </div>
+      </div>
+
+      <!-- Détails libres -->
+      <div class="field">
+        <label>Details to add <span>(optional)</span></label>
+        <textarea id="m3-details" rows="3" placeholder="Name, date, flowers, halo, stars, specific background…" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text);font-size:0.85rem;resize:vertical;font-family:inherit;"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="m3-btn-generate" disabled>Generate my pet tattoo →</button>
+
+      <div class="status" id="m3-status"></div>
+
+      <div data-hidden id="m3-result" style="margin-top:16px">
+        <div class="result-img-wrap" style="margin-bottom:16px">
+          <img id="m3-result-img" src="" alt="Pet tattoo design" />
+          <a id="m3-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
+        </div>
+        <button class="btn btn-secondary" id="m3-btn-place">Place on my skin →</button>
+      </div>
+
+      <!-- Étape 2 — placement -->
+      <div data-hidden id="m3-step2">
+        <hr class="divider" />
+        <p class="section-title" style="margin-bottom:16px">Step 2 — Place on your skin</p>
+        <div class="field">
+          <label>Your photo <span>(the chosen area must be visible)</span></label>
+          <div class="upload-area" id="m3-body-area">
+            <input type="file" id="m3-body-input" accept="image/*" />
+            <span class="icon">📷</span>
+            <p><strong>Tap here</strong> to add your photo</p>
+          </div>
+          <div data-hidden id="m3-body-preview-wrap" class="result-img-wrap" style="margin-top:8px">
+            <img id="m3-body-preview-img" src="" alt="Your photo" />
+            <button class="result-change" id="m3-btn-remove-body">Change</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="m3-btn-place-go" disabled>See it on my skin →</button>
+        <div class="status" id="m3-status2"></div>
+        <div data-hidden id="m3-body-result" style="margin-top:16px">
+          <div class="result-img-wrap">
+            <img id="m3-body-result-img" src="" alt="Result" />
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ══════════ MES PROJETS ══════════ -->
@@ -1006,12 +1089,18 @@
       hide(modeSelector); hide(modeBack);
       show(mode2Card); show(modeBack);
     }
+    const mode3Card = document.getElementById('mode3-card');
+    function activateMode3() {
+      hide(modeSelector);
+      show(mode3Card); show(modeBack);
+    }
 
     document.getElementById('btn-mode1').addEventListener('click', activateMode1);
     document.getElementById('btn-mode2').addEventListener('click', activateMode2);
+    document.getElementById('btn-mode3').addEventListener('click', activateMode3);
 
     modeBack.addEventListener('click', () => {
-      hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(modeBack);
+      hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(modeBack);
       resetMode2();
       show(modeSelector);
     });
@@ -1108,6 +1197,132 @@
     const urlMode = new URLSearchParams(window.location.search).get('mode');
     if (urlMode === 'create') activateMode1();
     if (urlMode === 'body')   activateMode2();
+    if (urlMode === 'pet')    activateMode3();
+
+    // ── MODE 3 — PET PORTRAIT ────────────────────────────
+    let m3Style = 'realism';
+    let m3DesignUrl = '';
+
+    const m3PhotoInput      = document.getElementById('m3-photo-input');
+    const m3PhotoArea       = document.getElementById('m3-photo-area');
+    const m3PhotoPreviewWrap= document.getElementById('m3-photo-preview-wrap');
+    const m3PhotoPreviewImg = document.getElementById('m3-photo-preview-img');
+    const m3BtnRemovePhoto  = document.getElementById('m3-btn-remove-photo');
+    const m3Details         = document.getElementById('m3-details');
+    const m3BtnGenerate     = document.getElementById('m3-btn-generate');
+    const m3Status          = document.getElementById('m3-status');
+    const m3Result          = document.getElementById('m3-result');
+    const m3ResultImg       = document.getElementById('m3-result-img');
+    const m3BtnDl           = document.getElementById('m3-btn-dl');
+    const m3BtnPlace        = document.getElementById('m3-btn-place');
+    const m3Step2           = document.getElementById('m3-step2');
+    const m3BodyArea        = document.getElementById('m3-body-area');
+    const m3BodyInput       = document.getElementById('m3-body-input');
+    const m3BodyPreviewWrap = document.getElementById('m3-body-preview-wrap');
+    const m3BodyPreviewImg  = document.getElementById('m3-body-preview-img');
+    const m3BtnRemoveBody   = document.getElementById('m3-btn-remove-body');
+    const m3BtnPlaceGo      = document.getElementById('m3-btn-place-go');
+    const m3Status2         = document.getElementById('m3-status2');
+    const m3BodyResult      = document.getElementById('m3-body-result');
+    const m3BodyResultImg   = document.getElementById('m3-body-result-img');
+
+    // Style selector
+    document.querySelectorAll('[data-m3style]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-m3style]').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        m3Style = btn.dataset.m3style;
+      });
+    });
+
+    // Photo upload
+    m3PhotoInput.addEventListener('change', () => {
+      const file = m3PhotoInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = e => {
+        m3PhotoPreviewImg.src = e.target.result;
+        hide(m3PhotoArea); show(m3PhotoPreviewWrap);
+        m3BtnGenerate.disabled = false;
+      };
+      r.readAsDataURL(file);
+    });
+    m3BtnRemovePhoto.addEventListener('click', () => {
+      m3PhotoInput.value = ''; m3PhotoPreviewImg.src = '';
+      show(m3PhotoArea); hide(m3PhotoPreviewWrap);
+      m3BtnGenerate.disabled = true;
+    });
+
+    // Generate
+    m3BtnGenerate.addEventListener('click', async () => {
+      setLoading(m3Status, 'Generating your pet tattoo design… (under 60s)');
+      m3BtnGenerate.disabled = true; hide(m3Result); hide(m3Step2);
+      try {
+        const fd = new FormData();
+        fd.append('photo',   m3PhotoInput.files[0]);
+        fd.append('style',   m3Style);
+        fd.append('details', m3Details.value.trim());
+        const resp = await fetch('/generate-pet-tattoo', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
+        m3DesignUrl = data.imageUrl;
+        m3ResultImg.src = data.imageUrl;
+        m3BtnDl.href = `/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo.jpg`;
+        hideStatus(m3Status); show(m3Result);
+        m3Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        saveProject({ type: 'pet', imageUrl: data.imageUrl, params: { sujet: 'Pet tattoo', style: m3Style } });
+      } catch (err) {
+        m3Status.textContent = '❌ Error: ' + err.message;
+        m3Status.style.color = 'var(--error)';
+      } finally {
+        m3BtnGenerate.disabled = false;
+      }
+    });
+
+    // Go to placement step
+    m3BtnPlace.addEventListener('click', () => {
+      show(m3Step2);
+      m3Step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Body photo upload
+    m3BodyInput.addEventListener('change', () => {
+      const file = m3BodyInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = e => {
+        m3BodyPreviewImg.src = e.target.result;
+        hide(m3BodyArea); show(m3BodyPreviewWrap);
+        m3BtnPlaceGo.disabled = false;
+      };
+      r.readAsDataURL(file);
+    });
+    m3BtnRemoveBody.addEventListener('click', () => {
+      m3BodyInput.value = ''; m3BodyPreviewImg.src = '';
+      show(m3BodyArea); hide(m3BodyPreviewWrap);
+      m3BtnPlaceGo.disabled = true;
+    });
+
+    // Place on body
+    m3BtnPlaceGo.addEventListener('click', async () => {
+      setLoading(m3Status2, 'Applying tattoo to your photo… (1–2 min)');
+      m3BtnPlaceGo.disabled = true; hide(m3BodyResult);
+      try {
+        const fd = new FormData();
+        fd.append('photo',     m3BodyInput.files[0]);
+        fd.append('designUrl', m3DesignUrl);
+        fd.append('zone',      'dos');
+        const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
+        m3BodyResultImg.src = data.imageUrl;
+        hideStatus(m3Status2); show(m3BodyResult);
+        m3BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        m3Status2.textContent = '❌ Error: ' + err.message;
+        m3Status2.style.color = 'var(--error)';
+      } finally {
+        m3BtnPlaceGo.disabled = false;
+      }
+    });
 
     // ── HISTORIQUE PROJETS (localStorage) ───────────────
     const STORAGE_KEY = 'ink_projects';

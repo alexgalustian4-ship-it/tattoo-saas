@@ -495,6 +495,65 @@ app.post('/place-uploaded-design', upload.fields([
 });
 
 // ─────────────────────────────────────────────────
+// POST /generate-pet-tattoo — Mode animal
+// File  : photo (photo de l'animal)
+// Body  : style, details (texte libre), zone (optionnel)
+// Retour: { imageUrl }
+// ─────────────────────────────────────────────────
+app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No photo received.' });
+
+  const style   = (req.body.style   || 'realism').trim();
+  const details = (req.body.details || '').trim();
+  const zone    = (req.body.zone    || '').trim();
+
+  const photoPath = req.file.path + '.jpg';
+  fs.renameSync(req.file.path, photoPath);
+
+  const stylePrompts = {
+    realism:    'photorealistic black and grey realism tattoo, ultra-detailed fur and eyes, deep contrast, fine lines',
+    fineline:   'fine line tattoo, delicate single-needle style, minimal shading, elegant linework',
+    geometric:  'geometric tattoo design, dotwork and sacred geometry patterns integrated with the animal portrait',
+    watercolor: 'watercolor tattoo style, soft ink washes, painterly strokes, vibrant but controlled color bleeding',
+    traditional:'bold traditional tattoo style, thick black outlines, solid fills, classic flash art aesthetic',
+  };
+  const styleDesc = stylePrompts[style] || stylePrompts.realism;
+
+  const prompt =
+    `Create a professional tattoo design based on the animal in the photo. ` +
+    `Style: ${styleDesc}. ` +
+    `Capture the animal's most recognizable features: face, eyes, fur texture, expression. ` +
+    (details ? `Additional details to include: ${details}. ` : '') +
+    `White background, tattoo flash art composition, ready to tattoo. ` +
+    `High resolution, professional tattoo artist quality.`;
+
+  try {
+    console.log('\n🐾 Pet tattoo generation');
+    console.log('   Style   :', style);
+    console.log('   Details :', details || 'none');
+
+    const payload = {
+      model:      'nano_banana_2',
+      prompt,
+      images:     [fileToBase64(photoPath)],
+      resolution: '2k',
+    };
+
+    const { imageUrl } = await fetchHiggsfield(payload,
+      'The photo was blocked by the content filter. Try a clearer, well-lit photo of the animal.'
+    );
+
+    res.json({ imageUrl, zone });
+
+  } catch (err) {
+    console.error('❌ /generate-pet-tattoo :', err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
+  }
+});
+
+// ─────────────────────────────────────────────────
 // POST /generate-video — ÉTAPE 3 (masquée dans l'UI)
 // Body  : sourceUrl (URL de l'image de prévisualisation corps)
 // Retour: { videoUrl }
