@@ -278,10 +278,13 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
   const { model, prompt, resolution, images } = payload;
 
-  // Build params object — images as base64 array if provided
+  // Build params object — nano_banana_2 uses input_images, gpt_image_2 uses images
   const params = { prompt };
   if (resolution) params.resolution = resolution;
-  if (Array.isArray(images) && images.length) params.images = images;
+  if (Array.isArray(images) && images.length) {
+    if (model === 'gpt_image_2') params.images = images;
+    else params.input_images = images;
+  }
 
   const body = { job_set_type: model, params };
 
