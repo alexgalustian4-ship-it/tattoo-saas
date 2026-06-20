@@ -310,14 +310,6 @@ async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
   const prompt = payload.prompt || '';
   const tmpFiles = [];
 
-  // gpt_image_2 avec images → REST direct (le CLI ne supporte pas --image pour ce modèle)
-  if (model === 'gpt_image_2' && Array.isArray(payload.images) && payload.images.length > 0) {
-    return fetchHiggsFieldREST({
-      job_set_type: model,
-      params: { prompt, images: payload.images, resolution: payload.resolution || '2k' },
-    }, timeoutMs);
-  }
-
   try {
     const args = ['generate', 'create', model, '--prompt', prompt, '--wait'];
 
@@ -494,7 +486,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
       payload = {
-        model:      'gpt_image_2',
+        model:      'nano_banana_2',
         prompt,
         images:     [fileToBase64(inspPath)],
         resolution: '2k',
