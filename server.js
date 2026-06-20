@@ -240,7 +240,7 @@ const ZONE_PROMPTS = {
 
 // Modèles disponibles pour l'étape 2 (pose sur le corps)
 const BODY_MODELS = {
-  nano_banana_pro:  { apiModel: 'nano_banana_2', extras: { resolution: '2k' }, label: 'Standard' },
+  nano_banana_pro:  { apiModel: 'gpt_image_2', extras: { resolution: '2k' }, label: 'Standard' },
 };
 const DEFAULT_BODY_MODEL = 'nano_banana_pro';
 
