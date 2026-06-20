@@ -1147,10 +1147,18 @@
             <button class="rework-brush-btn" id="brush-remove" data-mode="remove" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">− Remove</button>
             <button id="brush-erase" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">⌫ Erase zone</button>
             <button id="rework-clear-canvas" style="background:none;border:1px solid #2a2a32;border-radius:6px;color:var(--text-muted);padding:5px 12px;cursor:pointer;font-size:0.75rem">Clear all</button>
+            <div style="display:flex;gap:4px;margin-left:8px;align-items:center">
+              <button id="zoom-out" style="background:#1a1a1a;border:1px solid #333;color:#ccc;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1">−</button>
+              <span id="zoom-label" style="font-size:0.72rem;color:var(--text-muted);min-width:36px;text-align:center">100%</span>
+              <button id="zoom-in" style="background:#1a1a1a;border:1px solid #333;color:#ccc;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1">+</button>
+              <button id="zoom-reset" style="background:none;border:1px solid #2a2a32;border-radius:6px;color:var(--text-muted);padding:4px 8px;cursor:pointer;font-size:0.72rem">Reset</button>
+            </div>
           </div>
           <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid #2a2a32;background:#0a0a10;cursor:crosshair" id="rework-canvas-wrap">
-            <img id="rework-base-img" style="display:block;width:100%;height:auto;user-select:none;pointer-events:none" />
-            <canvas id="rework-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+            <div id="rework-canvas-inner" style="position:relative;transform-origin:0 0;will-change:transform">
+              <img id="rework-base-img" style="display:block;width:100%;height:auto;user-select:none;pointer-events:none" />
+              <canvas id="rework-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+            </div>
           </div>
           <p style="font-size:0.72rem;color:#404050;margin-top:8px">Vert = zone à ajouter &nbsp;·&nbsp; Rouge = zone à supprimer &nbsp;·&nbsp; Laisse vide pour modifier via le texte uniquement</p>
         </div>
@@ -2415,6 +2423,88 @@
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     });
 
+    // Zoom/pan state
+    let viewZoom = 1, viewPanX = 0, viewPanY = 0;
+    let isPanning = false, panStart = null;
+
+    function applyViewTransform() {
+      const inner = document.getElementById('rework-canvas-inner');
+      inner.style.transform = `translate(${viewPanX}px,${viewPanY}px) scale(${viewZoom})`;
+      inner.style.transformOrigin = '0 0';
+      document.getElementById('zoom-label').textContent = Math.round(viewZoom * 100) + '%';
+    }
+
+    function clampPan() {
+      const wrap  = document.getElementById('rework-canvas-wrap');
+      const inner = document.getElementById('rework-canvas-inner');
+      const ww = wrap.clientWidth, wh = wrap.clientHeight;
+      const iw = inner.clientWidth * viewZoom, ih = inner.clientHeight * viewZoom;
+      const maxX = Math.max(0, iw - ww), maxY = Math.max(0, ih - wh);
+      viewPanX = Math.min(0, Math.max(-maxX, viewPanX));
+      viewPanY = Math.min(0, Math.max(-maxY, viewPanY));
+    }
+
+    function setZoom(newZoom, cx, cy) {
+      const wrap = document.getElementById('rework-canvas-wrap');
+      const rect = wrap.getBoundingClientRect();
+      cx = cx ?? rect.width  / 2;
+      cy = cy ?? rect.height / 2;
+      const prevZoom = viewZoom;
+      viewZoom = Math.min(5, Math.max(1, newZoom));
+      viewPanX = cx - (cx - viewPanX) * (viewZoom / prevZoom);
+      viewPanY = cy - (cy - viewPanY) * (viewZoom / prevZoom);
+      clampPan();
+      applyViewTransform();
+    }
+
+    document.getElementById('zoom-in').addEventListener('click',    () => setZoom(viewZoom + 0.5));
+    document.getElementById('zoom-out').addEventListener('click',   () => setZoom(viewZoom - 0.5));
+    document.getElementById('zoom-reset').addEventListener('click', () => { viewZoom = 1; viewPanX = 0; viewPanY = 0; applyViewTransform(); });
+
+    // Scroll wheel zoom
+    document.getElementById('rework-canvas-wrap').addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = document.getElementById('rework-canvas-wrap').getBoundingClientRect();
+      setZoom(viewZoom - e.deltaY * 0.001, e.clientX - rect.left, e.clientY - rect.top);
+    }, { passive: false });
+
+    // Middle-click or space+drag to pan
+    document.getElementById('rework-canvas-wrap').addEventListener('mousedown', (e) => {
+      if (e.button === 1 || e.button === 0 && e.altKey) {
+        e.preventDefault();
+        isPanning = true;
+        panStart = { x: e.clientX - viewPanX, y: e.clientY - viewPanY };
+        document.getElementById('rework-canvas-wrap').style.cursor = 'grabbing';
+      }
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      viewPanX = e.clientX - panStart.x;
+      viewPanY = e.clientY - panStart.y;
+      clampPan();
+      applyViewTransform();
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (isPanning) { isPanning = false; document.getElementById('rework-canvas-wrap').style.cursor = 'crosshair'; }
+    });
+
+    // Pinch to zoom on mobile
+    let lastPinchDist = null;
+    document.getElementById('rework-canvas-wrap').addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) lastPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }, { passive: true });
+    document.getElementById('rework-canvas-wrap').addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && lastPinchDist) {
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const rect = document.getElementById('rework-canvas-wrap').getBoundingClientRect();
+        const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+        const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+        setZoom(viewZoom * (dist / lastPinchDist), cx, cy);
+        lastPinchDist = dist;
+      }
+    }, { passive: true });
+    document.getElementById('rework-canvas-wrap').addEventListener('touchend', () => { lastPinchDist = null; });
+
     // Lasso drawing
     (function() {
       const canvas = document.getElementById('rework-canvas');
@@ -2422,11 +2512,14 @@
       let lassoActive = false;
 
       function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width  / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const src = e.touches ? e.touches[0] : e;
-        return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+        const inner = document.getElementById('rework-canvas-inner');
+        const rect  = inner.getBoundingClientRect();
+        const src   = e.touches ? e.touches[0] : e;
+        // Account for zoom: inner rect already includes scale, so divide by zoom for canvas coords
+        return {
+          x: ((src.clientX - rect.left) / viewZoom) * (canvas.width  / (rect.width  / viewZoom)),
+          y: ((src.clientY - rect.top)  / viewZoom) * (canvas.height / (rect.height / viewZoom)),
+        };
       }
 
       function redrawLasso() {
