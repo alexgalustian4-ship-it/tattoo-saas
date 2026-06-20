@@ -30,23 +30,31 @@ async function makeStencil(inputPath, outputPath) {
   for (let i = 0; i < w * h; i++)
     gray[i] = 0.299*srcData[i*4] + 0.587*srcData[i*4+1] + 0.114*srcData[i*4+2];
 
-  // Difference of Gaussians (DoG) — gives thin clean edges
-  const blur1 = gaussianBlur(gray, w, h, 1);  // fine detail
-  const blur2 = gaussianBlur(gray, w, h, 6);  // coarse
+  // Gaussian pre-blur to reduce noise
+  const blurred = gaussianBlur(gray, w, h, 1);
 
-  // DoG = difference = edges only
-  const dog = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++)
-    dog[i] = blur1[i] - blur2[i];
+  // Sobel edge detection — gradient magnitude, works on any image darkness
+  const mag = new Float32Array(w * h);
+  let maxMag = 0;
+  for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+    const p = (y2, x2) => blurred[y2*w+x2];
+    const gx = -p(y-1,x-1) + p(y-1,x+1) - 2*p(y,x-1) + 2*p(y,x+1) - p(y+1,x-1) + p(y+1,x+1);
+    const gy = -p(y-1,x-1) - 2*p(y-1,x) - p(y-1,x+1) + p(y+1,x-1) + 2*p(y+1,x) + p(y+1,x+1);
+    const m = Math.sqrt(gx*gx + gy*gy);
+    mag[y*w+x] = m;
+    if (m > maxMag) maxMag = m;
+  }
 
-  // Threshold: only keep strong edges (negative = dark edge)
+  // Adaptive threshold at 15% of max gradient
+  const threshold = maxMag * 0.15;
+
+  // Output: white bg + violet (75, 0, 130) lines
   const out = createCanvas(w, h);
   const oCtx = out.getContext('2d');
   const outData = oCtx.createImageData(w, h);
 
   for (let i = 0; i < w * h; i++) {
-    // Negative DoG = dark lines on bright background
-    const isLine = dog[i] < -8;
+    const isLine = mag[i] > threshold;
     outData.data[i*4]   = isLine ? 75  : 255;
     outData.data[i*4+1] = isLine ? 0   : 255;
     outData.data[i*4+2] = isLine ? 130 : 255;

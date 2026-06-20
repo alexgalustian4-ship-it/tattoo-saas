@@ -2434,16 +2434,28 @@
         for (let i = 0; i < w * h; i++)
           gray[i] = 0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2];
 
-        // Difference of Gaussians — thin clean edges only
-        const blur1 = gaussBlur(gray, w, h, 1);
-        const blur2 = gaussBlur(gray, w, h, 6);
-        const dog = new Float32Array(w * h);
-        for (let i = 0; i < w * h; i++) dog[i] = blur1[i] - blur2[i];
+        // Gaussian pre-blur to reduce noise before edge detection
+        const blurred = gaussBlur(gray, w, h, 1);
 
-        // Output: white bg + violet lines where edge detected
+        // Sobel edge detection — gradient magnitude, works on any image darkness
+        const mag = new Float32Array(w * h);
+        let maxMag = 0;
+        for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+          const p = (y2, x2) => blurred[y2*w+x2];
+          const gx = -p(y-1,x-1) + p(y-1,x+1) - 2*p(y,x-1) + 2*p(y,x+1) - p(y+1,x-1) + p(y+1,x+1);
+          const gy = -p(y-1,x-1) - 2*p(y-1,x) - p(y-1,x+1) + p(y+1,x-1) + 2*p(y+1,x) + p(y+1,x+1);
+          const m = Math.sqrt(gx*gx + gy*gy);
+          mag[y*w+x] = m;
+          if (m > maxMag) maxMag = m;
+        }
+
+        // Adaptive threshold at 15% of max gradient
+        const threshold = maxMag * 0.15;
+
+        // Output: white bg + violet lines
         const out = ctx.createImageData(w, h);
         for (let i = 0; i < w*h; i++) {
-          const isLine = dog[i] < -8;
+          const isLine = mag[i] > threshold;
           out.data[i*4]   = isLine ? 75  : 255;
           out.data[i*4+1] = isLine ? 0   : 255;
           out.data[i*4+2] = isLine ? 130 : 255;
