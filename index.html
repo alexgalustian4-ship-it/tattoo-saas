@@ -696,9 +696,22 @@
       transition: box-shadow 0.25s, transform 0.2s;
     }
     .ss-cta:hover { box-shadow: 0 0 28px rgba(139,92,246,0.5); transform: translateY(-2px); }
+    #ps-showcase {
+      padding: 100px 5vw;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1; overflow: hidden;
+    }
+    #ps-showcase::before {
+      content: '';
+      position: absolute; left: -10%; top: 50%;
+      transform: translateY(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
     @media (max-width: 900px) {
       .ss-inner { grid-template-columns: 1fr; gap: 40px; }
-      #stencil-showcase { padding: 60px 5vw; }
+      #stencil-showcase, #ps-showcase { padding: 60px 5vw; }
     }
 
     /* ══ VIDEO BG ══════════════════════════════ */
@@ -1108,6 +1121,51 @@
           <p class="style-desc">Hyperrealistic black &amp; grey, deep contrasts</p>
         </a>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ PLACE ON SKIN SHOWCASE ══ -->
+  <section id="ps-showcase">
+    <div class="ss-inner">
+
+      <!-- Left: before/after slider -->
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-slider" id="ps-slider">
+          <img src="images/skin-after.png" alt="Tattoo on skin" style="object-fit:cover" />
+          <div class="ss-after-layer" id="ps-after-layer">
+            <img src="images/skin-before.png" alt="Tattoo design" style="object-fit:contain;background:#fff" />
+          </div>
+          <div class="ss-line" id="ps-line"></div>
+          <div class="ss-knob" id="ps-knob">
+            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
+          </div>
+          <div class="ss-badges">
+            <span class="ss-badge after">On skin</span>
+            <span class="ss-badge">Design</span>
+          </div>
+        </div>
+        <p class="ss-caption">Drag to compare</p>
+      </div>
+
+      <!-- Right: text -->
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow">Place on skin</p>
+        <h2>See it on<br>your skin.<br>Before you ink.</h2>
+        <p>Upload your design and a photo — AI places the tattoo exactly where you want it, in real conditions. Show it to your artist before committing.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Any placement — arm, chest, back, thigh…
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Photorealistic result in under 60 seconds
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Free — no account required
+          </div>
+        </div>
+        <a href="outil.html?mode=body" class="ss-cta">Try for free →</a>
+      </div>
+
     </div>
   </section>
 
@@ -1584,6 +1642,30 @@
       window.addEventListener('touchmove', e => { if (ssDragging) setPos(e.touches[0].clientX); }, { passive: true });
       window.addEventListener('touchend', () => { ssDragging = false; });
     }
+
+    // Place on skin slider (static before/after)
+    (function() {
+      const slider = document.getElementById('ps-slider');
+      const layer  = document.getElementById('ps-after-layer');
+      const line   = document.getElementById('ps-line');
+      const knob   = document.getElementById('ps-knob');
+      if (!slider) return;
+      let dragging = false;
+      function setPos(x) {
+        const rect = slider.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+        layer.style.clipPath = `inset(0 ${(100 - pct * 100).toFixed(1)}% 0 0)`;
+        line.style.left = knob.style.left = (pct * 100).toFixed(1) + '%';
+      }
+      // Start at 50%
+      setPos(slider.getBoundingClientRect().left + slider.offsetWidth / 2);
+      slider.onmousedown = e => { dragging = true; setPos(e.clientX); e.preventDefault(); };
+      slider.ontouchstart = e => { dragging = true; setPos(e.touches[0].clientX); };
+      window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+      window.addEventListener('mouseup', () => { dragging = false; });
+      window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('touchend', () => { dragging = false; });
+    })();
 
     // Tab switching
     function ssTab(tab) {
