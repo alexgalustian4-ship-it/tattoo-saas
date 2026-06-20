@@ -420,10 +420,12 @@ function clientError(err) {
   return err.message || 'Generation failed. Please try again in a moment.';
 }
 
+const upload = multer({ dest: 'uploads/' });
+if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+
 // ─────────────────────────────────────────────────
-// POST /rework — déclaré plus bas, après `upload`
+// POST /rework — Inpainting précis via OpenAI gpt-image-1
 // ─────────────────────────────────────────────────
-function registerReworkEndpoint() {
 app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async (req, res) => {
   const prompt    = (req.body.prompt    || '').trim();
   const zoneDesc  = (req.body.zoneDesc  || '').trim();
@@ -501,7 +503,6 @@ app.get('/rework-result/:filename', (req, res) => {
   res.setHeader('Content-Type', 'image/png');
   res.send(fs.readFileSync(p));
 });
-}
 
 // ─────────────────────────────────────────────────
 // Middleware
@@ -527,9 +528,6 @@ app.get('/download', async (req, res) => {
   }
 });
 
-const upload = multer({ dest: 'uploads/' });
-if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
-registerReworkEndpoint();
 
 // ─────────────────────────────────────────────────
 // POST /generate — ÉTAPE 1 : génération du design
