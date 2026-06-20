@@ -293,9 +293,9 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   });
   const submitted = await submitRes.json();
   console.log('REST submit:', JSON.stringify(submitted).slice(0, 300));
-  if (!submitRes.ok || !submitted.id) throw new Error('REST submit failed: ' + JSON.stringify(submitted).slice(0, 200));
-
-  const jobId    = submitted.id;
+  // API returns either ["jobId"] or {id: "jobId"}
+  const jobId = Array.isArray(submitted) ? submitted[0] : submitted.id;
+  if (!submitRes.ok || !jobId) throw new Error('REST submit failed: ' + JSON.stringify(submitted).slice(0, 200));
   const deadline = Date.now() + timeoutMs;
 
   // Poll jusqu'au résultat
