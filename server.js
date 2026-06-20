@@ -467,7 +467,20 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
 
     const data = await response.json();
     console.log('OpenAI response status:', response.status);
-    if (!response.ok) throw new Error(data.error?.message || JSON.stringify(data).slice(0, 200));
+
+    // Si OpenAI échoue (billing, quota…) → fallback sur nano_banana_2
+    if (!response.ok) {
+      console.warn('⚠️ OpenAI failed, falling back to nano_banana_2:', data.error?.message);
+      const b64img = fs.readFileSync(imageFile.path).toString('base64');
+      const fallbackPayload = {
+        model: 'nano_banana_2',
+        prompt: `${fullPrompt}`,
+        images: [`data:image/png;base64,${b64img}`],
+        resolution: '2k',
+      };
+      const { imageUrl } = await fetchHiggsfield(fallbackPayload);
+      return res.json({ imageUrl, fallback: true });
+    }
 
     const b64 = data.data?.[0]?.b64_json;
     const url  = data.data?.[0]?.url;
@@ -475,11 +488,9 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
 
     let imageUrl = url;
     if (b64 && !url) {
-      // Sauvegarde temporaire et sert le fichier
       const outPath = path.join(os.tmpdir(), `rework-${Date.now()}.png`);
       fs.writeFileSync(outPath, Buffer.from(b64, 'base64'));
       imageUrl = `/rework-result/${path.basename(outPath)}`;
-      // Sert le fichier temporaire
       setTimeout(() => { try { fs.unlinkSync(outPath); } catch {} }, 10 * 60 * 1000);
       app._reworkTmp = app._reworkTmp || {};
       app._reworkTmp[path.basename(outPath)] = outPath;
@@ -490,8 +501,8 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
     console.error('❌ /rework:', err.message);
     res.status(500).json({ error: err.message });
   } finally {
-    if (imageFile && fs.existsSync(imageFile.path)) fs.unlinkSync(imageFile.path);
-    if (maskFile  && fs.existsSync(maskFile.path))  fs.unlinkSync(maskFile.path);
+    if (imageFile && fs.existsSync(imageFile.path)) try { fs.unlinkSync(imageFile.path); } catch {}
+    if (maskFile  && fs.existsSync(maskFile.path))  try { fs.unlinkSync(maskFile.path);  } catch {}
   }
 });
 
