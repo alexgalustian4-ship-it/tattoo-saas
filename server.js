@@ -286,13 +286,20 @@ function runCLI(args, timeoutMs, retry = true) {
           await refreshHiggsfieldToken();
           resolve(await runCLI(args, timeoutMs, false));
         } catch (refreshErr) {
-          reject(new Error('Session expired and token refresh failed. Please update HIGGSFIELD_API_KEY in Railway. ' + refreshErr.message));
+          console.error('❌ Token refresh failed:', refreshErr.message);
+          reject(new Error('Generation temporarily unavailable. Please try again in a moment.'));
         }
         return;
       }
-      if (err) return reject(new Error(stderr || err.message || 'Higgsfield CLI error'));
+      if (err) {
+        console.error('❌ CLI error:', stderr || err.message);
+        return reject(new Error('Generation failed. Please try again.'));
+      }
       const url = stdout.trim().split('\n').filter(l => l.startsWith('http')).pop();
-      if (!url) return reject(new Error('No URL in CLI output: ' + stdout.slice(0, 200)));
+      if (!url) {
+        console.error('❌ No URL in CLI output:', stdout.slice(0, 300));
+        return reject(new Error('Generation failed. Please try again.'));
+      }
       resolve(url);
     });
   });
@@ -339,6 +346,15 @@ function refreshHiggsfieldToken() {
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+// Retourne un message d'erreur safe pour le client (jamais de détails techniques)
+function clientError(err) {
+  const msg = err.message || '';
+  if (msg.includes('Generation') || msg.includes('temporarily unavailable')) return msg;
+  if (msg.includes('content filter') || msg.includes('bloquée') || msg.includes('blocked')) return msg;
+  if (msg.includes('No photo') || msg.includes('No design') || msg.includes('Aucun') || msg.includes('manquante')) return msg;
+  return 'Generation failed. Please try again in a moment.';
 }
 
 // ─────────────────────────────────────────────────
@@ -421,7 +437,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 
   } catch (err) {
     console.error('❌ /generate :', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: clientError(err) });
   } finally {
     if (inspPath && fs.existsSync(inspPath)) fs.unlinkSync(inspPath);
   }
@@ -482,7 +498,7 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
 
   } catch (err) {
     console.error('❌ /generate-on-body :', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: clientError(err) });
   } finally {
     if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
   }
@@ -537,7 +553,7 @@ app.post('/place-uploaded-design', upload.fields([
 
   } catch (err) {
     console.error('❌ /place-uploaded-design :', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: clientError(err) });
   } finally {
     if (fs.existsSync(designPath)) fs.unlinkSync(designPath);
     if (fs.existsSync(photoPath))  fs.unlinkSync(photoPath);
@@ -597,7 +613,7 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
 
   } catch (err) {
     console.error('❌ /generate-pet-tattoo :', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: clientError(err) });
   } finally {
     if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
   }
@@ -666,7 +682,7 @@ app.post('/merge-tattoos', upload.fields([
     res.json({ imageUrl });
   } catch (err) {
     console.error('❌ /merge-tattoos :', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: clientError(err) });
   } finally {
     tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch {} });
   }
