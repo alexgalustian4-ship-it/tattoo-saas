@@ -240,7 +240,7 @@ const ZONE_PROMPTS = {
 
 // Modèles disponibles pour l'étape 2 (pose sur le corps)
 const BODY_MODELS = {
-  nano_banana_pro:  { apiModel: 'gpt_image_2', extras: { resolution: '2k' }, label: 'Standard' },
+  nano_banana_pro:  { apiModel: 'nano_banana_2', extras: { resolution: '2k' }, label: 'Standard' },
 };
 const DEFAULT_BODY_MODEL = 'nano_banana_pro';
 
@@ -278,13 +278,9 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
   const { model, prompt, resolution, images } = payload;
 
-  // Build params object — nano_banana_2 uses input_images, gpt_image_2 uses images
   const params = { prompt };
   if (resolution) params.resolution = resolution;
-  if (Array.isArray(images) && images.length) {
-    if (model === 'gpt_image_2') params.images = images;
-    else params.input_images = images;
-  }
+  if (Array.isArray(images) && images.length) params.images = images;
 
   const body = { job_set_type: model, params };
 
@@ -524,7 +520,7 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 
       const fallbackImages = [`data:image/png;base64,${b64img}`];
       if (fusionFile) fallbackImages.push(`data:image/png;base64,${fs.readFileSync(fusionFile.path).toString('base64')}`);
       const fallbackPayload = {
-        model: 'gpt_image_2',
+        model: 'nano_banana_2',
         prompt: `${fullPrompt}`,
         images: fallbackImages,
         resolution: '2k',
@@ -756,7 +752,7 @@ app.post('/place-uploaded-design', upload.fields([
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
     const payload = {
-      model:      'gpt_image_2',
+      model:      'nano_banana_2',
       prompt,
       images:     [fileToBase64(photoPath), fileToBase64(designPath)],
       resolution: '2k',
@@ -817,7 +813,7 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
     console.log('   Details :', details || 'none');
 
     const payload = {
-      model:      'gpt_image_2',
+      model:      'nano_banana_2',
       prompt,
       images:     [fileToBase64(photoPath)],
       resolution: '2k',
@@ -891,7 +887,7 @@ app.post('/merge-tattoos', upload.fields([
     console.log(`\n⚡ Merge tattoos — ${base64Images.length} designs, style: ${style}`);
 
     const { imageUrl } = await fetchHiggsfield({
-      model:      'gpt_image_2',
+      model:      'nano_banana_2',
       prompt,
       images:     base64Images,
       resolution: '2k',
