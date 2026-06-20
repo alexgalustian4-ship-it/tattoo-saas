@@ -397,6 +397,41 @@
     }
     .hist-btn-del:hover { border-color: #7f1d1d; color: #fca5a5; background: rgba(127,29,29,0.1); }
 
+    .hist-menu-wrap { position: relative; }
+    .hist-menu-btn {
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border-hover);
+      color: var(--text-muted); border-radius: 5px; cursor: pointer;
+      font-size: 1rem; letter-spacing: 0.05em; transition: all 0.2s; line-height:1;
+    }
+    .hist-menu-btn:hover { border-color: var(--silver); color: var(--silver); }
+
+    .hist-dropdown {
+      display: none; position: absolute; bottom: calc(100% + 6px); right: 0;
+      background: #111118; border: 1px solid var(--border-hover);
+      border-radius: 8px; min-width: 180px; z-index: 999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6); overflow: hidden;
+      padding: 4px 0;
+    }
+    .hist-dropdown.open { display: block; }
+
+    .hist-dd-item {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 9px 14px; background: none; border: none;
+      color: var(--silver); font-size: 0.72rem; font-weight: 500;
+      cursor: pointer; text-align: left; transition: background 0.15s;
+      text-decoration: none;
+    }
+    .hist-dd-item:hover { background: rgba(176,180,194,0.07); color: #fff; }
+    .hist-dd-item.disabled { color: var(--text-muted); cursor: default; }
+    .hist-dd-item.disabled:hover { background: none; color: var(--text-muted); }
+    .hist-dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+    .hist-dd-pro {
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #8b5cf6;
+      border: 1px solid #8b5cf6; border-radius: 3px; padding: 2px 5px; margin-left: 8px;
+    }
+
     /* ── QUIZ ───────────────────────────────── */
     .quiz-progress-wrap {
       height: 2px; background: var(--border); border-radius: 2px; overflow: hidden;
@@ -3207,6 +3242,33 @@
       cuisse: 'Thigh', mollet: 'Calf', main: 'Hand'
     };
 
+    function toggleHistMenu(id) {
+      const menu = document.getElementById(id);
+      const isOpen = menu.classList.contains('open');
+      closeHistMenus();
+      if (!isOpen) menu.classList.add('open');
+    }
+    function closeHistMenus() {
+      document.querySelectorAll('.hist-dropdown.open').forEach(m => m.classList.remove('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.hist-menu-wrap')) closeHistMenus();
+    });
+
+    function histStencil(imageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const dataUrl = sobelStencil(img);
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'stencil.png';
+        a.click();
+      };
+      img.onerror = () => alert('Impossible de charger l\'image pour le stencil.');
+      img.src = imageUrl;
+    }
+
     function renderHistory() {
       const projects = loadProjects();
       const section  = document.getElementById('history-section');
@@ -3247,11 +3309,21 @@
             <div class="hist-info">
               <p class="hist-sujet">${sujet || 'Untitled'}</p>
               <p class="hist-date">${formatDate(p.date)}</p>
-              <div class="hist-actions" style="flex-wrap:wrap;gap:6px;">
-                ${!isOnBody ? `<button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>` : ''}
-                ${!isOnBody ? `<button class="hist-btn-primary" onclick="placeOnSkinFromHistory('${p.imageUrl.replace(/'/g, '%27')}')">Place on skin →</button>` : ''}
-                <a class="hist-btn-dl" href="#" onclick="event.preventDefault();gatedDownload('/download?url=${imgUrlEnc}&filename=ink-studio-${p.id}.jpg','ink-studio-${p.id}.jpg')" title="Download">↓</a>
-                <button class="hist-btn-del" onclick="deleteProject(${p.id})" title="Delete">✕</button>
+              <div class="hist-actions">
+                <div class="hist-menu-wrap">
+                  <button class="hist-menu-btn" onclick="toggleHistMenu('menu-${p.id}')" title="Plus d'actions">···</button>
+                  <div class="hist-dropdown" id="menu-${p.id}">
+                    ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();retoucherProject(${paramsJson})">✏️ Rework</button>` : ''}
+                    ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();placeOnSkinFromHistory('${p.imageUrl.replace(/'/g, '%27')}')">🖼 Place on skin</button>` : ''}
+                    ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();histStencil('${p.imageUrl.replace(/'/g, '%27')}')">⬛ Stencil <span class="hist-dd-pro">PRO</span></button>` : ''}
+                    <div class="hist-dd-sep"></div>
+                    <button class="hist-dd-item disabled" title="Bientôt disponible">🎨 3 Variations <span class="hist-dd-pro">PRO</span></button>
+                    <button class="hist-dd-item disabled" title="Bientôt disponible">🔲 PNG transparent <span class="hist-dd-pro">PRO</span></button>
+                    <button class="hist-dd-item disabled" title="Bientôt disponible">💧 Watermark <span class="hist-dd-pro">PRO</span></button>
+                  </div>
+                </div>
+                <a class="hist-btn-dl" href="#" onclick="event.preventDefault();gatedDownload('/download?url=${imgUrlEnc}&filename=ink-studio-${p.id}.jpg','ink-studio-${p.id}.jpg')" title="Télécharger">↓</a>
+                <button class="hist-btn-del" onclick="deleteProject(${p.id})" title="Supprimer">✕</button>
               </div>
             </div>
           </div>`;
