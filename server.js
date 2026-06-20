@@ -426,11 +426,12 @@ if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 // ─────────────────────────────────────────────────
 // POST /rework — Inpainting précis via OpenAI gpt-image-1
 // ─────────────────────────────────────────────────
-app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async (req, res) => {
+app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 'fusion' }]), async (req, res) => {
   const prompt    = (req.body.prompt    || '').trim();
   const zoneDesc  = (req.body.zoneDesc  || '').trim();
   const imageFile = req.files?.image?.[0];
   const maskFile  = req.files?.mask?.[0];
+  const fusionFile = req.files?.fusion?.[0];
 
   if (!prompt || !imageFile) {
     return res.status(400).json({ error: 'Missing prompt or image.' });
@@ -440,7 +441,8 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
   if (!apiKey) return res.status(500).json({ error: 'OpenAI API key not configured.' });
 
   try {
-    const fullPrompt = `Tattoo design. ${zoneDesc ? zoneDesc + ' ' : ''}${prompt}. Keep the same artistic style, line weight and composition for all areas outside the mask. Professional tattoo flash art, white background, high resolution.`;
+    const fusionNote = fusionFile ? ' Fuse the style and elements of the reference fusion image with the original design.' : '';
+    const fullPrompt = `Tattoo design. ${zoneDesc ? zoneDesc + ' ' : ''}${prompt}.${fusionNote} Keep the same artistic style, line weight and composition for all areas outside the mask. Professional tattoo flash art, white background, high resolution.`;
     console.log('\n🎨 Rework via OpenAI inpainting');
     console.log('   Prompt:', fullPrompt.slice(0, 120));
 
@@ -453,6 +455,10 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
 
     const imgBuffer = fs.readFileSync(imageFile.path);
     fd.append('image[]', new File([imgBuffer], 'design.png', { type: 'image/png' }));
+    if (fusionFile) {
+      const fusionBuffer = fs.readFileSync(fusionFile.path);
+      fd.append('image[]', new File([fusionBuffer], 'fusion.png', { type: 'image/png' }));
+    }
 
     if (maskFile) {
       const maskBuffer = fs.readFileSync(maskFile.path);
@@ -472,10 +478,12 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
     if (!response.ok) {
       console.warn('⚠️ OpenAI failed, falling back to nano_banana_2:', data.error?.message);
       const b64img = fs.readFileSync(imageFile.path).toString('base64');
+      const fallbackImages = [`data:image/png;base64,${b64img}`];
+      if (fusionFile) fallbackImages.push(`data:image/png;base64,${fs.readFileSync(fusionFile.path).toString('base64')}`);
       const fallbackPayload = {
         model: 'nano_banana_2',
         prompt: `${fullPrompt}`,
-        images: [`data:image/png;base64,${b64img}`],
+        images: fallbackImages,
         resolution: '2k',
       };
       const { imageUrl } = await fetchHiggsfield(fallbackPayload);
@@ -501,8 +509,9 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
     console.error('❌ /rework:', err.message);
     res.status(500).json({ error: err.message });
   } finally {
-    if (imageFile && fs.existsSync(imageFile.path)) try { fs.unlinkSync(imageFile.path); } catch {}
-    if (maskFile  && fs.existsSync(maskFile.path))  try { fs.unlinkSync(maskFile.path);  } catch {}
+    if (imageFile  && fs.existsSync(imageFile.path))  try { fs.unlinkSync(imageFile.path);  } catch {}
+    if (maskFile   && fs.existsSync(maskFile.path))   try { fs.unlinkSync(maskFile.path);   } catch {}
+    if (fusionFile && fs.existsSync(fusionFile.path)) try { fs.unlinkSync(fusionFile.path); } catch {}
   }
 });
 

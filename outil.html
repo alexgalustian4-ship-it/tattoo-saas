@@ -178,6 +178,50 @@
     }
     .result-img-wrap img { width: 100%; display: block; }
 
+    /* Before/After slider — inkroom style */
+    .ba-wrap {
+      position: relative; border-radius: 14px; overflow: hidden;
+      border: 1px solid #2a2a3a; cursor: ew-resize; user-select: none;
+      background: #111;
+    }
+    .ba-wrap img { width: 100%; display: block; pointer-events: none; }
+    .ba-wrap .ba-after-layer {
+      position: absolute; inset: 0;
+      clip-path: inset(0 50% 0 0);
+    }
+    .ba-wrap .ba-after-layer img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .ba-line {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
+      background: #8b5cf6; transform: translateX(-50%);
+      pointer-events: none; z-index: 2;
+      box-shadow: 0 0 12px rgba(139,92,246,0.6);
+    }
+    .ba-knob {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #8b5cf6;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(139,92,246,0.7), 0 2px 10px rgba(0,0,0,0.5);
+      pointer-events: none; z-index: 3;
+    }
+    .ba-knob svg { width: 16px; height: 16px; color: #fff; }
+    .ba-tags {
+      position: absolute; top: 12px; left: 0; right: 0;
+      display: flex; justify-content: space-between;
+      padding: 0 12px; pointer-events: none; z-index: 4;
+    }
+    .ba-tag {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
+      color: #fff;
+      background: rgba(20,20,30,0.75); backdrop-filter: blur(8px);
+      padding: 5px 14px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .ba-tag.after { background: #8b5cf6; border-color: #8b5cf6; }
+
     .result-change {
       position: absolute; top: 8px; right: 8px;
       background: rgba(8,8,8,0.88); color: var(--text-muted);
@@ -598,6 +642,14 @@
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
+      <button class="mode-card" id="btn-mode5">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Stencil — design existant</p>
+          <p class="mode-card-desc">Upload un tatouage ou design — génère le pochoir print-ready en 1 seconde.</p>
+        </div>
+        <span class="mode-card-arrow" style="color:#8b5cf6">PRO ›</span>
+      </button>
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
@@ -809,8 +861,16 @@
         <!-- Stencil result -->
         <div data-hidden id="stencil-result" style="margin-bottom:12px">
           <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">Stencil — print-ready black outline</p>
-          <div class="result-img-wrap">
-            <img id="stencil-img" src="" alt="Stencil" style="background:#fff" />
+          <div class="ba-wrap" id="stencil-ba-wrap">
+            <img id="stencil-before-img" src="" alt="Design original" />
+            <div class="ba-after-layer" id="stencil-after-layer">
+              <img id="stencil-img" src="" alt="Stencil" />
+            </div>
+            <div class="ba-line" id="stencil-ba-line"></div>
+            <div class="ba-knob" id="stencil-ba-knob">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
+            </div>
+            <div class="ba-tags"><span class="ba-tag">Avant</span><span class="ba-tag after">Après</span></div>
           </div>
           <a id="btn-dl-stencil" class="btn btn-secondary" style="display:block;text-align:center;margin-top:8px;text-decoration:none;font-size:0.82rem">↓ Download Stencil (PNG)</a>
         </div>
@@ -900,8 +960,16 @@
         <div class="status" id="status-body" style="margin-top:12px"></div>
 
         <div data-hidden id="body-result" style="margin-top:16px">
-          <div class="result-img-wrap">
-            <img id="body-result-img" src="" alt="Tatouage sur le corps" />
+          <div class="ba-wrap" id="body-ba-wrap">
+            <img id="body-before-img" src="" alt="Photo originale" />
+            <div class="ba-after-layer" id="body-after-layer">
+              <img id="body-result-img" src="" alt="Tatouage sur le corps" />
+            </div>
+            <div class="ba-line" id="body-ba-line"></div>
+            <div class="ba-knob" id="body-ba-knob">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+            </div>
+            <div class="ba-tags"><span class="ba-tag">Original</span><span class="ba-tag">Tattooed</span></div>
           </div>
           <a id="btn-dl-body" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
         </div>
@@ -1171,14 +1239,16 @@
             <textarea id="rework-prompt" rows="5" placeholder="Ex: retire les roses et remplace-les par des serpents. Ajoute plus de détails géométriques dans le fond." style="width:100%;background:#0e0e16;border:1px solid #2a2a32;border-radius:8px;color:#ccc;padding:12px;font-size:0.82rem;font-family:'Inter',sans-serif;resize:vertical;outline:none;line-height:1.6"></textarea>
           </div>
           <div>
-            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">Style</p>
-            <select id="rework-style" style="width:100%;background:#0e0e16;border:1px solid #2a2a32;border-radius:8px;color:#ccc;padding:10px;font-size:0.82rem;outline:none">
-              <option value="concept">Concept</option>
-              <option value="baroque">Baroque</option>
-              <option value="japonais">Japanese</option>
-              <option value="geometrique">Geometric</option>
-              <option value="realisme">Realism</option>
-            </select>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">Image de fusion (optionnel)</p>
+            <label id="rework-fusion-label" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0e0e16;border:1px dashed #2a2a32;border-radius:8px;cursor:pointer;font-size:0.82rem;color:#888;transition:border-color 0.2s">
+              <span style="font-size:1.1rem">🖼️</span>
+              <span id="rework-fusion-name">Ajouter une image à fusionner…</span>
+              <input type="file" id="rework-fusion-input" accept="image/*" style="display:none" />
+            </label>
+            <div id="rework-fusion-preview" style="display:none;margin-top:8px;position:relative">
+              <img id="rework-fusion-img" style="width:100%;border-radius:8px;border:1px solid #2a2a32;display:block" />
+              <button id="rework-fusion-clear" style="position:absolute;top:6px;right:6px;background:#1a1a26;border:1px solid #2a2a32;border-radius:50%;width:24px;height:24px;color:#ccc;cursor:pointer;font-size:0.75rem;display:flex;align-items:center;justify-content:center">✕</button>
+            </div>
           </div>
           <button id="rework-generate-btn" class="btn btn-primary" style="width:100%;padding:14px;font-size:0.9rem">⚡ Generate rework</button>
           <div id="rework-status" style="display:none;text-align:center;font-size:0.8rem;color:var(--text-muted);padding:12px">
@@ -1199,6 +1269,48 @@
       </div>
     </div>
   </div>
+
+  <!-- ══════════ STENCIL STUDIO ══════════ -->
+  <section id="stencil-studio" style="width:100%;padding:64px 24px 80px;border-top:1px solid #1c1c22">
+    <div style="max-width:640px;margin:0 auto">
+      <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Outil PRO</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:8px">Stencil depuis un design existant</h2>
+      <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;margin-bottom:28px">Upload n'importe quel tatouage ou design — on génère le pochoir prêt à imprimer en une seconde.</p>
+
+      <!-- Upload zone -->
+      <label id="studio-upload-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;background:#0e0e16;border:2px dashed #2a2a3a;border-radius:14px;cursor:pointer;transition:border-color 0.2s;margin-bottom:20px">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p style="font-size:0.85rem;color:#666;margin:0">Glisse ton image ici ou <span style="color:#8b5cf6;font-weight:600">clique pour choisir</span></p>
+        <p style="font-size:0.72rem;color:#444;margin:0">PNG, JPG, WEBP — max 10 Mo</p>
+        <input type="file" id="studio-file-input" accept="image/*" style="display:none" />
+      </label>
+
+      <!-- Preview + result -->
+      <div id="studio-result-wrap" style="display:none">
+        <div class="ba-wrap" id="studio-ba-wrap">
+          <img id="studio-before-img" src="" alt="Design original" />
+          <div class="ba-after-layer" id="studio-after-layer">
+            <img id="studio-after-img" src="" alt="Stencil" />
+          </div>
+          <div class="ba-line" id="studio-ba-line"></div>
+          <div class="ba-knob" id="studio-ba-knob">
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
+          </div>
+          <div class="ba-tags"><span class="ba-tag">Avant</span><span class="ba-tag after">Après</span></div>
+        </div>
+        <p style="text-align:center;font-size:0.74rem;color:var(--text-muted);margin-top:10px">Glisse le curseur pour comparer</p>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <a id="studio-dl-btn" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:0.82rem">↓ Télécharger le stencil</a>
+          <button id="studio-reset-btn" class="btn btn-secondary" style="font-size:0.82rem;padding:10px 16px">Nouveau</button>
+        </div>
+      </div>
+
+      <div id="studio-processing" style="display:none;text-align:center;padding:24px">
+        <div style="width:28px;height:28px;border:2px solid #8b5cf6;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div>
+        <p style="font-size:0.8rem;color:var(--text-muted)">Génération du stencil…</p>
+      </div>
+    </div>
+  </section>
 
   <!-- ══════════ MES PROJETS ══════════ -->
   <section id="history-section" style="display:none; width:100%; padding:64px 24px 80px; border-top:1px solid #1c1c22;">
@@ -1354,6 +1466,69 @@
     // const videoResultEl = document.getElementById('video-result-el');
 
     function show(el) { delete el.dataset.hidden; }
+
+    function sobelStencil(img) {
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      const src = document.createElement('canvas');
+      src.width = w; src.height = h;
+      const sCtx = src.getContext('2d');
+      sCtx.drawImage(img, 0, 0);
+      const srcData = sCtx.getImageData(0, 0, w, h).data;
+
+      // Convert to grayscale array
+      const gray = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i++) {
+        gray[i] = 0.299*srcData[i*4] + 0.587*srcData[i*4+1] + 0.114*srcData[i*4+2];
+      }
+
+      // Sobel kernels
+      const out = document.createElement('canvas');
+      out.width = w; out.height = h;
+      const oCtx = out.getContext('2d');
+      const outData = oCtx.createImageData(w, h);
+
+      for (let y = 1; y < h-1; y++) {
+        for (let x = 1; x < w-1; x++) {
+          const tl = gray[(y-1)*w+(x-1)], tc = gray[(y-1)*w+x], tr = gray[(y-1)*w+(x+1)];
+          const ml = gray[y*w+(x-1)],                             mr = gray[y*w+(x+1)];
+          const bl = gray[(y+1)*w+(x-1)], bc = gray[(y+1)*w+x], br = gray[(y+1)*w+(x+1)];
+          const gx = -tl - 2*ml - bl + tr + 2*mr + br;
+          const gy = -tl - 2*tc - tr + bl + 2*bc + br;
+          const mag = Math.min(255, Math.sqrt(gx*gx + gy*gy));
+          // Edge = dark line on white background
+          const v = 255 - Math.min(255, mag * 2.2);
+          const idx = (y*w+x)*4;
+          outData.data[idx] = outData.data[idx+1] = outData.data[idx+2] = v;
+          outData.data[idx+3] = 255;
+        }
+      }
+      oCtx.putImageData(outData, 0, 0);
+      return out.toDataURL('image/png');
+    }
+
+    function initBA(wrapId, layerId, lineId, knobId) {
+      const wrap = document.getElementById(wrapId);
+      const layer = document.getElementById(layerId);
+      const line = document.getElementById(lineId);
+      const knob = document.getElementById(knobId);
+      if (!wrap) return;
+      let dragging = false;
+      function setPos(x) {
+        const rect = wrap.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+        const p = (pct * 100).toFixed(1);
+        layer.style.clipPath = `inset(0 ${(100 - pct * 100).toFixed(1)}% 0 0)`;
+        line.style.left = p + '%';
+        knob.style.left = p + '%';
+      }
+      wrap.onmousedown = e => { dragging = true; setPos(e.clientX); e.preventDefault(); };
+      wrap.ontouchstart = e => { dragging = true; setPos(e.touches[0].clientX); };
+      window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+      window.addEventListener('mouseup', () => { dragging = false; });
+      window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('touchend', () => { dragging = false; });
+    }
     function hide(el) { el.dataset.hidden = ''; }
 
     let _timerInterval = null;
@@ -1517,20 +1692,10 @@
       try {
         const blobUrl = await fetchImageBlob(designImgUrl);
         const img = await loadImg(blobUrl);
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        // Grayscale + threshold: dark pixels → black, light → white
-        for (let i = 0; i < d.data.length; i += 4) {
-          const gray = 0.299*d.data[i] + 0.587*d.data[i+1] + 0.114*d.data[i+2];
-          const v = gray < 160 ? 0 : 255;
-          d.data[i] = d.data[i+1] = d.data[i+2] = v; d.data[i+3] = 255;
-        }
-        ctx.putImageData(d, 0, 0);
-        const stencilUrl = canvas.toDataURL('image/png');
+        const stencilUrl = sobelStencil(img);
         document.getElementById('stencil-img').src = stencilUrl;
+        document.getElementById('stencil-before-img').src = designImgUrl;
+        initBA('stencil-ba-wrap', 'stencil-after-layer', 'stencil-ba-line', 'stencil-ba-knob');
         document.getElementById('btn-dl-stencil').onclick = () => {
           const a = document.createElement('a'); a.href = stencilUrl;
           a.download = 'tattoo-stencil.png'; a.click();
@@ -1782,8 +1947,10 @@
         bodyResultImg.src = data.imageUrl;
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
+        document.getElementById('body-before-img').src = bodyPreviewImg.src;
         document.getElementById('btn-dl-body').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-body.jpg`, 'tattoo-on-body.jpg');
         hideStatus(statusBody); show(bodyResult);
+        initBA('body-ba-wrap', 'body-after-layer', 'body-ba-line', 'body-ba-knob');
         saveProject({
           type: 'on-body',
           imageUrl: data.imageUrl,
@@ -1847,6 +2014,14 @@
     document.getElementById('btn-mode2').addEventListener('click', activateMode2);
     document.getElementById('btn-mode3').addEventListener('click', activateMode3);
     document.getElementById('btn-mode4').addEventListener('click', activateMode4);
+
+    const stencilStudio = document.getElementById('stencil-studio');
+    function activateMode5() {
+      hide(modeSelector);
+      stencilStudio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      show(modeBack);
+    }
+    document.getElementById('btn-mode5').addEventListener('click', activateMode5);
 
     modeBack.addEventListener('click', () => {
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
@@ -2377,8 +2552,9 @@
       const baseImg = document.getElementById('rework-base-img');
       const canvas = document.getElementById('rework-canvas');
 
-      // Pre-fill style
-      if (params && params.style) document.getElementById('rework-style').value = params.style;
+      document.getElementById('rework-fusion-input').value = '';
+      document.getElementById('rework-fusion-name').textContent = 'Ajouter une image à fusionner…';
+      document.getElementById('rework-fusion-preview').style.display = 'none';
       document.getElementById('rework-prompt').value = '';
       document.getElementById('rework-result').style.display = 'none';
       document.getElementById('rework-status').style.display = 'none';
@@ -2404,6 +2580,76 @@
     document.getElementById('rework-close').addEventListener('click', () => {
       document.getElementById('rework-modal').style.display = 'none';
       document.body.style.overflow = '';
+    });
+
+    // ── Stencil Studio ────────────────────────────────────────────────
+    (function() {
+      const fileInput   = document.getElementById('studio-file-input');
+      const uploadLabel = document.getElementById('studio-upload-label');
+      const resultWrap  = document.getElementById('studio-result-wrap');
+      const processing  = document.getElementById('studio-processing');
+      const beforeImg   = document.getElementById('studio-before-img');
+      const afterImg    = document.getElementById('studio-after-img');
+      const dlBtn       = document.getElementById('studio-dl-btn');
+      const resetBtn    = document.getElementById('studio-reset-btn');
+
+      function processFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        uploadLabel.style.display = 'none';
+        processing.style.display = 'block';
+        resultWrap.style.display = 'none';
+
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            beforeImg.src = img.src;
+            const stencilUrl = sobelStencil(img);
+            afterImg.src = stencilUrl;
+            dlBtn.href = stencilUrl;
+            dlBtn.download = 'stencil.png';
+            processing.style.display = 'none';
+            resultWrap.style.display = 'block';
+            initBA('studio-ba-wrap', 'studio-after-layer', 'studio-ba-line', 'studio-ba-knob');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      fileInput.addEventListener('change', e => processFile(e.target.files[0]));
+
+      // Drag & drop
+      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#8b5cf6'; });
+      uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = '#2a2a3a'; });
+      uploadLabel.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadLabel.style.borderColor = '#2a2a3a';
+        processFile(e.dataTransfer.files[0]);
+      });
+
+      resetBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        resultWrap.style.display = 'none';
+        uploadLabel.style.display = 'flex';
+      });
+    })();
+
+    // Fusion image upload
+    document.getElementById('rework-fusion-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('rework-fusion-name').textContent = file.name;
+      const url = URL.createObjectURL(file);
+      document.getElementById('rework-fusion-img').src = url;
+      document.getElementById('rework-fusion-preview').style.display = 'block';
+      document.getElementById('rework-fusion-label').style.borderColor = '#6060ff';
+    });
+    document.getElementById('rework-fusion-clear').addEventListener('click', () => {
+      document.getElementById('rework-fusion-input').value = '';
+      document.getElementById('rework-fusion-name').textContent = 'Ajouter une image à fusionner…';
+      document.getElementById('rework-fusion-preview').style.display = 'none';
+      document.getElementById('rework-fusion-label').style.borderColor = '#2a2a32';
     });
 
     // Brush mode buttons
@@ -2825,6 +3071,8 @@
         fd.append('zoneDesc', zoneDesc);
         fd.append('image', imageBlob, 'design.png');
         if (maskBlob) fd.append('mask', maskBlob, 'mask.png');
+        const fusionFile = document.getElementById('rework-fusion-input').files[0];
+        if (fusionFile) fd.append('fusion', fusionFile, fusionFile.name);
 
         const r = await fetch('/rework', { method: 'POST', body: fd });
         const data = await r.json();
@@ -2852,7 +3100,7 @@
         };
 
         // Save to history
-        saveProject({ imageUrl: data.imageUrl, sujet: prompt, style, ambiance: 'epique', mot: '', elements: '', zone: '' });
+        saveProject({ imageUrl: data.imageUrl, sujet: prompt, style: '', ambiance: 'epique', mot: '', elements: '', zone: '' });
 
       } catch(e) { alert('Erreur: ' + e.message); }
       finally { btn.disabled = false; btn.textContent = '⚡ Generate rework'; status.style.display = 'none'; }

@@ -464,6 +464,99 @@
     }
     .footer-links a:hover { color: var(--muted); }
 
+    /* ══ BEFORE/AFTER STENCIL SHOWCASE ════════ */
+    #stencil-showcase {
+      padding: 100px 5vw;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+      overflow: hidden;
+    }
+    #stencil-showcase::before {
+      content: '';
+      position: absolute; right: -10%; top: 50%;
+      transform: translateY(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, rgba(96,96,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .ss-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+    }
+    /* Slider */
+    .ss-slider-wrap { position: relative; }
+    .ss-slider {
+      position: relative; border-radius: 18px; overflow: hidden;
+      cursor: ew-resize; user-select: none;
+      border: 1px solid #1e1e2e;
+      background: #0a0a0f;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      aspect-ratio: 1 / 1;
+    }
+    .ss-slider img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .ss-after-layer {
+      position: absolute; inset: 0;
+      clip-path: inset(0 50% 0 0);
+    }
+    .ss-after-layer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .ss-line {
+      position: absolute; top: 0; bottom: 0; left: 50%;
+      width: 2px; transform: translateX(-50%);
+      background: #8b5cf6;
+      box-shadow: 0 0 14px rgba(139,92,246,0.8);
+      pointer-events: none; z-index: 2;
+    }
+    .ss-knob {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #8b5cf6;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 24px rgba(139,92,246,0.8);
+      pointer-events: none; z-index: 3;
+    }
+    .ss-knob svg { width: 18px; height: 18px; fill: #fff; }
+    .ss-badges {
+      position: absolute; top: 14px; left: 0; right: 0;
+      display: flex; justify-content: space-between;
+      padding: 0 14px; pointer-events: none; z-index: 4;
+    }
+    .ss-badge {
+      font-size: 0.78rem; font-weight: 600;
+      color: #fff; padding: 6px 16px; border-radius: 20px;
+      background: rgba(15,15,25,0.8); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .ss-badge.after { background: #8b5cf6; border-color: #8b5cf6; }
+    .ss-caption {
+      text-align: center; margin-top: 14px;
+      font-size: 0.75rem; color: var(--muted); letter-spacing: 0.03em;
+    }
+    /* Text side */
+    .ss-text .ss-eyebrow {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+    }
+    .ss-text h2 {
+      font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 4vw, 3.2rem);
+      font-weight: 800; line-height: 1.1; color: #fff; margin-bottom: 20px;
+    }
+    .ss-text p {
+      font-size: 0.9rem; color: var(--muted); line-height: 1.75; margin-bottom: 32px;
+    }
+    .ss-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #8b5cf6; color: #fff;
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.05em;
+      padding: 13px 26px; border-radius: 30px; text-decoration: none;
+      transition: box-shadow 0.25s, transform 0.2s;
+    }
+    .ss-cta:hover { box-shadow: 0 0 28px rgba(139,92,246,0.5); transform: translateY(-2px); }
+    @media (max-width: 768px) {
+      .ss-inner { grid-template-columns: 1fr; gap: 40px; }
+    }
+
     /* ══ VIDEO BG ══════════════════════════════ */
     #video-bg {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -862,6 +955,98 @@
     </div>
   </section>
 
+  <!-- ══ STENCIL SHOWCASE ══ -->
+  <section id="stencil-showcase">
+    <div class="ss-inner">
+
+      <!-- Left: interactive tool -->
+      <div class="ss-slider-wrap fade-up">
+
+        <!-- State 1: upload choice -->
+        <div id="ss-choice">
+          <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Essaie maintenant — gratuit</p>
+          <!-- Tab buttons -->
+          <div style="display:flex;gap:8px;margin-bottom:20px">
+            <button id="ss-tab-own" onclick="ssTab('own')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #8b5cf6;background:#8b5cf6;color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer">Mon design existant</button>
+            <button id="ss-tab-ai" onclick="ssTab('ai')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #2a2a3a;background:transparent;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer">Design généré par l'IA</button>
+          </div>
+
+          <!-- Own design: upload -->
+          <div id="ss-panel-own">
+            <label id="ss-upload-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 24px;background:#0a0a0f;border:2px dashed #2a2a3a;border-radius:14px;cursor:pointer;transition:border-color 0.25s;text-align:center">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span style="font-size:0.88rem;color:#666">Glisse ton design ici ou <span style="color:#8b5cf6;font-weight:600">clique pour choisir</span></span>
+              <span style="font-size:0.72rem;color:#3a3a4a">PNG · JPG · WEBP</span>
+              <input type="file" id="ss-file-input" accept="image/*" style="display:none" />
+            </label>
+          </div>
+
+          <!-- AI designs: redirect -->
+          <div id="ss-panel-ai" style="display:none">
+            <div style="padding:32px 24px;background:#0a0a0f;border:1px solid #1e1e2e;border-radius:14px;text-align:center">
+              <p style="font-size:0.88rem;color:var(--muted);margin-bottom:20px;line-height:1.7">Génère un design unique avec notre IA, puis convertis-le en pochoir en un clic — tout dans l'outil.</p>
+              <a href="outil.html" style="display:inline-flex;align-items:center;gap:8px;background:#8b5cf6;color:#fff;font-size:0.82rem;font-weight:600;padding:12px 24px;border-radius:24px;text-decoration:none;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 0 24px rgba(139,92,246,0.5)'" onmouseout="this.style.boxShadow=''">
+                Générer un design →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- State 2: processing -->
+        <div id="ss-processing" style="display:none;text-align:center;padding:60px 24px">
+          <div style="width:32px;height:32px;border:2px solid #8b5cf6;border-top-color:transparent;border-radius:50%;animation:ss-spin 0.8s linear infinite;margin:0 auto 14px"></div>
+          <p style="font-size:0.82rem;color:var(--muted)">Génération du stencil…</p>
+        </div>
+
+        <!-- State 3: result slider -->
+        <div id="ss-result" style="display:none">
+          <div class="ss-slider" id="ss-slider">
+            <img id="ss-before" src="" alt="Design original" />
+            <div class="ss-after-layer" id="ss-after-layer">
+              <img id="ss-after" src="" alt="Stencil" />
+            </div>
+            <div class="ss-line" id="ss-line"></div>
+            <div class="ss-knob" id="ss-knob">
+              <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
+            </div>
+            <div class="ss-badges">
+              <span class="ss-badge">Avant</span>
+              <span class="ss-badge after">Après</span>
+            </div>
+          </div>
+          <p class="ss-caption">Glissez pour comparer</p>
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <a id="ss-dl-btn" style="flex:1;display:block;text-align:center;background:#8b5cf6;color:#fff;font-size:0.8rem;font-weight:600;padding:11px;border-radius:24px;text-decoration:none">↓ Télécharger le stencil</a>
+            <button onclick="ssReset()" style="padding:11px 16px;border-radius:24px;border:1px solid #2a2a3a;background:transparent;color:var(--muted);font-size:0.8rem;cursor:pointer">Nouveau</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: text -->
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow">Outil PRO — Pochoir instantané</p>
+        <h2>Ton tatouage<br>en pochoir.<br>En 1 seconde.</h2>
+        <p>Upload ton design ou génère-en un avec l'IA — convertis-le en pochoir print-ready instantanément. Lignes nettes, profondeur préservée. Fini Photoshop.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Aucun logiciel requis
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Résultat en moins d'une seconde
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> PNG haute résolution téléchargeable
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
+            <span style="color:#8b5cf6;font-size:1rem">✓</span> Fonctionne sur tous vos designs existants
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- ══ HOW ══ -->
   <section id="how">
     <div class="section-inner">
@@ -1038,6 +1223,115 @@
     }
     window.addEventListener('scroll', onVideoScroll, { passive: true });
     onVideoScroll();
+
+    // ── Stencil showcase ──────────────────────────────────────────────
+    // CSS animation for spinner
+    const ssStyle = document.createElement('style');
+    ssStyle.textContent = '@keyframes ss-spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(ssStyle);
+
+    function generateStencil(img) {
+      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+      const src = document.createElement('canvas');
+      src.width = w; src.height = h;
+      const sCtx = src.getContext('2d');
+      sCtx.drawImage(img, 0, 0);
+      const srcData = sCtx.getImageData(0, 0, w, h).data;
+      const gray = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i++)
+        gray[i] = 0.299*srcData[i*4] + 0.587*srcData[i*4+1] + 0.114*srcData[i*4+2];
+      const out = document.createElement('canvas');
+      out.width = w; out.height = h;
+      const oCtx = out.getContext('2d');
+      const outData = oCtx.createImageData(w, h);
+      for (let y = 1; y < h-1; y++) {
+        for (let x = 1; x < w-1; x++) {
+          const tl=gray[(y-1)*w+(x-1)],tc=gray[(y-1)*w+x],tr=gray[(y-1)*w+(x+1)];
+          const ml=gray[y*w+(x-1)],mr=gray[y*w+(x+1)];
+          const bl=gray[(y+1)*w+(x-1)],bc=gray[(y+1)*w+x],br=gray[(y+1)*w+(x+1)];
+          const gx=-tl-2*ml-bl+tr+2*mr+br, gy=-tl-2*tc-tr+bl+2*bc+br;
+          const v = 255 - Math.min(255, Math.sqrt(gx*gx+gy*gy) * 2.2);
+          const idx=(y*w+x)*4;
+          outData.data[idx]=outData.data[idx+1]=outData.data[idx+2]=v;
+          outData.data[idx+3]=255;
+        }
+      }
+      oCtx.putImageData(outData, 0, 0);
+      return out.toDataURL('image/png');
+    }
+
+    // Slider drag
+    let ssDragging = false;
+    function ssInitSlider() {
+      const slider = document.getElementById('ss-slider');
+      const layer  = document.getElementById('ss-after-layer');
+      const line   = document.getElementById('ss-line');
+      const knob   = document.getElementById('ss-knob');
+      function setPos(x) {
+        const rect = slider.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+        const p = (pct * 100).toFixed(1);
+        layer.style.clipPath = `inset(0 ${(100-pct*100).toFixed(1)}% 0 0)`;
+        line.style.left = knob.style.left = p + '%';
+      }
+      slider.onmousedown = e => { ssDragging = true; setPos(e.clientX); e.preventDefault(); };
+      slider.ontouchstart = e => { ssDragging = true; setPos(e.touches[0].clientX); };
+      window.addEventListener('mousemove', e => { if (ssDragging) setPos(e.clientX); });
+      window.addEventListener('mouseup', () => { ssDragging = false; });
+      window.addEventListener('touchmove', e => { if (ssDragging) setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('touchend', () => { ssDragging = false; });
+    }
+
+    // Tab switching
+    function ssTab(tab) {
+      const isOwn = tab === 'own';
+      document.getElementById('ss-panel-own').style.display = isOwn ? 'block' : 'none';
+      document.getElementById('ss-panel-ai').style.display  = isOwn ? 'none'  : 'block';
+      document.getElementById('ss-tab-own').style.background = isOwn ? '#8b5cf6' : 'transparent';
+      document.getElementById('ss-tab-own').style.borderColor = '#8b5cf6';
+      document.getElementById('ss-tab-own').style.color = isOwn ? '#fff' : 'var(--muted)';
+      document.getElementById('ss-tab-ai').style.background = isOwn ? 'transparent' : '#8b5cf6';
+      document.getElementById('ss-tab-ai').style.borderColor = isOwn ? '#2a2a3a' : '#8b5cf6';
+      document.getElementById('ss-tab-ai').style.color = isOwn ? 'var(--muted)' : '#fff';
+    }
+    window.ssTab = ssTab;
+
+    // File upload → stencil
+    function ssProcessFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      document.getElementById('ss-choice').style.display = 'none';
+      document.getElementById('ss-processing').style.display = 'block';
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const stencilUrl = generateStencil(img);
+          document.getElementById('ss-before').src = img.src;
+          document.getElementById('ss-after').src = stencilUrl;
+          document.getElementById('ss-dl-btn').href = stencilUrl;
+          document.getElementById('ss-dl-btn').download = 'stencil.png';
+          document.getElementById('ss-processing').style.display = 'none';
+          document.getElementById('ss-result').style.display = 'block';
+          ssInitSlider();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function ssReset() {
+      document.getElementById('ss-file-input').value = '';
+      document.getElementById('ss-result').style.display = 'none';
+      document.getElementById('ss-choice').style.display = 'block';
+    }
+    window.ssReset = ssReset;
+
+    const ssInput = document.getElementById('ss-file-input');
+    const ssLabel = document.getElementById('ss-upload-label');
+    ssInput.addEventListener('change', e => ssProcessFile(e.target.files[0]));
+    ssLabel.addEventListener('dragover', e => { e.preventDefault(); ssLabel.style.borderColor = '#8b5cf6'; });
+    ssLabel.addEventListener('dragleave', () => { ssLabel.style.borderColor = '#2a2a3a'; });
+    ssLabel.addEventListener('drop', e => { e.preventDefault(); ssLabel.style.borderColor = '#2a2a3a'; ssProcessFile(e.dataTransfer.files[0]); });
   </script>
 
 </body>
