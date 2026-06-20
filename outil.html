@@ -2518,32 +2518,45 @@
       document.getElementById('rework-result').style.display = 'none';
 
       try {
-        // Send the original clean image (no annotations — the AI can't interpret painted circles)
-        const baseImg    = document.getElementById('rework-base-img');
-        const annCanvas  = document.getElementById('rework-canvas');
-        const flat = document.createElement('canvas');
-        flat.width = baseImg.naturalWidth; flat.height = baseImg.naturalHeight;
-        flat.getContext('2d').drawImage(baseImg, 0, 0);
-        const blob = await new Promise(res => flat.toBlob(res, 'image/jpeg', 0.92));
+        const baseImg   = document.getElementById('rework-base-img');
+        const annCanvas = document.getElementById('rework-canvas');
 
-        // Analyse les annotations pour détecter les zones touchées
-        const zoneDesc = analyzeAnnotations(annCanvas);
-        const zonePrefix = zoneDesc.length
-          ? zoneDesc.join(' ') + ' '
-          : '';
+        // Image originale en PNG (RGBA requis par OpenAI)
+        const flatCanvas = document.createElement('canvas');
+        flatCanvas.width  = baseImg.naturalWidth;
+        flatCanvas.height = baseImg.naturalHeight;
+        flatCanvas.getContext('2d').drawImage(baseImg, 0, 0);
+        const imageBlob = await new Promise(res => flatCanvas.toBlob(res, 'image/png'));
 
-        // Strengthen prompt so Higgsfield stays close to the original composition
-        const reworkInstruction = `Based strictly on this tattoo design as reference, keep the exact same composition, style and overall structure. ${zonePrefix}Only apply this change: ${prompt}. Do not reinvent the design — preserve all other elements.`;
+        // Masque : fond blanc opaque, zones annotées en rouge → transparent
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width  = baseImg.naturalWidth;
+        maskCanvas.height = baseImg.naturalHeight;
+        const mCtx = maskCanvas.getContext('2d');
+        mCtx.fillStyle = '#ffffff';
+        mCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+        // Lit les pixels du canvas d'annotation et rend transparentes les zones rouges
+        const annData = annCanvas.getContext('2d').getImageData(0, 0, annCanvas.width, annCanvas.height);
+        const mData   = mCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+        for (let i = 0; i < annData.data.length; i += 4) {
+          const r = annData.data[i], g = annData.data[i+1], b = annData.data[i+2], a = annData.data[i+3];
+          if (a > 20 && r > 150 && g < 100 && b < 100) {
+            mData.data[i] = mData.data[i+1] = mData.data[i+2] = mData.data[i+3] = 0; // transparent
+          }
+        }
+        mCtx.putImageData(mData, 0, 0);
+        const maskBlob = await new Promise(res => maskCanvas.toBlob(res, 'image/png'));
 
-        const style = document.getElementById('rework-style').value;
+        // Zones détectées pour le prompt
+        const zoneDesc = analyzeAnnotations(annCanvas).join(' ');
+
         const fd = new FormData();
-        fd.append('sujet', reworkInstruction);
-        fd.append('style', style);
-        fd.append('ambiance', 'epique');
-        fd.append('freePrompt', '1');
-        fd.append('inspiration', blob, 'rework-ref.jpg');
+        fd.append('prompt', prompt);
+        fd.append('zoneDesc', zoneDesc);
+        fd.append('image', imageBlob, 'design.png');
+        if (maskBlob) fd.append('mask', maskBlob, 'mask.png');
 
-        const r = await fetch('/generate', { method: 'POST', body: fd });
+        const r = await fetch('/rework', { method: 'POST', body: fd });
         const data = await r.json();
         if (!data.imageUrl) throw new Error(data.error || 'Generation failed');
 

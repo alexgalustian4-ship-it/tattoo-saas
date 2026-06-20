@@ -421,6 +421,90 @@ function clientError(err) {
 }
 
 // ─────────────────────────────────────────────────
+// POST /rework — Inpainting précis via OpenAI gpt-image-1
+// Body  : prompt (ce qu'on change), zoneDesc (zones détectées)
+// Files : image (original), mask (zones rouges en PNG transparent)
+// Retour: { imageUrl }
+// ─────────────────────────────────────────────────
+app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async (req, res) => {
+  const prompt    = (req.body.prompt    || '').trim();
+  const zoneDesc  = (req.body.zoneDesc  || '').trim();
+  const imageFile = req.files?.image?.[0];
+  const maskFile  = req.files?.mask?.[0];
+
+  if (!prompt || !imageFile) {
+    return res.status(400).json({ error: 'Missing prompt or image.' });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) return res.status(500).json({ error: 'OpenAI API key not configured.' });
+
+  try {
+    const fullPrompt = `Tattoo design. ${zoneDesc ? zoneDesc + ' ' : ''}${prompt}. Keep the same artistic style, line weight and composition for all areas outside the mask. Professional tattoo flash art, white background, high resolution.`;
+    console.log('\n🎨 Rework via OpenAI inpainting');
+    console.log('   Prompt:', fullPrompt.slice(0, 120));
+
+    const { FormData: NodeFormData, File: NodeFile } = await import('undici');
+    const fd = new NodeFormData();
+    fd.append('model', 'gpt-image-1');
+    fd.append('prompt', fullPrompt);
+    fd.append('size', '1024x1024');
+    fd.append('quality', 'high');
+    fd.append('n', '1');
+
+    const imgBuffer = fs.readFileSync(imageFile.path);
+    fd.append('image[]', new NodeFile([imgBuffer], 'design.png', { type: 'image/png' }));
+
+    if (maskFile) {
+      const maskBuffer = fs.readFileSync(maskFile.path);
+      fd.append('mask', new NodeFile([maskBuffer], 'mask.png', { type: 'image/png' }));
+    }
+
+    const response = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: fd,
+    });
+
+    const data = await response.json();
+    console.log('OpenAI response status:', response.status);
+    if (!response.ok) throw new Error(data.error?.message || JSON.stringify(data).slice(0, 200));
+
+    const b64 = data.data?.[0]?.b64_json;
+    const url  = data.data?.[0]?.url;
+    if (!b64 && !url) throw new Error('No image in OpenAI response');
+
+    let imageUrl = url;
+    if (b64 && !url) {
+      // Sauvegarde temporaire et sert le fichier
+      const outPath = path.join(os.tmpdir(), `rework-${Date.now()}.png`);
+      fs.writeFileSync(outPath, Buffer.from(b64, 'base64'));
+      imageUrl = `/rework-result/${path.basename(outPath)}`;
+      // Sert le fichier temporaire
+      setTimeout(() => { try { fs.unlinkSync(outPath); } catch {} }, 10 * 60 * 1000);
+      app._reworkTmp = app._reworkTmp || {};
+      app._reworkTmp[path.basename(outPath)] = outPath;
+    }
+
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('❌ /rework:', err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (imageFile && fs.existsSync(imageFile.path)) fs.unlinkSync(imageFile.path);
+    if (maskFile  && fs.existsSync(maskFile.path))  fs.unlinkSync(maskFile.path);
+  }
+});
+
+// Sert les résultats rework temporaires (base64 → fichier local)
+app.get('/rework-result/:filename', (req, res) => {
+  const p = (app._reworkTmp || {})[req.params.filename];
+  if (!p || !fs.existsSync(p)) return res.status(404).send('Not found');
+  res.setHeader('Content-Type', 'image/png');
+  res.send(fs.readFileSync(p));
+});
+
+// ─────────────────────────────────────────────────
 // Middleware
 // ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
