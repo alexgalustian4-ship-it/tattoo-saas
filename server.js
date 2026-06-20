@@ -430,6 +430,56 @@ const upload = multer({ dest: 'uploads/' });
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 // ─────────────────────────────────────────────────
+// OpenAI image generation — gpt-image-1 (best quality)
+// ─────────────────────────────────────────────────
+async function generateWithOpenAI(prompt, referenceImagePath = null) {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
+
+  if (referenceImagePath) {
+    // With reference: use edits endpoint
+    const FormData = (await import('node:buffer')).Blob ? (await import('formdata-node')).FormData : require('form-data');
+    const fd = new (require('form-data'))();
+    fd.append('model', 'gpt-image-1');
+    fd.append('prompt', prompt);
+    fd.append('n', '1');
+    fd.append('size', '1024x1024');
+    fd.append('quality', 'high');
+    fd.append('image[]', fs.createReadStream(referenceImagePath), { filename: 'reference.jpg', contentType: 'image/jpeg' });
+
+    const resp = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, ...fd.getHeaders() },
+      body: fd,
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error('OpenAI edits error: ' + JSON.stringify(data).slice(0, 300));
+    const b64 = data.data?.[0]?.b64_json;
+    if (!b64) throw new Error('No image returned from OpenAI edits');
+    // Save to temp file and return as data URL
+    const tmpPath = path.join(os.tmpdir(), `openai-${Date.now()}.png`);
+    fs.writeFileSync(tmpPath, Buffer.from(b64, 'base64'));
+    // Return as data URL so existing pipeline works
+    return `data:image/png;base64,${b64}`;
+
+  } else {
+    // Text-only: use generations endpoint
+    const resp = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size: '1024x1024', quality: 'high' }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error('OpenAI generations error: ' + JSON.stringify(data).slice(0, 300));
+    const b64 = data.data?.[0]?.b64_json;
+    const url  = data.data?.[0]?.url;
+    if (b64) return `data:image/png;base64,${b64}`;
+    if (url) return url;
+    throw new Error('No image returned from OpenAI generations');
+  }
+}
+
+// ─────────────────────────────────────────────────
 // POST /rework — Inpainting précis via OpenAI gpt-image-1
 // ─────────────────────────────────────────────────
 app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 'fusion' }]), async (req, res) => {
@@ -587,30 +637,14 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     console.log('   Style   :', style, '/ Ambiance :', ambiance);
     console.log('   Ref     :', inspFile ? 'oui' : 'non');
 
-    let payload;
-
     if (inspFile) {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
-      payload = {
-        model:      'nano_banana_2',
-        prompt,
-        images:     [fileToBase64(inspPath)],
-        resolution: '2k',
-      };
-    } else {
-      payload = {
-        model:  'gpt_image_2',
-        prompt,
-      };
     }
 
-    const { imageUrl, jobId } = await fetchHiggsfield(payload,
-      'La génération a été bloquée par le filtre du modèle.\n' +
-      'Essaie de reformuler ta description — évite les termes d\'armes, de violence ou de symboles religieux forts.'
-    );
+    const imageUrl = await generateWithOpenAI(prompt, inspPath || null);
 
-    res.json({ imageUrl, jobId, prompt, zone });
+    res.json({ imageUrl, jobId: null, prompt, zone });
 
   } catch (err) {
     console.error('❌ /generate :', err.message);
