@@ -273,17 +273,67 @@ async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 300_000, endpoint =
   }
 }
 
-function runCLI(args, timeoutMs) {
+function runCLI(args, timeoutMs, retry = true) {
   return new Promise((resolve, reject) => {
     const hfBin = path.join(__dirname, 'node_modules', '.bin', 'higgsfield');
     const bin   = fs.existsSync(hfBin) ? hfBin : 'higgsfield';
 
-    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024 }, async (err, stdout, stderr) => {
+      const errMsg = (stderr || err?.message || '').toLowerCase();
+      if (err && errMsg.includes('session') && errMsg.includes('expired') && retry) {
+        console.log('⚠ Session expired — attempting token refresh...');
+        try {
+          await refreshHiggsfieldToken();
+          resolve(await runCLI(args, timeoutMs, false));
+        } catch (refreshErr) {
+          reject(new Error('Session expired and token refresh failed. Please update HIGGSFIELD_API_KEY in Railway. ' + refreshErr.message));
+        }
+        return;
+      }
       if (err) return reject(new Error(stderr || err.message || 'Higgsfield CLI error'));
       const url = stdout.trim().split('\n').filter(l => l.startsWith('http')).pop();
       if (!url) return reject(new Error('No URL in CLI output: ' + stdout.slice(0, 200)));
       resolve(url);
     });
+  });
+}
+
+function refreshHiggsfieldToken() {
+  return new Promise((resolve, reject) => {
+    const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
+    let creds;
+    try { creds = JSON.parse(fs.readFileSync(credFile, 'utf8')); } catch { return reject(new Error('Cannot read credentials file')); }
+    if (!creds.refresh_token) return reject(new Error('No refresh token available'));
+
+    const https = require('https');
+    const body  = JSON.stringify({ refresh_token: creds.refresh_token });
+    const opts  = {
+      hostname: 'api.higgsfield.ai',
+      path:     '/auth/refresh',
+      method:   'POST',
+      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    };
+    const req = https.request(opts, res => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j.access_token) {
+            creds.access_token = j.access_token;
+            if (j.refresh_token) creds.refresh_token = j.refresh_token;
+            fs.writeFileSync(credFile, JSON.stringify(creds));
+            console.log('✓ Higgsfield token refreshed');
+            resolve();
+          } else {
+            reject(new Error('Refresh response: ' + data.slice(0, 100)));
+          }
+        } catch (e) { reject(e); }
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
   });
 }
 
