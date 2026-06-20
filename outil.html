@@ -218,7 +218,7 @@
 
     /* ── STATUS ──────────────────────────────── */
     .status {
-      display: none; border-radius: 7px; padding: 13px; font-size: 0.83rem; text-align: center;
+      display: none; border-radius: 7px; padding: 14px 16px; font-size: 0.83rem; text-align: center;
     }
     .status.loading {
       background: rgba(176,180,194,0.04); border: 1px solid var(--border-hover); color: var(--text-muted);
@@ -227,6 +227,51 @@
       background: var(--red-bg); border: 1px solid var(--red-border);
       color: #fca5a5; text-align: left; font-size: 0.78rem; white-space: pre-wrap; word-break: break-word;
     }
+
+    /* ── LOADING DOTS ──────────────────────────── */
+    .loading-dots { display: inline-flex; gap: 4px; vertical-align: middle; margin-left: 8px; }
+    .loading-dots span {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--silver-dim);
+      animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse { 0%,80%,100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
+
+    /* ── TIMER ─────────────────────────────────── */
+    .loading-timer { font-size: 0.72rem; color: #3a3a48; margin-top: 7px; letter-spacing: 0.03em; }
+
+    /* ── BEFORE/AFTER SLIDER ───────────────────── */
+    .ba-slider {
+      position: relative; overflow: hidden; border-radius: 10px; cursor: ew-resize;
+      user-select: none; touch-action: pan-y;
+    }
+    .ba-slider img { display: block; width: 100%; height: auto; pointer-events: none; }
+    .ba-after {
+      position: absolute; inset: 0; overflow: hidden;
+      clip-path: inset(0 50% 0 0);
+    }
+    .ba-after img { width: 100%; height: 100%; object-fit: cover; }
+    .ba-handle {
+      position: absolute; top: 0; bottom: 0; left: 50%;
+      width: 2px; background: rgba(255,255,255,0.8);
+      transform: translateX(-50%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ba-handle-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #111; box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+    .ba-label {
+      position: absolute; bottom: 10px; font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px;
+      border-radius: 4px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    }
+    .ba-label-before { left: 10px; color: #aaa; }
+    .ba-label-after  { right: 10px; color: #e0e0e6; }
 
     .spinner {
       display: inline-block; width: 13px; height: 13px;
@@ -1080,17 +1125,80 @@
     function show(el) { delete el.dataset.hidden; }
     function hide(el) { el.dataset.hidden = ''; }
 
+    let _timerInterval = null;
     function setLoading(el, msg) {
       el.className = 'status loading'; el.style.display = 'block';
-      el.innerHTML = '<span class="spinner"></span>' + msg;
+      el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span class="spinner"></span><span>${msg}</span>
+        <span class="loading-dots"><span></span><span></span><span></span></span>
+      </div>
+      <div class="loading-timer" id="loading-timer-txt">0s</div>`;
+      if (_timerInterval) clearInterval(_timerInterval);
+      const start = Date.now();
+      _timerInterval = setInterval(() => {
+        const el2 = document.getElementById('loading-timer-txt');
+        if (el2) el2.textContent = Math.round((Date.now() - start) / 1000) + 's';
+      }, 1000);
     }
     function setError(el, msg) {
+      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
       el.className = 'status error'; el.style.display = 'block';
       el.textContent = msg.includes('Failed to fetch')
         ? '❌ Server unreachable. Run node server.js in a terminal.'
         : '❌ ' + msg;
     }
-    function hideStatus(el) { el.style.display = 'none'; }
+    function hideStatus(el) {
+      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+      el.style.display = 'none';
+    }
+
+    // ── RESIZE IMAGE CÔTÉ CLIENT ─────────────────
+    function resizeImage(file, maxPx = 1536) {
+      return new Promise(resolve => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.88);
+        };
+        img.src = url;
+      });
+    }
+
+    // ── SLIDER AVANT/APRÈS ───────────────────────
+    function makeBASlider(wrap, beforeSrc, afterSrc) {
+      wrap.innerHTML = `
+        <div class="ba-slider" id="ba-${Date.now()}">
+          <img src="${beforeSrc}" alt="Before" />
+          <div class="ba-after"><img src="${afterSrc}" alt="After" /></div>
+          <div class="ba-handle"><div class="ba-handle-btn">⇔</div></div>
+          <span class="ba-label ba-label-before">Before</span>
+          <span class="ba-label ba-label-after">After</span>
+        </div>`;
+      const slider  = wrap.querySelector('.ba-slider');
+      const after   = wrap.querySelector('.ba-after');
+      const handle  = wrap.querySelector('.ba-handle');
+      let dragging  = false;
+
+      function setPos(x) {
+        const rect = slider.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(100, (x - rect.left) / rect.width * 100));
+        after.style.clipPath  = `inset(0 ${100 - pct}% 0 0)`;
+        handle.style.left     = pct + '%';
+      }
+      slider.addEventListener('mousedown',  e => { dragging = true; setPos(e.clientX); });
+      slider.addEventListener('touchstart', e => { dragging = true; setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('mousemove',  e => { if (dragging) setPos(e.clientX); });
+      window.addEventListener('touchmove',  e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('mouseup',    () => dragging = false);
+      window.addEventListener('touchend',   () => dragging = false);
+    }
 
     // ── QUIZ NAVIGATION ──────────────────────────
     const quizNext1 = document.getElementById('quiz-next-1');
@@ -1144,7 +1252,7 @@
         fd.append('ambiance', ambianceDesign.value);
         fd.append('mot',      motDesign.value.trim());
         fd.append('elements', elementsDesign.value.trim());
-        if (inspiInput.files[0]) fd.append('inspiration', inspiInput.files[0]);
+        if (inspiInput.files[0]) fd.append('inspiration', await resizeImage(inspiInput.files[0]));
         const resp = await fetch('/generate', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
@@ -1225,7 +1333,7 @@
       btnBody.disabled = true; hide(bodyResult);
       try {
         const fd = new FormData();
-        fd.append('photo', fileInput.files[0]);
+        fd.append('photo', await resizeImage(fileInput.files[0]));
         fd.append('designUrl', designImgUrl);
         fd.append('zone', selectedZone || 'dos');
         fd.append('model', selectedModel);
@@ -1236,6 +1344,8 @@
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
         document.getElementById('btn-dl-body').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-body.jpg`, 'tattoo-on-body.jpg');
+        const beforeSrc = bodyPreviewImg.src;
+        makeBASlider(bodyResult.querySelector('.result-img-wrap'), beforeSrc, data.imageUrl);
         hideStatus(statusBody); show(bodyResult);
         saveProject({
           type: 'on-body',
@@ -1365,14 +1475,15 @@
       m2BtnPlace.disabled = true; hide(m2Result);
       try {
         const fd = new FormData();
-        fd.append('design', m2DesignInput.files[0]);
-        fd.append('photo',  m2PhotoInput.files[0]);
+        fd.append('design', await resizeImage(m2DesignInput.files[0]));
+        fd.append('photo',  await resizeImage(m2PhotoInput.files[0]));
         fd.append('zone',   m2SelectedZone || 'dos');
         const resp = await fetch('/place-uploaded-design', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m2ResultImg.src = data.imageUrl;
         document.getElementById('m2-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-skin.jpg`, 'tattoo-on-skin.jpg');
+        makeBASlider(m2Result.querySelector('.result-img-wrap'), m2PhotoPreviewImg.src, data.imageUrl);
         hideStatus(m2Status); show(m2Result);
         m2Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
@@ -1460,7 +1571,7 @@
       m3BtnGenerate.disabled = true; hide(m3Result); hide(m3Step2);
       try {
         const fd = new FormData();
-        fd.append('photo',   m3PhotoInput.files[0]);
+        fd.append('photo',   await resizeImage(m3PhotoInput.files[0]));
         fd.append('style',   m3Style);
         fd.append('details', m3Details.value.trim());
         const resp = await fetch('/generate-pet-tattoo', { method: 'POST', body: fd });
@@ -1503,13 +1614,14 @@
       m3BtnPlaceGo.disabled = true; hide(m3BodyResult);
       try {
         const fd = new FormData();
-        fd.append('photo',     m3BodyInput.files[0]);
+        fd.append('photo',     await resizeImage(m3BodyInput.files[0]));
         fd.append('designUrl', m3DesignUrl);
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m3BodyResultImg.src = data.imageUrl;
+        makeBASlider(m3BodyResult.querySelector('.result-img-wrap'), m3BodyPreviewImg.src, data.imageUrl);
         hideStatus(m3Status2); show(m3BodyResult);
         m3BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
@@ -1627,13 +1739,14 @@
       m4BtnPlaceGo.disabled = true; hide(m4BodyResult);
       try {
         const fd = new FormData();
-        fd.append('photo',     m4BodyInput.files[0]);
+        fd.append('photo',     await resizeImage(m4BodyInput.files[0]));
         fd.append('designUrl', m4DesignUrl);
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m4BodyResultImg.src = data.imageUrl;
+        makeBASlider(m4BodyResult.querySelector('.result-img-wrap'), m4BodyPreviewImg.src, data.imageUrl);
         hideStatus(m4Status2); show(m4BodyResult);
         m4BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
