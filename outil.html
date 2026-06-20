@@ -833,8 +833,8 @@
         <div data-hidden id="body-result" style="margin-top:16px">
           <div class="result-img-wrap">
             <img id="body-result-img" src="" alt="Tatouage sur le corps" />
-            <a id="btn-dl-body" class="result-change" style="cursor:pointer;">↓ Download</a>
           </div>
+          <a id="btn-dl-body" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
         </div>
 
         <!-- ══════════ ÉTAPE 3 — masquée temporairement ══════════
@@ -912,8 +912,8 @@
       <div data-hidden id="m2-result">
         <div class="result-img-wrap">
           <img id="m2-result-img" src="" alt="Résultat" />
-          <a id="m2-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
+        <a id="m2-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
       </div>
     </div>
 
@@ -952,10 +952,10 @@
       <div class="status" id="m4-status"></div>
 
       <div data-hidden id="m4-result" style="margin-top:16px">
-        <div class="result-img-wrap" style="margin-bottom:16px">
+        <div class="result-img-wrap">
           <img id="m4-result-img" src="" alt="Merged tattoo design" />
-          <a id="m4-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
+        <a id="m4-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
 
         <hr class="divider" />
         <p class="section-title" style="margin-bottom:12px">Place on your skin</p>
@@ -977,6 +977,7 @@
           <div class="result-img-wrap">
             <img id="m4-body-result-img" src="" alt="Result" />
           </div>
+          <a id="m4-body-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
         </div>
       </div>
     </div>
@@ -1023,10 +1024,10 @@
       <div class="status" id="m3-status"></div>
 
       <div data-hidden id="m3-result" style="margin-top:16px">
-        <div class="result-img-wrap" style="margin-bottom:16px">
+        <div class="result-img-wrap">
           <img id="m3-result-img" src="" alt="Pet tattoo design" />
-          <a id="m3-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
+        <a id="m3-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
 
         <hr class="divider" />
         <p class="section-title" style="margin-bottom:12px">Place on your skin</p>
@@ -1048,6 +1049,7 @@
           <div class="result-img-wrap">
             <img id="m3-body-result-img" src="" alt="Result" />
           </div>
+          <a id="m3-body-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
         </div>
       </div>
     </div>
@@ -1621,6 +1623,7 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m3BodyResultImg.src = data.imageUrl;
+        document.getElementById('m3-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo-on-skin.jpg`, 'pet-tattoo-on-skin.jpg');
         makeBASlider(m3BodyResult.querySelector('.result-img-wrap'), m3BodyPreviewImg.src, data.imageUrl);
         hideStatus(m3Status2); show(m3BodyResult);
         m3BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1746,6 +1749,7 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m4BodyResultImg.src = data.imageUrl;
+        document.getElementById('m4-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=merged-tattoo-on-skin.jpg`, 'merged-tattoo-on-skin.jpg');
         makeBASlider(m4BodyResult.querySelector('.result-img-wrap'), m4BodyPreviewImg.src, data.imageUrl);
         hideStatus(m4Status2); show(m4BodyResult);
         m4BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
