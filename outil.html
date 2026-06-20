@@ -2378,12 +2378,19 @@
       modal.style.display = 'block';
       document.body.style.overflow = 'hidden';
 
-      baseImg.onload = () => {
-        canvas.width = baseImg.naturalWidth;
-        canvas.height = baseImg.naturalHeight;
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-      };
-      baseImg.src = imageUrl;
+      // Load via proxy to avoid tainted canvas (CORS)
+      fetchImageBlob(imageUrl).then(blobUrl => {
+        baseImg.onload = () => {
+          canvas.width = baseImg.naturalWidth;
+          canvas.height = baseImg.naturalHeight;
+          canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+          reworkBaseImageUrl = blobUrl;
+        };
+        baseImg.src = blobUrl;
+      }).catch(() => {
+        // Fallback: direct URL (may taint canvas but at least shows image)
+        baseImg.src = imageUrl;
+      });
     }
 
     document.getElementById('rework-close').addEventListener('click', () => {
