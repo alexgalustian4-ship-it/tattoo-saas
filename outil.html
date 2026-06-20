@@ -2471,24 +2471,22 @@
       document.getElementById('rework-result').style.display = 'none';
 
       try {
-        // Flatten base image + annotations into one canvas
+        // Send the original clean image (no annotations — the AI can't interpret painted circles)
         const baseImg = document.getElementById('rework-base-img');
-        const annCanvas = document.getElementById('rework-canvas');
         const flat = document.createElement('canvas');
         flat.width = baseImg.naturalWidth; flat.height = baseImg.naturalHeight;
-        const fCtx = flat.getContext('2d');
-        fCtx.drawImage(baseImg, 0, 0);
-        fCtx.drawImage(annCanvas, 0, 0);
-
-        // Convert to blob
+        flat.getContext('2d').drawImage(baseImg, 0, 0);
         const blob = await new Promise(res => flat.toBlob(res, 'image/jpeg', 0.92));
+
+        // Strengthen prompt so Higgsfield stays close to the original composition
+        const reworkInstruction = `Based strictly on this tattoo design as reference, keep the exact same composition, style and overall structure. Only apply this change: ${prompt}. Do not reinvent the design — preserve all other elements.`;
 
         const style = document.getElementById('rework-style').value;
         const fd = new FormData();
-        fd.append('sujet', prompt);
+        fd.append('sujet', reworkInstruction);
         fd.append('style', style);
         fd.append('ambiance', 'epique');
-        fd.append('freePrompt', '0');
+        fd.append('freePrompt', '1');
         fd.append('inspiration', blob, 'rework-ref.jpg');
 
         const r = await fetch('/generate', { method: 'POST', body: fd });
