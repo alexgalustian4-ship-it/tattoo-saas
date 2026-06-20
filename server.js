@@ -271,10 +271,49 @@ const MODEL_MAP = {
   'cinematic_studio_video_3_5': 'seedance_2_0',
 };
 
+const HF_API = 'https://fnf.higgsfield.ai';
+
+// Appel REST direct — utilisé quand le CLI ne supporte pas l'option (ex: gpt_image_2 + image)
+async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
+  const apiKey = process.env.HIGGSFIELD_API_KEY || '';
+  const body   = { ...payload };
+
+  // Soumettre le job
+  const submitRes = await fetch(`${HF_API}/agents/jobs`, {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body:    JSON.stringify(body),
+  });
+  const submitted = await submitRes.json();
+  console.log('REST submit:', JSON.stringify(submitted).slice(0, 300));
+  if (!submitRes.ok || !submitted.id) throw new Error('REST submit failed: ' + JSON.stringify(submitted).slice(0, 200));
+
+  const jobId    = submitted.id;
+  const deadline = Date.now() + timeoutMs;
+
+  // Poll jusqu'au résultat
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 4000));
+    const pollRes  = await fetch(`${HF_API}/agents/jobs/${jobId}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+    });
+    const job = await pollRes.json();
+    console.log('REST poll:', job.status, job.result_url || '');
+    if (job.status === 'completed' && job.result_url) return { imageUrl: job.result_url, jobId };
+    if (job.status === 'failed') throw new Error('Job failed: ' + JSON.stringify(job).slice(0, 200));
+  }
+  throw new Error('Timeout waiting for REST job');
+}
+
 async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
   const model  = MODEL_MAP[payload.model] || payload.model || 'nano_banana_2';
   const prompt = payload.prompt || '';
   const tmpFiles = [];
+
+  // gpt_image_2 avec images → REST direct (le CLI ne supporte pas --image pour ce modèle)
+  if (model === 'gpt_image_2' && Array.isArray(payload.images) && payload.images.length > 0) {
+    return fetchHiggsFieldREST({ model, prompt, images: payload.images, resolution: payload.resolution || '2k' }, timeoutMs);
+  }
 
   try {
     const args = ['generate', 'create', model, '--prompt', prompt, '--wait'];
@@ -452,7 +491,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
       payload = {
-        model:      'nano_banana_2',
+        model:      'gpt_image_2',
         prompt,
         images:     [fileToBase64(inspPath)],
         resolution: '2k',
