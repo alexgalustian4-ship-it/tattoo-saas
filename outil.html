@@ -731,6 +731,7 @@
       <div data-hidden id="design-result">
         <div class="result-img-wrap" style="margin-bottom:16px">
           <img id="design-img" src="" alt="Generated design" />
+          <a id="btn-dl-design" class="result-change" style="cursor:pointer;">↓ Download</a>
           <button class="result-change" id="btn-redesign">Regenerate</button>
         </div>
         <button class="btn btn-secondary" id="btn-goto-step2">
@@ -787,6 +788,7 @@
         <div data-hidden id="body-result" style="margin-top:16px">
           <div class="result-img-wrap">
             <img id="body-result-img" src="" alt="Tatouage sur le corps" />
+            <a id="btn-dl-body" class="result-change" style="cursor:pointer;">↓ Download</a>
           </div>
         </div>
 
@@ -865,6 +867,7 @@
       <div data-hidden id="m2-result">
         <div class="result-img-wrap">
           <img id="m2-result-img" src="" alt="Résultat" />
+          <a id="m2-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
       </div>
     </div>
@@ -1148,6 +1151,7 @@
         designJobId = data.jobId; designImgUrl = data.imageUrl;
         if (data.zone) selectedZone = data.zone;
         designImg.src = data.imageUrl;
+        document.getElementById('btn-dl-design').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
         hideStatus(statusDesign); show(designResult);
         indStep1.classList.remove('active'); indStep1.classList.add('done');
         saveProject({
@@ -1231,6 +1235,7 @@
         bodyResultImg.src = data.imageUrl;
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
+        document.getElementById('btn-dl-body').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-body.jpg`, 'tattoo-on-body.jpg');
         hideStatus(statusBody); show(bodyResult);
         saveProject({
           type: 'on-body',
@@ -1367,6 +1372,7 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m2ResultImg.src = data.imageUrl;
+        document.getElementById('m2-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-skin.jpg`, 'tattoo-on-skin.jpg');
         hideStatus(m2Status); show(m2Result);
         m2Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
