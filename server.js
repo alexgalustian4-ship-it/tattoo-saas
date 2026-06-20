@@ -278,8 +278,10 @@ async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
 
 function runCLI(args, timeoutMs, retry = true) {
   return new Promise((resolve, reject) => {
-    const hfBin = path.join(__dirname, 'node_modules', '.bin', 'higgsfield');
-    const bin   = fs.existsSync(hfBin) ? hfBin : 'higgsfield';
+    // Appel direct au binaire hf (bypass du wrapper Node qui re-spawn sans nos env vars)
+    const binName   = process.platform === 'win32' ? 'hf.exe' : 'hf';
+    const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
+    const bin       = fs.existsSync(vendorBin) ? vendorBin : binName;
 
     // Passe le token en variable d'environnement au CLI
     const env = {
