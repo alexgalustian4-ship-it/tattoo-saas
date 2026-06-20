@@ -387,6 +387,29 @@ function clientError(err) {
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
+// ── Diagnostic endpoint (remove after debugging) ──
+app.get('/hf-debug', (req, res) => {
+  const binName   = process.platform === 'win32' ? 'hf.exe' : 'hf';
+  const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
+  const binExists = fs.existsSync(vendorBin);
+  const apiKey    = process.env.HIGGSFIELD_API_KEY || '(not set)';
+  const env = { ...process.env, HIGGSFIELD_API_KEY: apiKey, HOME: os.homedir() };
+  if (!binExists) {
+    return res.json({ binExists, vendorBin, apiKeyPrefix: apiKey.slice(0, 8) });
+  }
+  execFile(vendorBin, ['auth', 'token'], { timeout: 10_000, env }, (err, stdout, stderr) => {
+    res.json({
+      binExists,
+      vendorBin,
+      platform: process.platform,
+      home: os.homedir(),
+      apiKeyPrefix: apiKey.slice(0, 8),
+      tokenOut: (stdout || '').trim().slice(0, 20),
+      err: err ? (stderr || err.message).slice(0, 300) : null,
+    });
+  });
+});
+
 // ── Download proxy (cross-origin image download) ──
 app.get('/download', async (req, res) => {
   const { url, filename = 'ink-studio.jpg' } = req.query;
