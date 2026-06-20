@@ -273,14 +273,57 @@ const MODEL_MAP = {
 
 const HF_API = 'https://fnf.higgsfield.ai';
 
+// Upload an image buffer to Higgsfield media — returns {id, url}
+async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
+  const apiKey = process.env.HIGGSFIELD_API_KEY || '';
+
+  // Step 1: get presigned S3 URL
+  const fd = new FormData();
+  fd.set('file', new File([buffer], 'photo.jpg', { type: mimeType }));
+
+  const initRes = await fetch(`${HF_API}/agents/uploads?type=image`, {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body:    fd,
+  });
+  if (!initRes.ok) throw new Error('Upload init failed: ' + await initRes.text());
+  const { id, url, upload_url } = await initRes.json();
+
+  // Step 2: PUT actual bytes to S3 presigned URL
+  const s3Res = await fetch(upload_url, {
+    method:  'PUT',
+    headers: { 'Content-Type': mimeType },
+    body:    buffer,
+  });
+  if (!s3Res.ok) throw new Error('S3 upload failed: ' + s3Res.status);
+
+  console.log('✓ Higgsfield media uploaded:', id);
+  return { id, url };
+}
+
 // Appel REST direct — utilisé quand le CLI ne supporte pas l'option (ex: gpt_image_2 + image)
 async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
   const { model, prompt, resolution, images } = payload;
 
+  let input_images;
+  if (Array.isArray(images) && images.length) {
+    // Upload each image to Higgsfield and get media UUIDs
+    input_images = await Promise.all(images.map(async (b64) => {
+      const data   = b64.replace(/^data:image\/\w+;base64,/, '');
+      const mime   = (b64.match(/^data:(image\/\w+);/) || [])[1] || 'image/jpeg';
+      const buffer = Buffer.from(data, 'base64');
+      const { id, url } = await uploadImageToHiggsfield(buffer, mime);
+      return { id, url, type: 'media_input' };
+    }));
+  }
+
   const params = { prompt };
   if (resolution) params.resolution = resolution;
-  if (Array.isArray(images) && images.length) params.images = images;
+  if (input_images) {
+    if (model === 'gpt_image_2') params.medias = input_images.map(img => ({ data: img, role: 'image' }));
+    else params.input_images = input_images;
+  }
 
   const body = { job_set_type: model, params };
 
