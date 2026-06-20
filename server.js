@@ -381,13 +381,11 @@ function runCLI(args, timeoutMs, retry = true) {
 
 function refreshHiggsfieldToken() {
   return new Promise((resolve, reject) => {
-    const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
-    let creds;
-    try { creds = JSON.parse(fs.readFileSync(credFile, 'utf8')); } catch { return reject(new Error('Cannot read credentials file')); }
-    if (!creds.refresh_token) return reject(new Error('No refresh token available'));
+    const refreshToken = process.env.HIGGSFIELD_REFRESH_TOKEN;
+    if (!refreshToken) return reject(new Error('No refresh token available'));
 
     const https = require('https');
-    const body  = JSON.stringify({ refresh_token: creds.refresh_token });
+    const body  = JSON.stringify({ refresh_token: refreshToken });
     const opts  = {
       hostname: 'api.higgsfield.ai',
       path:     '/auth/refresh',
@@ -401,11 +399,10 @@ function refreshHiggsfieldToken() {
         try {
           const j = JSON.parse(data);
           if (j.access_token) {
-            creds.access_token = j.access_token;
-            if (j.refresh_token) creds.refresh_token = j.refresh_token;
-            fs.writeFileSync(credFile, JSON.stringify(creds));
             process.env.HIGGSFIELD_API_KEY = j.access_token;
             if (j.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = j.refresh_token;
+            const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
+            try { fs.writeFileSync(credFile, JSON.stringify({ access_token: j.access_token, refresh_token: j.refresh_token || refreshToken })); } catch {}
             console.log('✓ Higgsfield token refreshed');
             resolve();
           } else {
