@@ -2459,6 +2459,53 @@
       canvas.addEventListener('touchend',   () => { reworkDrawing = false; });
     })();
 
+    // Analyse les annotations canvas et retourne des descriptions de zones en anglais
+    function analyzeAnnotations(canvas) {
+      const w = canvas.width, h = canvas.height;
+      if (!w || !h) return [];
+      const ctx  = canvas.getContext('2d');
+      const data = ctx.getImageData(0, 0, w, h).data;
+
+      // Grille 3×3
+      const cols = 3, rows = 3;
+      const cw = w / cols, ch = h / rows;
+      const colNames = ['left', 'center', 'right'];
+      const rowNames = ['top', 'middle', 'bottom'];
+      const THRESHOLD = 80; // pixels minimum pour considérer une zone annotée
+
+      const removeZones = [], addZones = [];
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          let redPx = 0, greenPx = 0;
+          const x0 = Math.floor(col * cw), x1 = Math.floor((col + 1) * cw);
+          const y0 = Math.floor(row * ch), y1 = Math.floor((row + 1) * ch);
+
+          for (let y = y0; y < y1; y++) {
+            for (let x = x0; x < x1; x++) {
+              const i = (y * w + x) * 4;
+              const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+              if (a < 20) continue;
+              if (r > 150 && g < 100 && b < 100) redPx++;
+              if (g > 150 && r < 100 && b < 100) greenPx++;
+            }
+          }
+
+          const label = rowNames[row] === 'middle' && colNames[col] === 'center'
+            ? 'center'
+            : `${rowNames[row]}-${colNames[col]}`;
+
+          if (redPx   > THRESHOLD) removeZones.push(label);
+          if (greenPx > THRESHOLD) addZones.push(label);
+        }
+      }
+
+      const sentences = [];
+      if (removeZones.length) sentences.push(`Remove the elements in the ${removeZones.join(' and ')} area of the design.`);
+      if (addZones.length)    sentences.push(`Add new elements in the ${addZones.join(' and ')} area of the design.`);
+      return sentences;
+    }
+
     // Generate rework
     document.getElementById('rework-generate-btn').addEventListener('click', async () => {
       const prompt = document.getElementById('rework-prompt').value.trim();
@@ -2472,14 +2519,21 @@
 
       try {
         // Send the original clean image (no annotations — the AI can't interpret painted circles)
-        const baseImg = document.getElementById('rework-base-img');
+        const baseImg    = document.getElementById('rework-base-img');
+        const annCanvas  = document.getElementById('rework-canvas');
         const flat = document.createElement('canvas');
         flat.width = baseImg.naturalWidth; flat.height = baseImg.naturalHeight;
         flat.getContext('2d').drawImage(baseImg, 0, 0);
         const blob = await new Promise(res => flat.toBlob(res, 'image/jpeg', 0.92));
 
+        // Analyse les annotations pour détecter les zones touchées
+        const zoneDesc = analyzeAnnotations(annCanvas);
+        const zonePrefix = zoneDesc.length
+          ? zoneDesc.join(' ') + ' '
+          : '';
+
         // Strengthen prompt so Higgsfield stays close to the original composition
-        const reworkInstruction = `Based strictly on this tattoo design as reference, keep the exact same composition, style and overall structure. Only apply this change: ${prompt}. Do not reinvent the design — preserve all other elements.`;
+        const reworkInstruction = `Based strictly on this tattoo design as reference, keep the exact same composition, style and overall structure. ${zonePrefix}Only apply this change: ${prompt}. Do not reinvent the design — preserve all other elements.`;
 
         const style = document.getElementById('rework-style').value;
         const fd = new FormData();
