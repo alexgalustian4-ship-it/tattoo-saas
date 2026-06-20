@@ -290,9 +290,8 @@ async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
   const initRes = await fetch(`${HF_API}/agents/uploads?type=image`, {
     method:  'POST',
     headers: {
-      'Authorization':  `Bearer ${apiKey}`,
-      'Content-Type':   `multipart/form-data; boundary=${boundary}`,
-      'Content-Length': String(body.length),
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type':  `multipart/form-data; boundary=${boundary}`,
     },
     body,
   });
