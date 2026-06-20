@@ -3255,6 +3255,28 @@
       if (!e.target.closest('.hist-menu-wrap')) closeHistMenus();
     });
 
+    async function histRemoveBg(imageUrl) {
+      const btn = event.target.closest('.hist-dd-item');
+      const orig = btn ? btn.textContent : '';
+      if (btn) btn.textContent = '⏳ Traitement...';
+      try {
+        const fd = new FormData();
+        fd.append('imageUrl', imageUrl);
+        const r = await fetch('/remove-bg', { method: 'POST', body: fd });
+        if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'transparent.png';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      } catch (err) {
+        alert('Erreur PNG transparent : ' + err.message);
+      } finally {
+        if (btn) btn.innerHTML = '🔲 PNG transparent <span class="hist-dd-pro">PRO</span>';
+      }
+    }
+
     function histStencil(imageUrl) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -3318,7 +3340,7 @@
                     ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();histStencil('${p.imageUrl.replace(/'/g, '%27')}')">⬛ Stencil <span class="hist-dd-pro">PRO</span></button>` : ''}
                     <div class="hist-dd-sep"></div>
                     <button class="hist-dd-item disabled" title="Bientôt disponible">🎨 3 Variations <span class="hist-dd-pro">PRO</span></button>
-                    <button class="hist-dd-item disabled" title="Bientôt disponible">🔲 PNG transparent <span class="hist-dd-pro">PRO</span></button>
+                    <button class="hist-dd-item" onclick="closeHistMenus();histRemoveBg('${p.imageUrl.replace(/'/g, '%27')}')">🔲 PNG transparent <span class="hist-dd-pro">PRO</span></button>
                     <button class="hist-dd-item disabled" title="Bientôt disponible">💧 Watermark <span class="hist-dd-pro">PRO</span></button>
                   </div>
                 </div>

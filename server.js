@@ -920,6 +920,63 @@ app.post('/generate-video', upload.none(), async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
+// Remove background (remove.bg)
+// ─────────────────────────────────────────────────
+app.post('/remove-bg', upload.single('image'), async (req, res) => {
+  const apiKey = process.env.REMOVE_BG_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'REMOVE_BG_API_KEY not configured' });
+
+  const file = req.file;
+  const imageUrl = req.body.imageUrl;
+
+  if (!file && !imageUrl) return res.status(400).json({ error: 'image or imageUrl required' });
+
+  try {
+    const FormData = require('form-data');
+    const https = require('https');
+
+    const form = new FormData();
+    form.append('size', 'auto');
+    if (file) {
+      form.append('image_file', fs.createReadStream(file.path), { filename: file.originalname });
+    } else {
+      form.append('image_url', imageUrl);
+    }
+
+    const result = await new Promise((resolve, reject) => {
+      const opts = {
+        hostname: 'api.remove.bg',
+        path: '/v1.0/removebg',
+        method: 'POST',
+        headers: { ...form.getHeaders(), 'X-Api-Key': apiKey },
+      };
+      const chunks = [];
+      const reqHttp = https.request(opts, r => {
+        r.on('data', c => chunks.push(c));
+        r.on('end', () => {
+          if (r.statusCode !== 200) {
+            const body = Buffer.concat(chunks).toString();
+            return reject(new Error('remove.bg error: ' + body.slice(0, 200)));
+          }
+          resolve(Buffer.concat(chunks));
+        });
+      });
+      reqHttp.on('error', reject);
+      form.pipe(reqHttp);
+    });
+
+    res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', 'attachment; filename="transparent.png"');
+    res.send(result);
+  } catch (err) {
+    console.error('❌ /remove-bg:', err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (file) try { fs.unlinkSync(file.path); } catch {}
+  }
+});
+
+// ─────────────────────────────────────────────────
 // Démarrage
 // ─────────────────────────────────────────────────
 app.listen(PORT, () => {
