@@ -1147,8 +1147,7 @@
             <button class="rework-brush-btn" id="brush-remove" data-mode="remove" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">− Remove</button>
             <button id="brush-erase" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">⌫ Erase zone</button>
             <button id="rework-clear-canvas" style="background:none;border:1px solid #2a2a32;border-radius:6px;color:var(--text-muted);padding:5px 12px;cursor:pointer;font-size:0.75rem">Clear all</button>
-            <button id="brush-magic" style="background:#1a1a2a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">🪄 Magic</button>
-            <input type="range" id="magic-tolerance" min="10" max="100" value="35" title="Tolérance" style="width:70px;accent-color:#6060ff" />
+            <button id="brush-magic" style="background:#1a1a2a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">▭ Rectangle</button>
             <div style="display:flex;gap:4px;margin-left:8px;align-items:center">
               <button id="zoom-out" style="background:#1a1a1a;border:1px solid #333;color:#ccc;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1">−</button>
               <span id="zoom-label" style="font-size:0.72rem;color:var(--text-muted);min-width:36px;text-align:center">100%</span>
@@ -2424,75 +2423,110 @@
     document.getElementById('brush-erase').addEventListener('click', () => setReworkMode('erase'));
     document.getElementById('brush-magic').addEventListener('click', () => setReworkMode('magic'));
 
-    // ── Magic wand flood fill ─────────────────────────────────────
-    function floodFill(imgData, startX, startY, tolerance, fillR, fillG, fillB, fillA, outData) {
-      const w = imgData.width, h = imgData.height;
-      const src = imgData.data;
-      const visited = new Uint8Array(w * h);
-      const idx = (x, y) => (y * w + x) * 4;
+    // ── Rectangle selection ───────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('rework-canvas');
+      let rectStart = null, rectCurrent = null, rectDrawing = false;
+      let animRect;
 
-      const si = idx(startX, startY);
-      const tr = src[si], tg = src[si+1], tb = src[si+2];
-
-      function colorMatch(i) {
-        return Math.abs(src[i]-tr) + Math.abs(src[i+1]-tg) + Math.abs(src[i+2]-tb) < tolerance * 3;
+      function getCanvasPos(e) {
+        const inner = document.getElementById('rework-canvas-inner');
+        const rect  = inner.getBoundingClientRect();
+        const src   = e.touches ? e.touches[0] : e;
+        return {
+          x: Math.round(((src.clientX - rect.left) / viewZoom) * (canvas.width  / (rect.width  / viewZoom))),
+          y: Math.round(((src.clientY - rect.top)  / viewZoom) * (canvas.height / (rect.height / viewZoom))),
+        };
       }
 
-      const stack = [[startX, startY]];
-      while (stack.length) {
-        const [x, y] = stack.pop();
-        if (x < 0 || x >= w || y < 0 || y >= h) continue;
-        const vi = y * w + x;
-        if (visited[vi]) continue;
-        visited[vi] = 1;
-        const pi = idx(x, y);
-        if (!colorMatch(pi)) continue;
-        outData[pi]   = fillR;
-        outData[pi+1] = fillG;
-        outData[pi+2] = fillB;
-        outData[pi+3] = fillA;
-        stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+      function drawRectPreview() {
+        if (!rectDrawing || !rectStart || !rectCurrent) return;
+        const ctx = canvas.getContext('2d');
+        const x = Math.min(rectStart.x, rectCurrent.x);
+        const y = Math.min(rectStart.y, rectCurrent.y);
+        const w = Math.abs(rectCurrent.x - rectStart.x);
+        const h = Math.abs(rectCurrent.y - rectStart.y);
+        ctx.save();
+        ctx.strokeStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.95)' : 'rgba(220,80,80,0.95)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.lineDashOffset = -Date.now() / 60 % 10;
+        ctx.strokeRect(x, y, w, h);
+        ctx.restore();
+        animRect = requestAnimationFrame(drawRectPreview);
       }
-    }
 
-    document.getElementById('rework-canvas').addEventListener('click', (e) => {
-      if (!magicMode) return;
-      e.preventDefault();
+      function commitRect() {
+        if (!rectStart || !rectCurrent) return;
+        const ctx = canvas.getContext('2d');
+        const x = Math.min(rectStart.x, rectCurrent.x);
+        const y = Math.min(rectStart.y, rectCurrent.y);
+        const w = Math.abs(rectCurrent.x - rectStart.x);
+        const h = Math.abs(rectCurrent.y - rectStart.y);
+        if (w < 3 || h < 3) return;
+        ctx.save();
+        if (reworkBrushMode === 'erase') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.fillStyle = 'rgba(0,0,0,1)';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.45)' : 'rgba(220,80,80,0.45)';
+        }
+        ctx.fillRect(x, y, w, h);
+        if (reworkBrushMode !== 'erase') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.9)' : 'rgba(220,80,80,0.9)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.strokeRect(x, y, w, h);
+        }
+        ctx.restore();
+      }
 
-      const canvas  = document.getElementById('rework-canvas');
-      const baseImg = document.getElementById('rework-base-img');
-      const inner   = document.getElementById('rework-canvas-inner');
-      const rect    = inner.getBoundingClientRect();
-
-      // Map click to canvas pixel coords (accounting for zoom)
-      const cx = Math.floor(((e.clientX - rect.left) / viewZoom) * (canvas.width  / (rect.width  / viewZoom)));
-      const cy = Math.floor(((e.clientY - rect.top)  / viewZoom) * (canvas.height / (rect.height / viewZoom)));
-      if (cx < 0 || cy < 0 || cx >= canvas.width || cy >= canvas.height) return;
-
-      // Sample base image pixels
-      const tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = canvas.width; tmpCanvas.height = canvas.height;
-      const tCtx = tmpCanvas.getContext('2d');
-      tCtx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
-      const imgData = tCtx.getImageData(0, 0, canvas.width, canvas.height);
-
-      // Prepare fill on annotation canvas
-      const annCtx  = canvas.getContext('2d');
-      const annData = annCtx.getImageData(0, 0, canvas.width, canvas.height);
-      const outData = new Uint8ClampedArray(annData.data);
-
-      const tol = parseInt(document.getElementById('magic-tolerance').value);
-      const isErase = reworkBrushMode === 'erase';
-      const [fr, fg, fb, fa] = isErase
-        ? [0, 0, 0, 0]
-        : reworkBrushMode === 'add'
-          ? [80, 220, 80, 140]
-          : [220, 80, 80, 140];
-
-      floodFill(imgData, cx, cy, tol, fr, fg, fb, fa, outData);
-      annData.data.set(outData);
-      annCtx.putImageData(annData, 0, 0);
-    });
+      canvas.addEventListener('mousedown', (e) => {
+        if (!magicMode) return;
+        e.stopPropagation();
+        rectStart = getCanvasPos(e);
+        rectCurrent = { ...rectStart };
+        rectDrawing = true;
+        reworkDrawing = false; // désactive le lasso
+        drawRectPreview();
+      });
+      canvas.addEventListener('mousemove', (e) => {
+        if (!magicMode || !rectDrawing) return;
+        e.preventDefault();
+        rectCurrent = getCanvasPos(e);
+      });
+      canvas.addEventListener('mouseup', (e) => {
+        if (!magicMode || !rectDrawing) return;
+        rectDrawing = false;
+        cancelAnimationFrame(animRect);
+        rectCurrent = getCanvasPos(e);
+        commitRect();
+        rectStart = null; rectCurrent = null;
+      });
+      canvas.addEventListener('touchstart', (e) => {
+        if (!magicMode) return;
+        e.stopPropagation();
+        rectStart = getCanvasPos(e);
+        rectCurrent = { ...rectStart };
+        rectDrawing = true;
+        reworkDrawing = false;
+        drawRectPreview();
+      }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => {
+        if (!magicMode || !rectDrawing) return;
+        e.preventDefault();
+        rectCurrent = getCanvasPos(e);
+      }, { passive: false });
+      canvas.addEventListener('touchend', (e) => {
+        if (!magicMode || !rectDrawing) return;
+        rectDrawing = false;
+        cancelAnimationFrame(animRect);
+        commitRect();
+        rectStart = null; rectCurrent = null;
+      });
+    })();
     document.getElementById('rework-clear-canvas').addEventListener('click', () => {
       const canvas = document.getElementById('rework-canvas');
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
