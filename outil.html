@@ -1818,7 +1818,6 @@
       motDesign.value      = params.mot      || '';
       elementsDesign.value = params.elements || '';
       if (params.zone) zoneDesign.value = params.zone;
-      // Pre-select quiz options visually
       ['style', 'ambiance', 'zone'].forEach(field => {
         const val = document.getElementById(field + '-design').value;
         document.querySelectorAll(`.quiz-opt[data-qfield="${field}"]`).forEach(b => {
@@ -1829,6 +1828,37 @@
       showQuizStep(1);
       activateMode1();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function placeOnSkinFromHistory(imageUrl) {
+      // Charge l'image dans le mode 2 (upload design + photo)
+      activateMode2();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Charge l'image comme design via URL en la convertissant en blob
+      fetch(`/download?url=${encodeURIComponent(imageUrl)}&filename=design.jpg`)
+        .then(r => r.blob())
+        .then(blob => {
+          const file = new File([blob], 'design-from-history.jpg', { type: 'image/jpeg' });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          m2DesignInput.files = dt.files;
+
+          const reader = new FileReader();
+          reader.onload = e => {
+            m2DesignPreviewImg.src = e.target.result;
+            hide(document.getElementById('m2-design-area'));
+            show(document.getElementById('m2-design-preview-wrap'));
+            m2UpdateBtn();
+          };
+          reader.readAsDataURL(file);
+        })
+        .catch(() => {
+          // Fallback : afficher l'image directement si le blob échoue
+          m2DesignPreviewImg.src = imageUrl;
+          hide(document.getElementById('m2-design-area'));
+          show(document.getElementById('m2-design-preview-wrap'));
+        });
     }
 
     function formatDate(iso) {
@@ -1864,11 +1894,13 @@
       empty.style.display   = 'none';
 
       grid.innerHTML = projects.map(p => {
-        const label = p.type === 'on-body' ? 'On body' : 'Design';
+        const isOnBody = p.type === 'on-body';
+        const label = isOnBody ? 'On body' : 'Design';
         const style = STYLE_LABELS[p.params?.style] || '';
         const zone  = ZONE_LABELS[p.params?.zone]  || '';
         const sujet = p.params?.sujet || '';
         const paramsJson = JSON.stringify(p.params).replace(/"/g, '&quot;');
+        const imgUrlEnc  = encodeURIComponent(p.imageUrl);
         return `
           <div class="hist-card">
             <div class="hist-img-wrap">
@@ -1884,10 +1916,11 @@
             <div class="hist-info">
               <p class="hist-sujet">${sujet || 'Untitled'}</p>
               <p class="hist-date">${formatDate(p.date)}</p>
-              <div class="hist-actions">
-                <button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>
-                <a class="hist-btn-dl" href="#" onclick="event.preventDefault();gatedDownload('/download?url=${encodeURIComponent(p.imageUrl)}&filename=ink-studio-${p.id}.jpg','ink-studio-${p.id}.jpg')">↓</a>
-                <button class="hist-btn-del" onclick="deleteProject(${p.id})">✕</button>
+              <div class="hist-actions" style="flex-wrap:wrap;gap:6px;">
+                ${!isOnBody ? `<button class="hist-btn-primary" onclick="retoucherProject(${paramsJson})">Rework →</button>` : ''}
+                ${!isOnBody ? `<button class="hist-btn-primary" onclick="placeOnSkinFromHistory('${p.imageUrl.replace(/'/g, '%27')}')">Place on skin →</button>` : ''}
+                <a class="hist-btn-dl" href="#" onclick="event.preventDefault();gatedDownload('/download?url=${imgUrlEnc}&filename=ink-studio-${p.id}.jpg','ink-studio-${p.id}.jpg')" title="Download">↓</a>
+                <button class="hist-btn-del" onclick="deleteProject(${p.id})" title="Delete">✕</button>
               </div>
             </div>
           </div>`;
