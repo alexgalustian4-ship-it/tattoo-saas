@@ -908,13 +908,9 @@
           <img id="m4-result-img" src="" alt="Merged tattoo design" />
           <a id="m4-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
-        <button class="btn btn-secondary" id="m4-btn-place">Place on my skin →</button>
-      </div>
 
-      <!-- Étape 2 — placement sur le corps -->
-      <div data-hidden id="m4-step2">
         <hr class="divider" />
-        <p class="section-title" style="margin-bottom:16px">Step 2 — Place on your skin</p>
+        <p class="section-title" style="margin-bottom:12px">Place on your skin</p>
         <div class="field">
           <label>Your photo <span>(the area must be visible)</span></label>
           <div class="upload-area" id="m4-body-area">
@@ -983,15 +979,11 @@
           <img id="m3-result-img" src="" alt="Pet tattoo design" />
           <a id="m3-btn-dl" class="result-change" style="cursor:pointer;">↓ Download</a>
         </div>
-        <button class="btn btn-secondary" id="m3-btn-place">Place on my skin →</button>
-      </div>
 
-      <!-- Étape 2 — placement -->
-      <div data-hidden id="m3-step2">
         <hr class="divider" />
-        <p class="section-title" style="margin-bottom:16px">Step 2 — Place on your skin</p>
+        <p class="section-title" style="margin-bottom:12px">Place on your skin</p>
         <div class="field">
-          <label>Your photo <span>(the chosen area must be visible)</span></label>
+          <label>Your photo <span>(the area must be visible)</span></label>
           <div class="upload-area" id="m3-body-area">
             <input type="file" id="m3-body-input" accept="image/*" />
             <span class="icon">📷</span>
@@ -1419,7 +1411,6 @@
     const m3Result          = document.getElementById('m3-result');
     const m3ResultImg       = document.getElementById('m3-result-img');
     const m3BtnDl           = document.getElementById('m3-btn-dl');
-    const m3BtnPlace        = document.getElementById('m3-btn-place');
     const m3Step2           = document.getElementById('m3-step2');
     const m3BodyArea        = document.getElementById('m3-body-area');
     const m3BodyInput       = document.getElementById('m3-body-input');
@@ -1483,12 +1474,6 @@
       }
     });
 
-    // Go to placement step
-    m3BtnPlace.addEventListener('click', () => {
-      show(m3Step2);
-      m3Step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
     // Body photo upload
     m3BodyInput.addEventListener('change', () => {
       const file = m3BodyInput.files[0]; if (!file) return;
@@ -1541,7 +1526,6 @@
     const m4Result        = document.getElementById('m4-result');
     const m4ResultImg     = document.getElementById('m4-result-img');
     const m4BtnDl         = document.getElementById('m4-btn-dl');
-    const m4BtnPlace      = document.getElementById('m4-btn-place');
     const m4Step2         = document.getElementById('m4-step2');
     const m4BodyArea      = document.getElementById('m4-body-area');
     const m4BodyInput     = document.getElementById('m4-body-input');
@@ -1613,11 +1597,6 @@
       } finally {
         m4BtnGenerate.disabled = m4Files.length < 2;
       }
-    });
-
-    m4BtnPlace.addEventListener('click', () => {
-      show(m4Step2);
-      m4Step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     m4BodyInput.addEventListener('change', () => {
