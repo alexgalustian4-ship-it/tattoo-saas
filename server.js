@@ -276,12 +276,19 @@ const HF_API = 'https://fnf.higgsfield.ai';
 // Appel REST direct — utilisé quand le CLI ne supporte pas l'option (ex: gpt_image_2 + image)
 async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
-  const body   = { ...payload };
+  const { model, prompt, resolution, images } = payload;
+
+  // Build params object — images as base64 array if provided
+  const params = { prompt };
+  if (resolution) params.resolution = resolution;
+  if (Array.isArray(images) && images.length) params.images = images;
+
+  const body = { job_set_type: model, params };
 
   // Soumettre le job
   const submitRes = await fetch(`${HF_API}/agents/jobs`, {
     method:  'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   });
   const submitted = await submitRes.json();
