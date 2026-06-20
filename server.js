@@ -290,8 +290,9 @@ function runCLI(args, timeoutMs, retry = true) {
         return;
       }
       if (err) {
-        console.error('❌ CLI error:', stderr || err.message);
-        return reject(new Error('Generation failed. Please try again.'));
+        const detail = (stderr || err.message || '').slice(0, 300);
+        console.error('❌ CLI error:', detail);
+        return reject(new Error('Generation failed: ' + detail));
       }
       const url = stdout.trim().split('\n').map(l => {
         const m = l.match(/https?:\/\/\S+/);
@@ -351,11 +352,7 @@ function sleep(ms) {
 
 // Retourne un message d'erreur safe pour le client (jamais de détails techniques)
 function clientError(err) {
-  const msg = err.message || '';
-  if (msg.includes('Generation') || msg.includes('temporarily unavailable')) return msg;
-  if (msg.includes('content filter') || msg.includes('bloquée') || msg.includes('blocked')) return msg;
-  if (msg.includes('No photo') || msg.includes('No design') || msg.includes('Aucun') || msg.includes('manquante')) return msg;
-  return 'Generation failed. Please try again in a moment.';
+  return err.message || 'Generation failed. Please try again in a moment.';
 }
 
 // ─────────────────────────────────────────────────
@@ -427,9 +424,8 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       };
     } else {
       payload = {
-        model:      'gpt_image_2',
+        model:  'gpt_image_2',
         prompt,
-        resolution: '2k',
       };
     }
 
