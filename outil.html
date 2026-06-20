@@ -2413,7 +2413,7 @@
       const baKnob       = document.getElementById('studio-ba-knob');
 
       function gaussBlur(src, w, h, r) {
-        const sigma = r/3, ks = r*2+1, k = new Float32Array(ks); let s=0;
+        const sigma = r/2, ks = r*2+1, k = new Float32Array(ks); let s=0;
         for(let i=0;i<ks;i++){const x=i-r;k[i]=Math.exp(-(x*x)/(2*sigma*sigma));s+=k[i];}
         for(let i=0;i<ks;i++)k[i]/=s;
         const tmp=new Float32Array(w*h), out=new Float32Array(w*h);
@@ -2434,23 +2434,16 @@
         for (let i = 0; i < w * h; i++)
           gray[i] = 0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2];
 
-        // Smooth + unsharp mask to enhance structure
-        const smoothed = gaussBlur(gray, w, h, 2);
-        const blurred  = gaussBlur(smoothed, w, h, 8);
-        const sharp = new Float32Array(w*h);
-        for(let i=0;i<w*h;i++) sharp[i] = Math.min(255, Math.max(0, smoothed[i] + 1.5*(smoothed[i]-blurred[i])));
+        // Difference of Gaussians — thin clean edges only
+        const blur1 = gaussBlur(gray, w, h, 1);
+        const blur2 = gaussBlur(gray, w, h, 6);
+        const dog = new Float32Array(w * h);
+        for (let i = 0; i < w * h; i++) dog[i] = blur1[i] - blur2[i];
 
-        // Levels + S-curve → push to B/W
-        for(let i=0;i<w*h;i++){
-          let v = Math.min(255, Math.max(0, (sharp[i]-50)/(210-50)*255));
-          v = v<128 ? 128*Math.pow(v/128,1.8) : 255-128*Math.pow((255-v)/128,1.8);
-          sharp[i] = v;
-        }
-
-        // Output: white bg + violet lines
+        // Output: white bg + violet lines where edge detected
         const out = ctx.createImageData(w, h);
         for (let i = 0; i < w*h; i++) {
-          const isLine = sharp[i] < 160;
+          const isLine = dog[i] < -8;
           out.data[i*4]   = isLine ? 75  : 255;
           out.data[i*4+1] = isLine ? 0   : 255;
           out.data[i*4+2] = isLine ? 130 : 255;
