@@ -277,17 +277,28 @@ const HF_API = 'https://fnf.higgsfield.ai';
 async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
 
-  // Step 1: get presigned S3 URL
-  const fd = new FormData();
-  fd.set('file', new File([buffer], 'photo.jpg', { type: mimeType }));
+  // Build multipart body manually for maximum compatibility
+  const boundary = '----HFBoundary' + Date.now().toString(16);
+  const ext = mimeType.includes('png') ? 'png' : 'jpg';
+  const header = Buffer.from(
+    `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="photo.${ext}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+  );
+  const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
+  const body   = Buffer.concat([header, buffer, footer]);
 
+  // Step 1: get presigned S3 URL
   const initRes = await fetch(`${HF_API}/agents/uploads?type=image`, {
     method:  'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}` },
-    body:    fd,
+    headers: {
+      'Authorization':  `Bearer ${apiKey}`,
+      'Content-Type':   `multipart/form-data; boundary=${boundary}`,
+      'Content-Length': String(body.length),
+    },
+    body,
   });
-  if (!initRes.ok) throw new Error('Upload init failed: ' + await initRes.text());
-  const { id, url, upload_url } = await initRes.json();
+  const initText = await initRes.text();
+  if (!initRes.ok) throw new Error('Upload init failed: ' + initText.slice(0, 200));
+  const { id, url, upload_url } = JSON.parse(initText);
 
   // Step 2: PUT actual bytes to S3 presigned URL
   const s3Res = await fetch(upload_url, {
