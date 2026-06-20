@@ -740,24 +740,59 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
-    // Conversion des deux images en base64 en parallèle
-    const [photoB64, designB64] = await Promise.all([
-      Promise.resolve(fileToBase64(photoPath)),
-      urlToBase64(designUrl),
-    ]);
+    const apiKey = process.env.HIGGSFIELD_API_KEY || '';
 
-    const { apiModel, extras } = BODY_MODELS[modelKey];
-    const payload = {
-      model:  apiModel,
-      prompt,
-      images: [photoB64, designB64],
-      ...extras,
+    // Upload body photo to Higgsfield
+    console.log('   Uploading body photo...');
+    const photoBuffer = fs.readFileSync(photoPath);
+    const photoMedia  = await uploadImageToHiggsfield(photoBuffer, 'image/jpeg');
+
+    // Extract design job ID from Higgsfield CDN URL (no re-upload needed)
+    const designJobId = (designUrl.match(/hf_\d+_([a-f0-9-]{36})\./) || [])[1];
+    const designMedia = designJobId
+      ? { id: designJobId, type: 'image_auto_job' }
+      : { id: photoMedia.id, type: 'media_input' }; // fallback
+
+    console.log('   Photo UUID:', photoMedia.id, '| Design job ID:', designJobId || 'not found');
+
+    // Submit nano_banana_2 with proper input_images
+    const submitBody = {
+      job_set_type: 'nano_banana_2',
+      params: {
+        prompt,
+        resolution: '2k',
+        input_images: [
+          { id: photoMedia.id, url: photoMedia.url, type: 'media_input' },
+          designMedia,
+        ],
+      },
     };
 
-    const { imageUrl, jobId } = await fetchHiggsfield(payload,
-      'La photo a été bloquée par le filtre de contenu du modèle.\n' +
-      'Essaie avec une photo où le bras ou la zone est bien visible sur un fond neutre, sans excès de peau exposée.'
-    );
+    const submitRes = await fetch(`${HF_API}/agents/jobs`, {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(submitBody),
+    });
+    const submitted = await submitRes.json();
+    const jobIdHF   = Array.isArray(submitted) ? submitted[0] : submitted.id;
+    if (!submitRes.ok || !jobIdHF) throw new Error('Job submit failed: ' + JSON.stringify(submitted).slice(0, 200));
+
+    console.log('   Job submitted:', jobIdHF);
+
+    // Poll for result
+    const deadline = Date.now() + 270_000;
+    let imageUrl;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 5000));
+      const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+      const job  = await poll.json();
+      console.log('   Poll:', job.status, job.result_url || '');
+      if (job.status === 'completed' && job.result_url) { imageUrl = job.result_url; break; }
+      if (job.status === 'failed') throw new Error('Job failed');
+    }
+    if (!imageUrl) throw new Error('Timeout');
+
+    const { jobId } = { jobId: jobIdHF };
 
     res.json({ imageUrl, jobId, model: modelKey });
 
