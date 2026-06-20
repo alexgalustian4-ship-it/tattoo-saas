@@ -2391,6 +2391,7 @@
     const stencilStudio = document.getElementById('stencil-studio');
     function activateMode5() {
       hide(modeSelector); hide(toolHeader);
+      show(stencilStudio);
       stencilStudio.scrollIntoView({ behavior: 'smooth', block: 'start' });
       show(modeBack);
     }
