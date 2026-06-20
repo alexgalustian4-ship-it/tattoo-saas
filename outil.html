@@ -327,68 +327,6 @@
     }
     #mode-back:hover { color: var(--silver); }
 
-    /* ── TOOL SUBTITLE ─────────────────────── */
-    .tool-subtitle { font-size: 0.82rem; color: var(--text-muted); text-align: center; margin-top: 6px; margin-bottom: 0; line-height: 1.6; }
-
-    /* ── STUDIO PROMPT ─────────────────────── */
-    .studio-prompt-box {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 18px; width: 100%; max-width: 560px;
-    }
-    .studio-prompt-box textarea {
-      width: 100%; background: transparent; border: none; outline: none;
-      color: var(--text); font-size: 0.88rem; font-family: 'Inter', sans-serif;
-      resize: none; line-height: 1.65;
-    }
-    .studio-prompt-box textarea::placeholder { color: #3a3a50; }
-    .studio-prompt-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;
-    }
-    .studio-pills { display: flex; gap: 5px; flex-wrap: wrap; }
-    .studio-pill {
-      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 4px 9px; border-radius: 4px; border: 1px solid var(--border-hover);
-      color: var(--text-muted); cursor: pointer; background: transparent; transition: all 0.2s;
-    }
-    .studio-pill:hover { border-color: var(--silver); color: var(--silver); }
-    .studio-gen-btn {
-      background: #8b5cf6; color: #fff; border: none; border-radius: 6px;
-      padding: 9px 20px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; cursor: pointer; font-family: 'Inter', sans-serif;
-      transition: opacity 0.2s; white-space: nowrap;
-    }
-    .studio-gen-btn:hover { opacity: 0.85; }
-
-    .studio-divider {
-      display: flex; align-items: center; gap: 12px;
-      width: 100%; max-width: 560px; margin: 22px 0;
-    }
-    .studio-divider span { font-size: 0.62rem; color: #3a3a50; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
-    .studio-divider::before, .studio-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .studio-tools-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-      width: 100%; max-width: 560px;
-    }
-    .studio-tool-card {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
-      padding: 14px; cursor: pointer; text-align: left; transition: border-color 0.2s, transform 0.2s;
-      display: flex; flex-direction: column; gap: 5px; position: relative;
-    }
-    .studio-tool-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
-    .studio-tool-pro { border-color: rgba(139,92,246,0.2); }
-    .studio-tool-pro:hover { border-color: rgba(139,92,246,0.5); }
-    .stc-icon { font-size: 1.1rem; color: var(--silver); margin-bottom: 4px; }
-    .stc-icon-pro { color: #8b5cf6; }
-    .stc-name { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 600; color: var(--text); }
-    .stc-desc { font-size: 0.66rem; color: var(--text-muted); line-height: 1.45; }
-    .stc-pro {
-      position: absolute; top: 10px; right: 10px;
-      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-      color: #8b5cf6; border: 1px solid rgba(139,92,246,0.4); border-radius: 3px; padding: 2px 5px;
-    }
-
     /* ── HISTORIQUE ─────────────────────────── */
     .hist-card {
       background: var(--bg-card); border: 1px solid var(--border);
@@ -702,68 +640,51 @@
   <main>
     <div class="tool-header">
       <p class="tool-eyebrow">— Studio —</p>
-      <h1 class="tool-title">Ton tatouage, de l'idée à la peau</h1>
-      <p class="tool-subtitle">Décris ton idée — l'IA crée un design pro unique dans ton style en 60 secondes.</p>
+      <h1 class="tool-title">Design your tattoo</h1>
     </div>
 
-    <!-- ══════════ NOUVELLE PAGE D'ACCUEIL STUDIO ══════════ -->
+    <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
     <div id="mode-selector">
-
-      <!-- PROMPT BOX -->
-      <div class="studio-prompt-box">
-        <textarea id="studio-prompt-input" rows="3" placeholder="Ex. Un dragon japonais enroulé autour d'un katana, noir et gris réalisme, avant-bras…"></textarea>
-        <div class="studio-prompt-footer">
-          <div class="studio-pills">
-            <button class="studio-pill" onclick="studioSetStyle('japonais')">Japonais</button>
-            <button class="studio-pill" onclick="studioSetStyle('realisme')">Réalisme</button>
-            <button class="studio-pill" onclick="studioSetStyle('baroque')">Baroque</button>
-            <button class="studio-pill" onclick="studioSetStyle('geometrique')">Géométrique</button>
-            <button class="studio-pill" onclick="studioSetStyle('concept')">Concept</button>
-          </div>
-          <button class="studio-gen-btn" onclick="studioGenerate()">✦ Générer</button>
+      <button class="mode-card" id="btn-mode1">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Generate my design</p>
+          <p class="mode-card-desc">Describe your tattoo — AI creates a unique design and places it on your body.</p>
         </div>
-      </div>
-
-      <!-- DIVIDER -->
-      <div class="studio-divider"><span>ou utilise un outil</span></div>
-
-      <!-- TOOL GRID -->
-      <div class="studio-tools-grid">
-        <button class="studio-tool-card" id="btn-mode2" onclick="activateMode2()">
-          <div class="stc-icon">◈</div>
-          <p class="stc-name">Voir sur ma peau</p>
-          <p class="stc-desc">Upload ton design, vois-le rendu réaliste sur ton corps.</p>
-        </button>
-        <button class="studio-tool-card" id="btn-mode3" onclick="activateMode3()">
-          <div class="stc-icon">◧</div>
-          <p class="stc-name">Photo → Tatouage</p>
-          <p class="stc-desc">Transforme n'importe quelle photo en design encrable.</p>
-        </button>
-        <button class="studio-tool-card" id="btn-mode4" onclick="activateMode4()">
-          <div class="stc-icon">⬡</div>
-          <p class="stc-name">Fusionner</p>
-          <p class="stc-desc">2 à 4 designs fusionnés en un chef-d'œuvre.</p>
-        </button>
-        <button class="studio-tool-card studio-tool-pro" id="btn-mode5" onclick="activateMode5()">
-          <span class="stc-pro">PRO</span>
-          <div class="stc-icon stc-icon-pro">▦</div>
-          <p class="stc-name">Stencil</p>
-          <p class="stc-desc">Pochoir print-ready en 1 seconde.</p>
-        </button>
-        <button class="studio-tool-card studio-tool-pro" onclick="document.getElementById('history-section').scrollIntoView({behavior:'smooth'})">
-          <span class="stc-pro">PRO</span>
-          <div class="stc-icon stc-icon-pro">✎</div>
-          <p class="stc-name">Rework</p>
-          <p class="stc-desc">Retouche une zone précise avec le lasso.</p>
-        </button>
-        <button class="studio-tool-card studio-tool-pro" onclick="document.getElementById('history-section').scrollIntoView({behavior:'smooth'})">
-          <span class="stc-pro">PRO</span>
-          <div class="stc-icon stc-icon-pro">✂</div>
-          <p class="stc-name">PNG transparent</p>
-          <p class="stc-desc">Supprime le fond blanc pour impression.</p>
-        </button>
-      </div>
-
+        <span class="mode-card-arrow">›</span>
+      </button>
+      <button class="mode-card" id="btn-mode2">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">See my tattoo on my skin</p>
+          <p class="mode-card-desc">Already have a design? Upload it and see it rendered on your body — exactly where you want it.</p>
+        </div>
+        <span class="mode-card-arrow">›</span>
+      </button>
+      <button class="mode-card" id="btn-mode3">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Photo → Tattoo design</p>
+          <p class="mode-card-desc">Upload any photo — pet, portrait, landscape, object. AI transforms it into a professional tattoo.</p>
+        </div>
+        <span class="mode-card-arrow">›</span>
+      </button>
+      <button class="mode-card" id="btn-mode4">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Merge designs into one</p>
+          <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into a single unique masterpiece.</p>
+        </div>
+        <span class="mode-card-arrow">›</span>
+      </button>
+      <button class="mode-card" id="btn-mode5">
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Stencil — design existant</p>
+          <p class="mode-card-desc">Upload un tatouage ou design — génère le pochoir print-ready en 1 seconde.</p>
+        </div>
+        <span class="mode-card-arrow" style="color:#8b5cf6">PRO ›</span>
+      </button>
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
@@ -3322,21 +3243,6 @@
       epaule: 'Shoulder', dos: 'Back', pectoral: 'Chest',
       cuisse: 'Thigh', mollet: 'Calf', main: 'Hand'
     };
-
-    function studioSetStyle(style) {
-      const styleMap = { japonais:'japonais', realisme:'realisme', baroque:'baroque', geometrique:'geometrique', concept:'concept' };
-      if (styleDesign) styleDesign.value = styleMap[style] || style;
-      activateMode1();
-    }
-    function studioGenerate() {
-      const txt = (document.getElementById('studio-prompt-input')?.value || '').trim();
-      activateMode1();
-      if (txt) {
-        const fp = document.getElementById('free-prompt-input');
-        if (fp) { fp.value = txt; }
-        document.getElementById('toggle-free')?.click();
-      }
-    }
 
     function toggleHistMenu(id) {
       const menu = document.getElementById(id);
