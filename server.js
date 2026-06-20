@@ -315,32 +315,14 @@ function runCLI(args, timeoutMs, retry = true) {
     };
 
     execFile(bin, args, { timeout: timeoutMs, maxBuffer: 20 * 1024 * 1024, env }, async (err, stdout, stderr) => {
-      const errMsg = (stderr || err?.message || '').toLowerCase();
-      const isAuthError = errMsg.includes('not authenticated') || errMsg.includes('session') && errMsg.includes('expired');
-      if (err && isAuthError && retry) {
-        console.log('⚠ Auth error — rewriting credentials and retrying...');
-        try {
-          // Réécrit les credentials depuis les env vars
-          const access  = process.env.HIGGSFIELD_API_KEY;
-          const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-          if (access) {
-            const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
-            fs.mkdirSync(credDir, { recursive: true });
-            fs.writeFileSync(path.join(credDir, 'credentials.json'),
-              JSON.stringify({ access_token: access, refresh_token: refresh }));
-            console.log('✓ Credentials rewritten, retrying...');
-          }
-          await refreshHiggsfieldToken().catch(() => {});
-          resolve(await runCLI(args, timeoutMs, false));
-        } catch (retryErr) {
-          console.error('❌ Retry failed:', retryErr.message);
-          reject(new Error('Generation temporarily unavailable. Please try again in a moment.'));
-        }
-        return;
-      }
+      // Log complet pour diagnostic
+      if (stdout) console.log('CLI stdout:', stdout.slice(0, 500));
+      if (stderr) console.log('CLI stderr:', stderr.slice(0, 500));
+      if (err)    console.log('CLI err.message:', err.message?.slice(0, 300));
+
       if (err) {
-        const detail = (stderr || err.message || '').slice(0, 300);
-        console.error('❌ CLI error:', detail);
+        const detail = (stderr || err.message || '').slice(0, 500);
+        console.error('❌ CLI failed. Full detail:', detail);
         return reject(new Error('Generation failed: ' + detail));
       }
       const url = stdout.trim().split('\n').map(l => {
