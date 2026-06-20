@@ -357,6 +357,13 @@ function runCLI(args, timeoutMs, retry = true) {
       if (err) {
         const detail = (stderr || err.message || '').slice(0, 500);
         console.error('❌ CLI failed. Full detail:', detail);
+        if (retry && /session expired/i.test(detail)) {
+          console.log('🔄 Session expired — refreshing token and retrying...');
+          refreshHiggsfieldToken()
+            .then(() => runCLI(args, timeoutMs, false).then(resolve).catch(reject))
+            .catch(e => reject(new Error('Token refresh failed: ' + e.message)));
+          return;
+        }
         return reject(new Error('Generation failed: ' + detail));
       }
       const url = stdout.trim().split('\n').map(l => {
@@ -397,6 +404,8 @@ function refreshHiggsfieldToken() {
             creds.access_token = j.access_token;
             if (j.refresh_token) creds.refresh_token = j.refresh_token;
             fs.writeFileSync(credFile, JSON.stringify(creds));
+            process.env.HIGGSFIELD_API_KEY = j.access_token;
+            if (j.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = j.refresh_token;
             console.log('✓ Higgsfield token refreshed');
             resolve();
           } else {
