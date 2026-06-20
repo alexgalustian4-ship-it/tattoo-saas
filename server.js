@@ -474,9 +474,11 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       `Two images are provided: image 1 is a body photo, image 2 is a tattoo design on white background. ` +
       `Apply the tattoo design from image 2 onto the skin in image 1. ` +
       `${ZONE_PROMPTS[zone]} ` +
+      `CRITICAL: preserve the EXACT same framing, crop, zoom level, angle, perspective, and composition as image 1 — do NOT zoom in, do NOT reframe, do NOT change the camera distance. ` +
+      `The output image must have the identical framing as the input photo. ` +
       `The tattoo ink must follow the skin's natural texture, lighting, highlights and shadows from the photo. ` +
-      `Black and grey realism, photorealistic result, professional tattoo artist quality. ` +
-      `Keep everything else in the photo completely unchanged.`;
+      `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
+      `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
     // Conversion des deux images en base64 en parallèle
     const [photoB64, designB64] = await Promise.all([
@@ -536,9 +538,11 @@ app.post('/place-uploaded-design', upload.fields([
       `Two images are provided: image 1 is a body photo, image 2 is a tattoo design on white background. ` +
       `Apply the tattoo design from image 2 onto the skin in image 1. ` +
       `${ZONE_PROMPTS[zone]} ` +
+      `CRITICAL: preserve the EXACT same framing, crop, zoom level, angle, perspective, and composition as image 1 — do NOT zoom in, do NOT reframe, do NOT change the camera distance. ` +
+      `The output image must have the identical framing as the input photo. ` +
       `The tattoo ink must follow the skin's natural texture, lighting, highlights and shadows from the photo. ` +
-      `Black and grey realism, photorealistic result, professional tattoo artist quality. ` +
-      `Keep everything else in the photo completely unchanged.`;
+      `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
+      `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
     const payload = {
       model:      'nano_banana_2',
