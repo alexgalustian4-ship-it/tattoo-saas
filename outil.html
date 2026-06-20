@@ -1142,11 +1142,10 @@
         <!-- Left: canvas annotation -->
         <div>
           <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
-            <span style="font-size:0.75rem;color:var(--text-muted)">Brush:</span>
-            <button class="rework-brush-btn" id="brush-add" data-mode="add" style="background:#1a3a1a;border:1px solid #2a5a2a;color:#6ddc6d;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:0.75rem">+ Add</button>
-            <button class="rework-brush-btn" id="brush-remove" data-mode="remove" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:0.75rem">− Remove</button>
-            <button id="brush-erase" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:0.75rem">⌫ Erase</button>
-            <input type="range" id="brush-size" min="8" max="60" value="20" style="width:80px;accent-color:#6060ff">
+            <span style="font-size:0.75rem;color:var(--text-muted)">Lasso:</span>
+            <button class="rework-brush-btn" id="brush-add" data-mode="add" style="background:#1a3a1a;border:2px solid #6ddc6d;color:#6ddc6d;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem;font-weight:600">+ Add</button>
+            <button class="rework-brush-btn" id="brush-remove" data-mode="remove" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">− Remove</button>
+            <button id="brush-erase" style="background:#1a1a1a;border:1px solid #333;color:var(--text-muted);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.75rem">⌫ Erase zone</button>
             <button id="rework-clear-canvas" style="background:none;border:1px solid #2a2a32;border-radius:6px;color:var(--text-muted);padding:5px 12px;cursor:pointer;font-size:0.75rem">Clear all</button>
           </div>
           <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid #2a2a32;background:#0a0a10;cursor:crosshair" id="rework-canvas-wrap">
@@ -2416,10 +2415,11 @@
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Canvas drawing
+    // Lasso drawing
     (function() {
       const canvas = document.getElementById('rework-canvas');
-      const wrap   = document.getElementById('rework-canvas-wrap');
+      let lassoPoints = [];
+      let lassoActive = false;
 
       function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -2429,34 +2429,102 @@
         return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
       }
 
-      function draw(e) {
-        if (!reworkDrawing) return;
-        e.preventDefault();
+      function redrawLasso() {
+        // Redraw only the live lasso preview (dashed outline while drawing)
         const ctx = canvas.getContext('2d');
-        const { x, y } = getPos(e);
-        const size = parseInt(document.getElementById('brush-size').value);
+        // On ne dessine que la preview — les zones déjà validées restent sur le canvas
+        if (!lassoActive || lassoPoints.length < 2) return;
+        // Draw lasso outline on top (non-destructive preview via a temp overlay)
+        ctx.save();
+        ctx.strokeStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.9)' : 'rgba(220,80,80,0.9)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.lineDashOffset = -Date.now() / 50 % 10;
+        ctx.beginPath();
+        ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+        lassoPoints.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function commitLasso() {
+        if (lassoPoints.length < 3) { lassoPoints = []; lassoActive = false; return; }
+        const ctx = canvas.getContext('2d');
+        ctx.save();
         if (reworkBrushMode === 'erase') {
           ctx.globalCompositeOperation = 'destination-out';
           ctx.fillStyle = 'rgba(0,0,0,1)';
         } else {
           ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = reworkBrushMode === 'add'
-            ? 'rgba(80,220,80,0.45)'
-            : 'rgba(220,80,80,0.45)';
+          ctx.fillStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.5)' : 'rgba(220,80,80,0.5)';
         }
+        // Smooth the path with bezier curves for a fluid look
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+        for (let i = 1; i < lassoPoints.length - 1; i++) {
+          const mx = (lassoPoints[i].x + lassoPoints[i+1].x) / 2;
+          const my = (lassoPoints[i].y + lassoPoints[i+1].y) / 2;
+          ctx.quadraticCurveTo(lassoPoints[i].x, lassoPoints[i].y, mx, my);
+        }
+        ctx.closePath();
         ctx.fill();
-        ctx.globalCompositeOperation = 'source-over';
+        // Smooth stroke border
+        if (reworkBrushMode !== 'erase') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = reworkBrushMode === 'add' ? 'rgba(80,220,80,0.9)' : 'rgba(220,80,80,0.9)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.stroke();
+        }
+        ctx.restore();
+        lassoPoints = [];
+        lassoActive = false;
       }
 
-      canvas.addEventListener('mousedown',  (e) => { reworkDrawing = true; draw(e); });
-      canvas.addEventListener('mousemove',  draw);
-      canvas.addEventListener('mouseup',    () => { reworkDrawing = false; });
-      canvas.addEventListener('mouseleave', () => { reworkDrawing = false; });
-      canvas.addEventListener('touchstart', (e) => { reworkDrawing = true; draw(e); }, { passive: false });
-      canvas.addEventListener('touchmove',  draw, { passive: false });
-      canvas.addEventListener('touchend',   () => { reworkDrawing = false; });
+      // Animate dashed outline while drawing
+      let animFrame;
+      function animateLasso() {
+        redrawLasso();
+        if (lassoActive) animFrame = requestAnimationFrame(animateLasso);
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        lassoPoints = [getPos(e)];
+        lassoActive = true;
+        reworkDrawing = true;
+        animateLasso();
+      });
+      canvas.addEventListener('mousemove', (e) => {
+        if (!reworkDrawing) return;
+        e.preventDefault();
+        lassoPoints.push(getPos(e));
+      });
+      canvas.addEventListener('mouseup', (e) => {
+        reworkDrawing = false; lassoActive = false;
+        cancelAnimationFrame(animFrame);
+        commitLasso();
+      });
+      canvas.addEventListener('mouseleave', (e) => {
+        if (reworkDrawing) { reworkDrawing = false; lassoActive = false; cancelAnimationFrame(animFrame); commitLasso(); }
+      });
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        lassoPoints = [getPos(e)];
+        lassoActive = true;
+        reworkDrawing = true;
+        animateLasso();
+      }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => {
+        if (!reworkDrawing) return;
+        e.preventDefault();
+        lassoPoints.push(getPos(e));
+      }, { passive: false });
+      canvas.addEventListener('touchend', () => {
+        reworkDrawing = false; lassoActive = false;
+        cancelAnimationFrame(animFrame);
+        commitLasso();
+      });
     })();
 
     // Analyse les annotations canvas et retourne des descriptions de zones en anglais
