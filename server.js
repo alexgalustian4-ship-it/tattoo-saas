@@ -392,24 +392,6 @@ function clientError(err) {
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
-// ── Diagnostic endpoint ──
-app.get('/hf-debug', async (req, res) => {
-  const apiKey = process.env.HIGGSFIELD_API_KEY || '';
-  const HF_API = 'https://fnf.higgsfield.ai';
-  const results = {};
-
-  // Test 1: can we reach the API and is the token valid?
-  try {
-    const r = await fetch(`${HF_API}/agents/jobs?size=1`, {
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    });
-    const body = await r.text();
-    results.jobsEndpoint = { status: r.status, body: body.slice(0, 300) };
-  } catch (e) { results.jobsEndpoint = { error: e.message }; }
-
-  res.json({ apiKeyPrefix: apiKey.slice(0, 8), ...results });
-});
-
 // ── Download proxy (cross-origin image download) ──
 app.get('/download', async (req, res) => {
   const { url, filename = 'ink-studio.jpg' } = req.query;
