@@ -12,21 +12,44 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Bootstrap Higgsfield CLI credentials from env vars ──
-(function bootstrapHiggsfieldAuth() {
-  const access  = process.env.HIGGSFIELD_API_KEY;
-  const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-  if (!access) {
-    console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail');
-    return;
-  }
+function writeCredentials(access, refresh) {
   const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
   const credFile = path.join(credDir, 'credentials.json');
   fs.mkdirSync(credDir, { recursive: true });
-  fs.writeFileSync(credFile, JSON.stringify({ access_token: access, refresh_token: refresh }));
-  console.log('✓ Higgsfield credentials written to', credFile);
-  console.log('  HOME =', os.homedir());
-  console.log('  token prefix =', access.slice(0, 8) + '...');
-})();
+  fs.writeFileSync(credFile, JSON.stringify({ access_token: access, refresh_token: refresh || '' }));
+  return credFile;
+}
+
+async function bootstrapHiggsfieldAuth() {
+  const access  = process.env.HIGGSFIELD_API_KEY;
+  const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+  if (!access) { console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail'); return; }
+
+  writeCredentials(access, refresh);
+  console.log('✓ Higgsfield credentials written. HOME =', os.homedir(), '| token prefix =', access.slice(0, 8));
+
+  // Rafraîchit le token immédiatement au démarrage
+  if (refresh) {
+    try {
+      const r = await fetch('https://api.higgsfield.ai/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh }),
+      });
+      const d = await r.json();
+      if (d.access_token) {
+        writeCredentials(d.access_token, d.refresh_token || refresh);
+        console.log('✓ Token refreshed at startup, new prefix =', d.access_token.slice(0, 8));
+      } else {
+        console.warn('⚠ Refresh response:', JSON.stringify(d).slice(0, 200));
+      }
+    } catch (e) {
+      console.warn('⚠ Startup token refresh failed:', e.message);
+    }
+  }
+}
+
+bootstrapHiggsfieldAuth();
 
 // ─────────────────────────────────────────────────
 // Recettes de style — une par style de tatouage.
@@ -388,22 +411,43 @@ app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
 // ── Diagnostic endpoint (remove after debugging) ──
-app.get('/hf-debug', (req, res) => {
+app.get('/hf-debug', async (req, res) => {
   const binName   = process.platform === 'win32' ? 'hf.exe' : 'hf';
   const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
   const binExists = fs.existsSync(vendorBin);
   const apiKey    = process.env.HIGGSFIELD_API_KEY || '(not set)';
-  const env = { ...process.env, HIGGSFIELD_API_KEY: apiKey, HOME: os.homedir() };
-  if (!binExists) {
-    return res.json({ binExists, vendorBin, apiKeyPrefix: apiKey.slice(0, 8) });
+  const refreshKey = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+  const credFile  = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
+
+  // Lire l'état actuel du fichier credentials
+  let credFileContent = null;
+  try { credFileContent = JSON.parse(fs.readFileSync(credFile, 'utf8')); } catch {}
+
+  // Tester un refresh direct
+  let refreshResult = null;
+  if (refreshKey) {
+    try {
+      const r = await fetch('https://api.higgsfield.ai/auth/refresh', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshKey }),
+      });
+      const d = await r.json();
+      refreshResult = { status: r.status, hasAccessToken: !!d.access_token, prefix: d.access_token?.slice(0, 8) };
+      if (d.access_token) writeCredentials(d.access_token, d.refresh_token || refreshKey);
+    } catch (e) { refreshResult = { error: e.message }; }
   }
+
+  if (!binExists) return res.json({ binExists, vendorBin, credFileContent, refreshResult });
+
+  const env = { ...process.env, HOME: os.homedir() };
   execFile(vendorBin, ['auth', 'token'], { timeout: 10_000, env }, (err, stdout, stderr) => {
     res.json({
-      binExists,
-      vendorBin,
-      platform: process.platform,
-      home: os.homedir(),
+      binExists, platform: process.platform, home: os.homedir(),
       apiKeyPrefix: apiKey.slice(0, 8),
+      refreshKeySet: !!refreshKey,
+      credFile,
+      credFilePrefix: credFileContent?.access_token?.slice(0, 8),
+      refreshResult,
       tokenOut: (stdout || '').trim().slice(0, 20),
       err: err ? (stderr || err.message).slice(0, 300) : null,
     });
