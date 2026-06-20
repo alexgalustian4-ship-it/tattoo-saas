@@ -306,31 +306,8 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
 }
 
 async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
-  const model  = MODEL_MAP[payload.model] || payload.model || 'nano_banana_2';
-  const prompt = payload.prompt || '';
-  const tmpFiles = [];
-
-  try {
-    const args = ['generate', 'create', model, '--prompt', prompt, '--wait'];
-
-    if (Array.isArray(payload.images)) {
-      for (const b64 of payload.images) {
-        const data = b64.replace(/^data:image\/\w+;base64,/, '');
-        const tmp  = path.join(os.tmpdir(), `hf-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`);
-        fs.writeFileSync(tmp, Buffer.from(data, 'base64'));
-        tmpFiles.push(tmp);
-        args.push('--image', tmp);
-      }
-    }
-
-    if (payload.resolution) args.push('--resolution', payload.resolution);
-
-    const imageUrl = await runCLI(args, timeoutMs);
-    return { imageUrl, jobId: null };
-
-  } finally {
-    tmpFiles.forEach(f => { try { fs.unlinkSync(f); } catch {} });
-  }
+  const model = MODEL_MAP[payload.model] || payload.model || 'nano_banana_2';
+  return fetchHiggsFieldREST({ ...payload, model }, timeoutMs);
 }
 
 function runCLI(args, timeoutMs, retry = true) {
