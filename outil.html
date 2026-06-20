@@ -301,9 +301,16 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     [data-hidden] { display: none !important; }
 
+    /* ── PAGE ATMOSPHERE ───────────────────────── */
+    main {
+      background:
+        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 30% at 50% 100%, rgba(176,180,194,0.02) 0%, transparent 70%);
+    }
+
     /* ── SÉLECTEUR DE MODE ──────────────────────── */
     #mode-selector {
-      width: 100%; max-width: 660px;
+      width: 100%; max-width: 700px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -312,72 +319,139 @@
     .mode-card {
       display: flex; flex-direction: column;
       background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 26px 24px; width: 100%;
+      border-radius: 16px; padding: 28px 26px; width: 100%;
       cursor: pointer; text-align: left;
-      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      transition: border-color 0.3s, transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
       position: relative; overflow: hidden;
+      min-height: 190px;
     }
-    .mode-card::before {
+    .mode-card::after {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(circle at 80% 0%, rgba(176,180,194,0.04) 0%, transparent 60%);
-      opacity: 0; transition: opacity 0.3s;
+      background: radial-gradient(circle at 70% 0%, rgba(176,180,194,0.05) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.35s;
     }
-    .mode-card:hover::before { opacity: 1; }
+    .mode-card:hover::after { opacity: 1; }
     .mode-card:hover {
       border-color: var(--border-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.5);
     }
+
+    /* Featured card — spans full width, taller */
     .mode-card.mode-featured {
       grid-column: span 2;
-      flex-direction: row; align-items: center; gap: 24px;
-      padding: 28px 32px;
-      border-color: #202026;
+      min-height: 140px;
+      padding: 32px 36px;
+      border-color: #1e1e24;
+      background: linear-gradient(135deg, #111114 0%, #0e0e12 100%);
+      flex-direction: row; align-items: center; gap: 28px;
     }
-    .mode-card.mode-featured:hover { border-color: var(--border-hover); }
-    .mode-card.mode-pro { border-color: rgba(139,92,246,0.18); }
-    .mode-card.mode-pro:hover { border-color: rgba(139,92,246,0.45); box-shadow: 0 14px 40px rgba(139,92,246,0.1); }
+    .mode-card.mode-featured::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 240px; height: 240px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(176,180,194,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .mode-card.mode-featured:hover {
+      border-color: #2e2e38;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    .mode-card.mode-featured .mode-card-text { flex: 1; }
 
-    .mode-card-num {
-      font-family: 'Syne', sans-serif; font-size: 0.58rem; font-weight: 700;
-      letter-spacing: 0.14em; color: #2a2a36;
-      margin-bottom: 20px; display: block;
+    /* PRO card */
+    .mode-card.mode-pro {
+      border-color: rgba(139,92,246,0.15);
+      background: linear-gradient(135deg, #0e0e14 0%, #0c0c12 100%);
     }
-    .mode-featured .mode-card-num { margin-bottom: 0; margin-right: auto; display: none; }
+    .mode-card.mode-pro::after {
+      background: radial-gradient(circle at 70% 0%, rgba(139,92,246,0.08) 0%, transparent 55%);
+    }
+    .mode-card.mode-pro:hover {
+      border-color: rgba(139,92,246,0.4);
+      box-shadow: 0 20px 48px rgba(139,92,246,0.12);
+    }
+
+    /* Big muted number in corner */
+    .mode-card-num {
+      position: absolute; top: 16px; right: 20px;
+      font-family: 'Syne', sans-serif; font-size: 3.2rem; font-weight: 800;
+      line-height: 1; color: rgba(255,255,255,0.04);
+      pointer-events: none; user-select: none;
+      letter-spacing: -0.03em;
+    }
+    .mode-featured .mode-card-num { display: none; }
 
     .mode-card-icon {
       flex-shrink: 0;
-      width: 44px; height: 44px; border: 1px solid var(--border-hover); border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; background: var(--bg);
-      color: var(--silver-dim); transition: border-color 0.2s, color 0.2s;
-      margin-bottom: 18px;
+      width: 46px; height: 46px; border: 1px solid var(--border-hover); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03);
+      color: var(--silver-dim); transition: border-color 0.25s, color 0.25s, background 0.25s;
+      margin-bottom: 20px;
     }
-    .mode-card:hover .mode-card-icon { border-color: var(--silver-dim); color: var(--silver); }
-    .mode-card.mode-pro .mode-card-icon { color: #8b5cf6; border-color: rgba(139,92,246,0.3); }
-    .mode-featured .mode-card-icon { margin-bottom: 0; width: 52px; height: 52px; }
+    .mode-card:hover .mode-card-icon { border-color: #3a3a48; color: var(--silver); background: rgba(255,255,255,0.05); }
+    .mode-card.mode-pro .mode-card-icon { color: #9d7de8; border-color: rgba(139,92,246,0.28); background: rgba(139,92,246,0.06); }
+    .mode-card.mode-pro:hover .mode-card-icon { color: #b09af5; border-color: rgba(139,92,246,0.5); }
+
+    /* Featured icon — bigger, no bottom margin */
+    .mode-featured .mode-card-icon {
+      width: 56px; height: 56px; margin-bottom: 0; flex-shrink: 0;
+      border-radius: 14px;
+    }
 
     .mode-card-text { flex: 1; }
     .mode-card-title {
-      font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700;
-      letter-spacing: 0.01em; color: var(--text); margin-bottom: 8px; line-height: 1.2;
+      font-family: 'Syne', sans-serif; font-size: 0.96rem; font-weight: 700;
+      letter-spacing: 0.01em; color: #d8d8e0; margin-bottom: 8px; line-height: 1.2;
+      transition: color 0.2s;
     }
-    .mode-featured .mode-card-title { font-size: 1.05rem; }
-    .mode-card-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.65; }
+    .mode-card:hover .mode-card-title { color: #fff; }
+    .mode-featured .mode-card-title { font-size: 1.15rem; margin-bottom: 10px; }
+    .mode-card-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.7; }
+    .mode-featured .mode-card-desc { font-size: 0.82rem; max-width: 380px; }
 
-    .mode-card-arrow {
-      color: var(--silver-dim); font-size: 0.85rem; flex-shrink: 0;
-      margin-top: 20px; font-weight: 600; letter-spacing: 0.06em;
-      transition: color 0.2s, transform 0.2s;
-      display: inline-block;
+    /* Tag pill */
+    .mode-card-tag {
+      display: inline-block; margin-top: 20px;
+      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #3a3a4a; border: 1px solid #1e1e28; border-radius: 20px; padding: 3px 10px;
+      transition: color 0.2s, border-color 0.2s;
     }
-    .mode-card:hover .mode-card-arrow { color: var(--silver); transform: translateX(3px); }
-    .mode-featured .mode-card-arrow { margin-top: 0; margin-left: 16px; align-self: center; font-size: 1rem; }
+    .mode-card:hover .mode-card-tag { color: var(--silver-dim); border-color: #2e2e3a; }
+    .mode-card.mode-pro .mode-card-tag { color: rgba(139,92,246,0.5); border-color: rgba(139,92,246,0.2); }
+
+    /* Arrow */
+    .mode-card-arrow {
+      color: #2e2e3a; font-size: 1rem; flex-shrink: 0; font-weight: 400;
+      transition: color 0.2s, transform 0.2s;
+      display: inline-block; margin-top: auto; padding-top: 20px;
+    }
+    .mode-card:hover .mode-card-arrow { color: var(--silver); transform: translateX(4px); }
+    .mode-featured .mode-card-arrow {
+      margin-top: 0; padding-top: 0;
+      margin-left: 20px; align-self: center; font-size: 1.3rem; color: #3a3a48;
+    }
+    .mode-card.mode-pro .mode-card-arrow { color: rgba(139,92,246,0.3); }
+    .mode-card.mode-pro:hover .mode-card-arrow { color: #9d7de8; }
+
+    /* PRO badge */
     .mode-pro-badge {
-      position: absolute; top: 12px; right: 12px;
-      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.12em;
-      color: #8b5cf6; border: 1px solid rgba(139,92,246,0.4);
-      padding: 3px 7px; border-radius: 3px; background: rgba(139,92,246,0.08);
+      position: absolute; top: 14px; right: 14px;
+      font-size: 0.48rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: #8b5cf6; border: 1px solid rgba(139,92,246,0.35);
+      padding: 3px 8px; border-radius: 4px; background: rgba(139,92,246,0.07);
+    }
+
+    /* Start here badge on featured */
+    .mode-start-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.58rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--silver-dim); margin-bottom: 14px;
+    }
+    .mode-start-badge::before {
+      content: ''; display: block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--silver-dim); opacity: 0.5;
     }
 
     #mode-back {
@@ -386,6 +460,13 @@
       text-align: center; transition: color 0.2s; margin-bottom: 8px;
     }
     #mode-back:hover { color: var(--silver); }
+
+    @media (max-width: 600px) {
+      #mode-selector { grid-template-columns: 1fr; }
+      .mode-card.mode-featured { grid-column: span 1; flex-direction: column; }
+      .mode-featured .mode-card-icon { margin-bottom: 18px; }
+      .mode-featured .mode-card-arrow { margin-left: 0; padding-top: 16px; }
+    }
 
     /* ── HISTORIQUE ─────────────────────────── */
     .hist-card {
@@ -713,6 +794,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
         <div class="mode-card-text">
+          <p class="mode-start-badge">Start here</p>
           <p class="mode-card-title">Generate a design</p>
           <p class="mode-card-desc">Describe your tattoo in a few words — AI creates a unique design in your style in under 60 seconds. Then place it on your body.</p>
         </div>
@@ -729,6 +811,7 @@
           <p class="mode-card-title">Place on skin</p>
           <p class="mode-card-desc">Already have a design? See it rendered on your body, exactly where you want it.</p>
         </div>
+        <span class="mode-card-tag">Upload design</span>
         <span class="mode-card-arrow">→</span>
       </button>
 
@@ -742,6 +825,7 @@
           <p class="mode-card-title">Photo → Tattoo</p>
           <p class="mode-card-desc">Upload any photo — pet, portrait, object. AI turns it into a tattoo design.</p>
         </div>
+        <span class="mode-card-tag">Upload photo</span>
         <span class="mode-card-arrow">→</span>
       </button>
 
@@ -755,6 +839,7 @@
           <p class="mode-card-title">Merge designs</p>
           <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into one unique masterpiece.</p>
         </div>
+        <span class="mode-card-tag">2–4 images</span>
         <span class="mode-card-arrow">→</span>
       </button>
 
@@ -769,7 +854,8 @@
           <p class="mode-card-title">Instant stencil</p>
           <p class="mode-card-desc">Upload any design — get a print-ready stencil in 1 second.</p>
         </div>
-        <span class="mode-card-arrow" style="color:#8b5cf6">→</span>
+        <span class="mode-card-tag">1 second</span>
+        <span class="mode-card-arrow">→</span>
       </button>
 
     </div>
