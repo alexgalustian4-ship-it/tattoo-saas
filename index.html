@@ -1173,68 +1173,23 @@
   <section id="stencil-showcase">
     <div class="ss-inner">
 
-      <!-- Left: interactive tool -->
+      <!-- Left: static before/after slider -->
       <div class="ss-slider-wrap fade-up">
-
-        <!-- State 1: upload choice -->
-        <div id="ss-choice">
-          <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Try it now — free</p>
-          <!-- Tab buttons -->
-          <div style="display:flex;gap:8px;margin-bottom:20px">
-            <button id="ss-tab-own" onclick="ssTab('own')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #8b5cf6;background:#8b5cf6;color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer">My existing design</button>
-            <button id="ss-tab-ai" onclick="ssTab('ai')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #2a2a3a;background:transparent;color:var(--muted);font-size:0.8rem;font-weight:600;cursor:pointer">AI-generated design</button>
+        <div class="ss-slider" id="ss-slider">
+          <img src="images/stencil-before.png" alt="Design original" style="object-fit:contain;background:#fff" />
+          <div class="ss-after-layer" id="ss-after-layer">
+            <img src="images/stencil-after.png" alt="Stencil" style="object-fit:contain;background:#fff" />
           </div>
-
-          <!-- Own design: upload -->
-          <div id="ss-panel-own">
-            <label id="ss-upload-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 24px;background:#0a0a0f;border:2px dashed #2a2a3a;border-radius:14px;cursor:pointer;transition:border-color 0.25s;text-align:center">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span style="font-size:0.88rem;color:#666">Drop your design here or <span style="color:#8b5cf6;font-weight:600">click to choose</span></span>
-              <span style="font-size:0.72rem;color:#3a3a4a">PNG · JPG · WEBP</span>
-              <input type="file" id="ss-file-input" accept="image/*" style="display:none" />
-            </label>
+          <div class="ss-line" id="ss-line"></div>
+          <div class="ss-knob" id="ss-knob">
+            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
           </div>
-
-          <!-- AI designs: redirect -->
-          <div id="ss-panel-ai" style="display:none">
-            <div style="padding:32px 24px;background:#0a0a0f;border:1px solid #1e1e2e;border-radius:14px;text-align:center">
-              <p style="font-size:0.88rem;color:var(--muted);margin-bottom:20px;line-height:1.7">Generate a unique design with our AI, then convert it to a stencil in one click — all in the studio.</p>
-              <a href="outil.html" style="display:inline-flex;align-items:center;gap:8px;background:#8b5cf6;color:#fff;font-size:0.82rem;font-weight:600;padding:12px 24px;border-radius:24px;text-decoration:none;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 0 24px rgba(139,92,246,0.5)'" onmouseout="this.style.boxShadow=''">
-                Generate a design →
-              </a>
-            </div>
+          <div class="ss-badges">
+            <span class="ss-badge">Design</span>
+            <span class="ss-badge after">Stencil</span>
           </div>
         </div>
-
-        <!-- State 2: processing -->
-        <div id="ss-processing" style="display:none;text-align:center;padding:60px 24px">
-          <div style="width:32px;height:32px;border:2px solid #8b5cf6;border-top-color:transparent;border-radius:50%;animation:ss-spin 0.8s linear infinite;margin:0 auto 14px"></div>
-          <p style="font-size:0.82rem;color:var(--muted)">Generating stencil…</p>
-        </div>
-
-        <!-- State 3: result slider -->
-        <div id="ss-result" style="display:none">
-          <div class="ss-slider" id="ss-slider">
-            <img id="ss-before" src="" alt="Design original" />
-            <div class="ss-after-layer" id="ss-after-layer">
-              <img id="ss-after" src="" alt="Stencil" />
-            </div>
-            <div class="ss-line" id="ss-line"></div>
-            <div class="ss-knob" id="ss-knob">
-              <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
-            </div>
-            <div class="ss-badges">
-              <span class="ss-badge">Avant</span>
-              <span class="ss-badge after">Après</span>
-            </div>
-          </div>
-          <p class="ss-caption">Glissez pour comparer</p>
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <a id="ss-dl-btn" style="flex:1;display:block;text-align:center;background:#8b5cf6;color:#fff;font-size:0.8rem;font-weight:600;padding:11px;border-radius:24px;text-decoration:none">↓ Download stencil</a>
-            <button onclick="ssReset()" style="padding:11px 16px;border-radius:24px;border:1px solid #2a2a3a;background:transparent;color:var(--muted);font-size:0.8rem;cursor:pointer">New</button>
-          </div>
-        </div>
-
+        <p class="ss-caption">Drag to compare</p>
       </div>
 
       <!-- Right: text -->
