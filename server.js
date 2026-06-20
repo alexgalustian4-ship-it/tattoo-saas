@@ -370,10 +370,13 @@ app.get('/download', async (req, res) => {
   try {
     const r = await fetch(url);
     if (!r.ok) return res.status(502).send('Failed to fetch image');
+    const buffer = Buffer.from(await r.arrayBuffer());
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', r.headers.get('content-type') || 'image/jpeg');
-    r.body.pipe(res);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
   } catch (e) {
+    console.error('❌ /download :', e.message);
     res.status(500).send('Download error');
   }
 });
