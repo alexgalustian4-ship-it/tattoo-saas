@@ -66,15 +66,20 @@
       display: flex; flex-direction: column; align-items: center;
     }
 
-    .tool-header { text-align: center; margin-bottom: 32px; }
+    .tool-header { text-align: center; margin-bottom: 48px; }
     .tool-eyebrow {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 0.9rem; font-style: italic; letter-spacing: 0.22em;
-      color: var(--silver-dim); margin-bottom: 8px;
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--silver-dim); margin-bottom: 14px;
     }
     .tool-title {
-      font-family: 'Syne', sans-serif; font-size: 1.5rem;
-      font-weight: 800; letter-spacing: -0.01em; color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.02em; color: var(--text);
+      line-height: 1.1; margin-bottom: 12px;
+    }
+    .tool-subtitle {
+      font-size: 0.85rem; color: var(--text-muted); line-height: 1.7;
+      max-width: 380px; margin: 0 auto;
     }
 
     /* ── ÉTAPES ──────────────────────────────── */
@@ -297,28 +302,83 @@
     [data-hidden] { display: none !important; }
 
     /* ── SÉLECTEUR DE MODE ──────────────────────── */
-    #mode-selector { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+    #mode-selector {
+      width: 100%; max-width: 660px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
     .mode-card {
-      display: flex; align-items: center; gap: 20px;
+      display: flex; flex-direction: column;
       background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 24px 28px; width: 100%;
-      cursor: pointer; text-align: left; transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      border-radius: 14px; padding: 26px 24px; width: 100%;
+      cursor: pointer; text-align: left;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative; overflow: hidden;
     }
-    .mode-card:hover { border-color: var(--silver-dim); transform: translateY(-2px); box-shadow: 0 10px 36px rgba(176,180,194,0.06); }
+    .mode-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 80% 0%, rgba(176,180,194,0.04) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .mode-card:hover::before { opacity: 1; }
+    .mode-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+    }
+    .mode-card.mode-featured {
+      grid-column: span 2;
+      flex-direction: row; align-items: center; gap: 24px;
+      padding: 28px 32px;
+      border-color: #202026;
+    }
+    .mode-card.mode-featured:hover { border-color: var(--border-hover); }
+    .mode-card.mode-pro { border-color: rgba(139,92,246,0.18); }
+    .mode-card.mode-pro:hover { border-color: rgba(139,92,246,0.45); box-shadow: 0 14px 40px rgba(139,92,246,0.1); }
+
+    .mode-card-num {
+      font-family: 'Syne', sans-serif; font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.14em; color: #2a2a36;
+      margin-bottom: 20px; display: block;
+    }
+    .mode-featured .mode-card-num { margin-bottom: 0; margin-right: auto; display: none; }
 
     .mode-card-icon {
-      font-size: 1.4rem; flex-shrink: 0;
-      width: 48px; height: 48px; border: 1px solid var(--border-hover); border-radius: 8px;
+      flex-shrink: 0;
+      width: 44px; height: 44px; border: 1px solid var(--border-hover); border-radius: 10px;
       display: flex; align-items: center; justify-content: center; background: var(--bg);
+      color: var(--silver-dim); transition: border-color 0.2s, color 0.2s;
+      margin-bottom: 18px;
     }
+    .mode-card:hover .mode-card-icon { border-color: var(--silver-dim); color: var(--silver); }
+    .mode-card.mode-pro .mode-card-icon { color: #8b5cf6; border-color: rgba(139,92,246,0.3); }
+    .mode-featured .mode-card-icon { margin-bottom: 0; width: 52px; height: 52px; }
+
     .mode-card-text { flex: 1; }
     .mode-card-title {
-      font-family: 'Syne', sans-serif; font-size: 0.77rem; font-weight: 400;
-      letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); margin-bottom: 5px;
+      font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700;
+      letter-spacing: 0.01em; color: var(--text); margin-bottom: 8px; line-height: 1.2;
     }
-    .mode-card-desc { font-size: 0.79rem; color: var(--text-muted); line-height: 1.55; }
-    .mode-card-arrow { color: var(--silver-dim); font-size: 1rem; flex-shrink: 0; }
+    .mode-featured .mode-card-title { font-size: 1.05rem; }
+    .mode-card-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.65; }
+
+    .mode-card-arrow {
+      color: var(--silver-dim); font-size: 0.85rem; flex-shrink: 0;
+      margin-top: 20px; font-weight: 600; letter-spacing: 0.06em;
+      transition: color 0.2s, transform 0.2s;
+      display: inline-block;
+    }
+    .mode-card:hover .mode-card-arrow { color: var(--silver); transform: translateX(3px); }
+    .mode-featured .mode-card-arrow { margin-top: 0; margin-left: 16px; align-self: center; font-size: 1rem; }
+    .mode-pro-badge {
+      position: absolute; top: 12px; right: 12px;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.12em;
+      color: #8b5cf6; border: 1px solid rgba(139,92,246,0.4);
+      padding: 3px 7px; border-radius: 3px; background: rgba(139,92,246,0.08);
+    }
 
     #mode-back {
       font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em;
@@ -639,52 +699,79 @@
 
   <main>
     <div class="tool-header">
-      <p class="tool-eyebrow">— Studio —</p>
-      <h1 class="tool-title">Design your tattoo</h1>
+      <p class="tool-eyebrow">AI Tattoo Studio</p>
+      <h1 class="tool-title">What do you want<br>to create?</h1>
+      <p class="tool-subtitle">Pick a tool below — each one takes you somewhere different.</p>
     </div>
 
     <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
     <div id="mode-selector">
-      <button class="mode-card" id="btn-mode1">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Generate my design</p>
-          <p class="mode-card-desc">Describe your tattoo — AI creates a unique design and places it on your body.</p>
+
+      <!-- Featured: Generate a design -->
+      <button class="mode-card mode-featured" id="btn-mode1">
+        <div class="mode-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
-        <span class="mode-card-arrow">›</span>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Generate a design</p>
+          <p class="mode-card-desc">Describe your tattoo in a few words — AI creates a unique design in your style in under 60 seconds. Then place it on your body.</p>
+        </div>
+        <span class="mode-card-arrow">→</span>
       </button>
+
+      <!-- Place on skin -->
       <button class="mode-card" id="btn-mode2">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">See my tattoo on my skin</p>
-          <p class="mode-card-desc">Already have a design? Upload it and see it rendered on your body — exactly where you want it.</p>
+        <span class="mode-card-num">02</span>
+        <div class="mode-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
         </div>
-        <span class="mode-card-arrow">›</span>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Place on skin</p>
+          <p class="mode-card-desc">Already have a design? See it rendered on your body, exactly where you want it.</p>
+        </div>
+        <span class="mode-card-arrow">→</span>
       </button>
+
+      <!-- Photo → Tattoo -->
       <button class="mode-card" id="btn-mode3">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Photo → Tattoo design</p>
-          <p class="mode-card-desc">Upload any photo — pet, portrait, landscape, object. AI transforms it into a professional tattoo.</p>
+        <span class="mode-card-num">03</span>
+        <div class="mode-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </div>
-        <span class="mode-card-arrow">›</span>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Photo → Tattoo</p>
+          <p class="mode-card-desc">Upload any photo — pet, portrait, object. AI turns it into a tattoo design.</p>
+        </div>
+        <span class="mode-card-arrow">→</span>
       </button>
+
+      <!-- Merge designs -->
       <button class="mode-card" id="btn-mode4">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Merge designs into one</p>
-          <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into a single unique masterpiece.</p>
+        <span class="mode-card-num">04</span>
+        <div class="mode-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </div>
-        <span class="mode-card-arrow">›</span>
-      </button>
-      <button class="mode-card" id="btn-mode5">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
         <div class="mode-card-text">
-          <p class="mode-card-title">Stencil — design existant</p>
-          <p class="mode-card-desc">Upload un tatouage ou design — génère le pochoir print-ready en 1 seconde.</p>
+          <p class="mode-card-title">Merge designs</p>
+          <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into one unique masterpiece.</p>
         </div>
-        <span class="mode-card-arrow" style="color:#8b5cf6">PRO ›</span>
+        <span class="mode-card-arrow">→</span>
       </button>
+
+      <!-- Instant stencil — PRO -->
+      <button class="mode-card mode-pro" id="btn-mode5">
+        <span class="mode-pro-badge">PRO</span>
+        <span class="mode-card-num">05</span>
+        <div class="mode-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+        </div>
+        <div class="mode-card-text">
+          <p class="mode-card-title">Instant stencil</p>
+          <p class="mode-card-desc">Upload any design — get a print-ready stencil in 1 second.</p>
+        </div>
+        <span class="mode-card-arrow" style="color:#8b5cf6">→</span>
+      </button>
+
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
@@ -1306,17 +1393,17 @@
   </div>
 
   <!-- ══════════ STENCIL STUDIO ══════════ -->
-  <section id="stencil-studio" style="width:100%;padding:64px 24px 80px;border-top:1px solid #1c1c22">
+  <section id="stencil-studio" data-hidden style="width:100%;padding:64px 24px 80px;border-top:1px solid #1c1c22">
     <div style="max-width:640px;margin:0 auto">
-      <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Outil PRO</p>
-      <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:8px">Stencil depuis un design existant</h2>
-      <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;margin-bottom:28px">Upload n'importe quel tatouage ou design — on génère le pochoir prêt à imprimer en une seconde.</p>
+      <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">PRO Tool</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:8px">Instant stencil from your design</h2>
+      <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;margin-bottom:28px">Upload any tattoo or design — get a print-ready stencil in one second.</p>
 
       <!-- Upload zone -->
       <label id="studio-upload-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;background:#0e0e16;border:2px dashed #2a2a3a;border-radius:14px;cursor:pointer;transition:border-color 0.2s;margin-bottom:20px">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p style="font-size:0.85rem;color:#666;margin:0">Glisse ton image ici ou <span style="color:#8b5cf6;font-weight:600">clique pour choisir</span></p>
-        <p style="font-size:0.72rem;color:#444;margin:0">PNG, JPG, WEBP — max 10 Mo</p>
+        <p style="font-size:0.85rem;color:#666;margin:0">Drop your image here or <span style="color:#8b5cf6;font-weight:600">click to choose</span></p>
+        <p style="font-size:0.72rem;color:#444;margin:0">PNG, JPG, WEBP — max 10 MB</p>
         <input type="file" id="studio-file-input" accept="image/*" style="display:none" />
       </label>
 
