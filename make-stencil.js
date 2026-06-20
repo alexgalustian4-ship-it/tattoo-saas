@@ -30,31 +30,62 @@ async function makeStencil(inputPath, outputPath) {
   for (let i = 0; i < w * h; i++)
     gray[i] = 0.299*srcData[i*4] + 0.587*srcData[i*4+1] + 0.114*srcData[i*4+2];
 
-  // Gaussian pre-blur to reduce noise
-  const blurred = gaussianBlur(gray, w, h, 1);
+  // Step 1: Gaussian blur to reduce noise
+  const blurred = gaussianBlur(gray, w, h, 2);
 
-  // Sobel edge detection — gradient magnitude, works on any image darkness
+  // Step 2: Sobel — gradient magnitude + direction
   const mag = new Float32Array(w * h);
+  const dir = new Float32Array(w * h);
   let maxMag = 0;
   for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
-    const p = (y2, x2) => blurred[y2*w+x2];
-    const gx = -p(y-1,x-1) + p(y-1,x+1) - 2*p(y,x-1) + 2*p(y,x+1) - p(y+1,x-1) + p(y+1,x+1);
-    const gy = -p(y-1,x-1) - 2*p(y-1,x) - p(y-1,x+1) + p(y+1,x-1) + 2*p(y+1,x) + p(y+1,x+1);
+    const p = (dy, dx) => blurred[(y+dy)*w+(x+dx)];
+    const gx = -p(-1,-1) + p(-1,1) - 2*p(0,-1) + 2*p(0,1) - p(1,-1) + p(1,1);
+    const gy = -p(-1,-1) - 2*p(-1,0) - p(-1,1) + p(1,-1) + 2*p(1,0) + p(1,1);
     const m = Math.sqrt(gx*gx + gy*gy);
     mag[y*w+x] = m;
+    dir[y*w+x] = Math.atan2(gy, gx);
     if (m > maxMag) maxMag = m;
   }
 
-  // Adaptive threshold at 15% of max gradient
-  const threshold = maxMag * 0.15;
+  // Step 3: Non-maximum suppression — thin lines to 1px
+  const nms = new Float32Array(w * h);
+  for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+    const m = mag[y*w+x];
+    if (m === 0) continue;
+    const a = ((dir[y*w+x] * 180 / Math.PI) + 180) % 180;
+    let n1, n2;
+    if      (a < 22.5 || a >= 157.5) { n1 = mag[y*w+x-1];     n2 = mag[y*w+x+1]; }
+    else if (a < 67.5)               { n1 = mag[(y+1)*w+x-1]; n2 = mag[(y-1)*w+x+1]; }
+    else if (a < 112.5)              { n1 = mag[(y-1)*w+x];   n2 = mag[(y+1)*w+x]; }
+    else                             { n1 = mag[(y-1)*w+x-1]; n2 = mag[(y+1)*w+x+1]; }
+    if (m >= n1 && m >= n2) nms[y*w+x] = m;
+  }
 
-  // Output: white bg + violet (75, 0, 130) lines
+  // Step 4: Hysteresis thresholding
+  const hi = maxMag * 0.45;
+  const lo = hi * 0.40;
+  const edge = new Uint8Array(w * h);
+  for (let i = 0; i < w*h; i++) if (nms[i] >= hi) edge[i] = 2;
+  const stack = [];
+  for (let i = 0; i < w*h; i++) if (edge[i] === 2) stack.push(i);
+  while (stack.length) {
+    const i = stack.pop();
+    const x = i % w, y = (i / w) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x+dx, ny = y+dy;
+      if (nx<0||ny<0||nx>=w||ny>=h) continue;
+      const ni = ny*w+nx;
+      if (edge[ni] === 0 && nms[ni] >= lo) { edge[ni] = 2; stack.push(ni); }
+    }
+  }
+
+  // Output: violet (75, 0, 130) on white — strict binary, no grey
   const out = createCanvas(w, h);
   const oCtx = out.getContext('2d');
   const outData = oCtx.createImageData(w, h);
-
   for (let i = 0; i < w * h; i++) {
-    const isLine = mag[i] > threshold;
+    const isLine = edge[i] === 2;
     outData.data[i*4]   = isLine ? 75  : 255;
     outData.data[i*4+1] = isLine ? 0   : 255;
     outData.data[i*4+2] = isLine ? 130 : 255;
