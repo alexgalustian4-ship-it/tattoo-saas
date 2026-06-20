@@ -15,12 +15,17 @@ const PORT = process.env.PORT || 3000;
 (function bootstrapHiggsfieldAuth() {
   const access  = process.env.HIGGSFIELD_API_KEY;
   const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-  if (!access) return;
+  if (!access) {
+    console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail');
+    return;
+  }
   const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
   const credFile = path.join(credDir, 'credentials.json');
   fs.mkdirSync(credDir, { recursive: true });
   fs.writeFileSync(credFile, JSON.stringify({ access_token: access, refresh_token: refresh }));
-  console.log('✓ Higgsfield credentials written from env vars');
+  console.log('✓ Higgsfield credentials written to', credFile);
+  console.log('  HOME =', os.homedir());
+  console.log('  token prefix =', access.slice(0, 8) + '...');
 })();
 
 // ─────────────────────────────────────────────────
@@ -276,15 +281,34 @@ function runCLI(args, timeoutMs, retry = true) {
     const hfBin = path.join(__dirname, 'node_modules', '.bin', 'higgsfield');
     const bin   = fs.existsSync(hfBin) ? hfBin : 'higgsfield';
 
-    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 20 * 1024 * 1024 }, async (err, stdout, stderr) => {
+    // Passe le token en variable d'environnement au CLI
+    const env = {
+      ...process.env,
+      HIGGSFIELD_API_KEY:       process.env.HIGGSFIELD_API_KEY || '',
+      HIGGSFIELD_REFRESH_TOKEN: process.env.HIGGSFIELD_REFRESH_TOKEN || '',
+      HOME: os.homedir(),
+    };
+
+    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 20 * 1024 * 1024, env }, async (err, stdout, stderr) => {
       const errMsg = (stderr || err?.message || '').toLowerCase();
-      if (err && errMsg.includes('session') && errMsg.includes('expired') && retry) {
-        console.log('⚠ Session expired — attempting token refresh...');
+      const isAuthError = errMsg.includes('not authenticated') || errMsg.includes('session') && errMsg.includes('expired');
+      if (err && isAuthError && retry) {
+        console.log('⚠ Auth error — rewriting credentials and retrying...');
         try {
-          await refreshHiggsfieldToken();
+          // Réécrit les credentials depuis les env vars
+          const access  = process.env.HIGGSFIELD_API_KEY;
+          const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+          if (access) {
+            const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
+            fs.mkdirSync(credDir, { recursive: true });
+            fs.writeFileSync(path.join(credDir, 'credentials.json'),
+              JSON.stringify({ access_token: access, refresh_token: refresh }));
+            console.log('✓ Credentials rewritten, retrying...');
+          }
+          await refreshHiggsfieldToken().catch(() => {});
           resolve(await runCLI(args, timeoutMs, false));
-        } catch (refreshErr) {
-          console.error('❌ Token refresh failed:', refreshErr.message);
+        } catch (retryErr) {
+          console.error('❌ Retry failed:', retryErr.message);
           reject(new Error('Generation temporarily unavailable. Please try again in a moment.'));
         }
         return;
