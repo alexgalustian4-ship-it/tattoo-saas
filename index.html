@@ -232,6 +232,49 @@
     }
     .tool-card:hover .tool-cta { color: var(--silver); gap: 8px; }
 
+    /* ══ ALL TOOLS GRID ════════════════════════ */
+    .all-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%; max-width: 860px;
+      margin: 0 auto 32px;
+    }
+    .atool-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+      text-decoration: none; color: inherit; text-align: left;
+      display: flex; flex-direction: column; position: relative;
+      transition: border-color 0.25s, transform 0.3s;
+    }
+    .atool-card:hover { border-color: var(--border-m); transform: translateY(-3px); }
+    .atool-featured { grid-column: span 2; }
+    .atool-pro { border-color: rgba(139,92,246,0.2); }
+    .atool-pro:hover { border-color: rgba(139,92,246,0.5); }
+    .atool-pro-badge {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: #8b5cf6; border: 1px solid rgba(139,92,246,.4); border-radius: 3px; padding: 2px 5px;
+    }
+    .atool-icon {
+      width: 34px; height: 34px; border-radius: 7px;
+      background: var(--bg); border: 1px solid var(--border-m);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; margin-bottom: 12px; flex-shrink: 0;
+    }
+    .atool-name { font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .atool-desc { font-size: 0.7rem; color: #666672; line-height: 1.6; flex: 1; }
+    .atool-cta { margin-top: 12px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; color: #606070; transition: color 0.2s; }
+    .atool-card:hover .atool-cta { color: var(--silver); }
+    @media (max-width: 800px) {
+      .all-tools-grid { grid-template-columns: repeat(2, 1fr); }
+      .atool-featured { grid-column: span 2; }
+    }
+    @media (max-width: 480px) {
+      .all-tools-grid { grid-template-columns: 1fr; }
+      .atool-featured { grid-column: span 1; }
+    }
+
     /* ══ PROOF BAR ══════════════════════════════ */
     .proof-bar {
       display: flex; width: 100%; max-width: 540px; margin: 0 auto 56px;
@@ -463,6 +506,30 @@
       letter-spacing: 0.06em; transition: color 0.2s;
     }
     .footer-links a:hover { color: var(--muted); }
+
+    /* ══ HOW IT WORKS ══════════════════════════ */
+    .how-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      margin-top: 56px;
+    }
+    .how-step {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px 22px; display: flex; flex-direction: column; gap: 12px;
+      position: relative; overflow: hidden;
+    }
+    .how-num {
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 700;
+      color: rgba(176,180,194,0.06); position: absolute; top: 12px; right: 16px; line-height: 1;
+    }
+    .how-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: var(--bg); border: 1px solid var(--border-m);
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .how-title { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .how-desc { font-size: 0.76rem; color: #666672; line-height: 1.65; }
+    @media (max-width: 900px) { .how-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .how-grid { grid-template-columns: 1fr; } }
 
     /* ══ BENTO GRID ════════════════════════════ */
     .bento-grid {
@@ -877,26 +944,57 @@
         Generate a professional custom design, place it on your skin in real conditions. Show it to your artist. In under a minute.
       </p>
 
-      <div class="tools-grid fade-up d3">
-        <a href="outil.html?mode=create" class="tool-card mag-btn">
-          <div class="tool-icon">✦</div>
-          <p class="tool-name">Generate a design</p>
-          <p class="tool-desc">AI creates a custom design in your chosen style, tailored to your body placement.</p>
-          <p class="tool-cta">Start <span>→</span></p>
+      <div class="all-tools-grid fade-up d3">
+        <a href="outil.html?mode=create" class="atool-card atool-featured mag-btn">
+          <div class="atool-icon">✦</div>
+          <p class="atool-name">Generate a design</p>
+          <p class="atool-desc">Describe your idea — AI creates a pro design in your style in 60 seconds.</p>
+          <p class="atool-cta">Start →</p>
         </a>
-        <a href="outil.html?mode=body" class="tool-card mag-btn">
-          <div class="tool-icon">◈</div>
-          <p class="tool-name">Place on my skin</p>
-          <p class="tool-desc">Upload your design and see it rendered realistically on your skin, exactly where you want it.</p>
-          <p class="tool-cta">Start →</p>
+        <a href="outil.html?mode=body" class="atool-card mag-btn">
+          <div class="atool-icon">◈</div>
+          <p class="atool-name">Place on my skin</p>
+          <p class="atool-desc">See your design rendered realistically on your body.</p>
+          <p class="atool-cta">Try →</p>
         </a>
-        <a href="outil.html#history-section" class="tool-card full mag-btn">
-          <div class="tool-icon">◫</div>
-          <div style="flex:1">
-            <p class="tool-name">My projects</p>
-            <p class="tool-desc">Access all your past generations, download or rework them anytime.</p>
-          </div>
-          <p class="tool-cta">View →</p>
+        <a href="outil.html?mode=pet" class="atool-card mag-btn">
+          <div class="atool-icon">◧</div>
+          <p class="atool-name">Photo → Tattoo</p>
+          <p class="atool-desc">Turn any photo into a professional tattoo design.</p>
+          <p class="atool-cta">Try →</p>
+        </a>
+        <a href="outil.html?mode=merge" class="atool-card mag-btn">
+          <div class="atool-icon">⬡</div>
+          <p class="atool-name">Merge designs</p>
+          <p class="atool-desc">Fuse 2–4 designs into one unique masterpiece.</p>
+          <p class="atool-cta">Try →</p>
+        </a>
+        <a href="outil.html?mode=stencil" class="atool-card atool-pro mag-btn">
+          <span class="atool-pro-badge">PRO</span>
+          <div class="atool-icon">▦</div>
+          <p class="atool-name">Instant stencil</p>
+          <p class="atool-desc">Print-ready stencil from any design in 1 second.</p>
+          <p class="atool-cta">Try →</p>
+        </a>
+        <a href="outil.html#history-section" class="atool-card atool-pro mag-btn">
+          <span class="atool-pro-badge">PRO</span>
+          <div class="atool-icon">✎</div>
+          <p class="atool-name">Precise rework</p>
+          <p class="atool-desc">Annotate and edit any zone of your design with AI.</p>
+          <p class="atool-cta">Try →</p>
+        </a>
+        <a href="outil.html#history-section" class="atool-card atool-pro mag-btn">
+          <span class="atool-pro-badge">PRO</span>
+          <div class="atool-icon">✂</div>
+          <p class="atool-name">PNG transparent</p>
+          <p class="atool-desc">Remove the white background — ready to print or share.</p>
+          <p class="atool-cta">Try →</p>
+        </a>
+        <a href="outil.html#history-section" class="atool-card mag-btn">
+          <div class="atool-icon">◫</div>
+          <p class="atool-name">My projects</p>
+          <p class="atool-desc">All your generations, download or rework anytime.</p>
+          <p class="atool-cta">View →</p>
         </a>
       </div>
 
@@ -1171,6 +1269,43 @@
     </div>
   </section>
 
+
+  <!-- ══ HOW IT WORKS ══ -->
+  <section id="how" style="width:100%;padding:100px 5vw;border-top:1px solid var(--border);position:relative;z-index:1">
+    <div class="section-inner">
+      <span class="section-label fade-up">How it works</span>
+      <h2 class="section-title fade-up d1">From idea to ink<br>in four steps</h2>
+      <div class="how-grid">
+        <div class="how-step fade-up d1">
+          <div class="how-num">01</div>
+          <div class="how-icon">✦</div>
+          <p class="how-title">Describe your idea</p>
+          <p class="how-desc">Type a few words about your tattoo — subject, style, placement. The more specific, the better the result.</p>
+        </div>
+        <div class="how-step fade-up d2">
+          <div class="how-num">02</div>
+          <div class="how-icon">◎</div>
+          <p class="how-title">AI generates your design</p>
+          <p class="how-desc">In under 60 seconds, our AI creates a unique professional tattoo design in your chosen artistic style.</p>
+        </div>
+        <div class="how-step fade-up d3">
+          <div class="how-num">03</div>
+          <div class="how-icon">◈</div>
+          <p class="how-title">See it on your skin</p>
+          <p class="how-desc">Upload a photo of your body — the AI renders the tattoo realistically exactly where you want it placed.</p>
+        </div>
+        <div class="how-step fade-up d4">
+          <div class="how-num">04</div>
+          <div class="how-icon">◫</div>
+          <p class="how-title">Show your artist</p>
+          <p class="how-desc">Download your design and skin preview. Walk into your tattoo session with a clear vision your artist can work from.</p>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:56px">
+        <a href="outil.html?mode=create" class="cta-btn mag-btn fade-up d5">Start for free →</a>
+      </div>
+    </div>
+  </section>
 
   <!-- ══ SOCIAL PROOF ══ -->
   <section id="social-proof">
