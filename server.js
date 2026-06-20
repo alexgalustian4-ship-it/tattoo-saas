@@ -438,20 +438,24 @@ if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 // Retour: { imageUrl, jobId, prompt, zone }
 // ─────────────────────────────────────────────────
 app.post('/generate', upload.single('inspiration'), async (req, res) => {
-  const sujet    = (req.body.sujet    || req.body.description || '').trim();
-  const style    = (req.body.style    || 'concept').trim();
-  const ambiance = (req.body.ambiance || 'epique').trim();
-  const mot      = (req.body.mot      || '').trim();
-  const elements = (req.body.elements || '').trim();
-  const zone     = (req.body.zone     || '').trim();
-  const inspFile = req.file || null;
+  const sujet      = (req.body.sujet    || req.body.description || '').trim();
+  const style      = (req.body.style    || 'concept').trim();
+  const ambiance   = (req.body.ambiance || 'epique').trim();
+  const mot        = (req.body.mot      || '').trim();
+  const elements   = (req.body.elements || '').trim();
+  const zone       = (req.body.zone     || '').trim();
+  const freePrompt = req.body.freePrompt === '1';
+  const inspFile   = req.file || null;
 
   if (!sujet) {
     if (inspFile && fs.existsSync(inspFile.path)) fs.unlinkSync(inspFile.path);
     return res.status(400).json({ error: 'Le sujet est vide.' });
   }
 
-  const prompt     = buildPrompt({ sujet, style, ambiance, mot, elements, zone, withReference: !!inspFile });
+  // Free prompt: use the user's text directly, just add technical requirements
+  const prompt = freePrompt
+    ? `${sujet}. ${TECHNICAL_REQUIREMENTS}`
+    : buildPrompt({ sujet, style, ambiance, mot, elements, zone, withReference: !!inspFile });
   let   inspPath   = null;
 
   try {
@@ -640,9 +644,9 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
   const styleDesc = stylePrompts[style] || stylePrompts.realism;
 
   const prompt =
-    `Create a professional tattoo design based on the animal in the photo. ` +
+    `Create a professional tattoo design inspired by the subject in the photo. ` +
     `Style: ${styleDesc}. ` +
-    `Capture the animal's most recognizable features: face, eyes, fur texture, expression. ` +
+    `Capture the most distinctive and recognizable features of the subject — whether it's an animal, person, landscape, or object. ` +
     (details ? `Additional details to include: ${details}. ` : '') +
     `White background, tattoo flash art composition, ready to tattoo. ` +
     `High resolution, professional tattoo artist quality.`;

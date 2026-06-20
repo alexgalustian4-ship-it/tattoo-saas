@@ -168,6 +168,7 @@
       position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
     .upload-area .icon { font-size: 1.7rem; margin-bottom: 6px; display: block; }
+    .upload-area .upload-svg { width: 36px; height: 36px; margin: 0 auto 10px; display: block; color: var(--silver-dim); }
     .upload-area p { color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; }
     .upload-area strong { color: var(--text); font-weight: 500; }
 
@@ -566,31 +567,31 @@
     <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
     <div id="mode-selector">
       <button class="mode-card" id="btn-mode1">
-        <div class="mode-card-icon">✦</div>
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
         <div class="mode-card-text">
           <p class="mode-card-title">Generate my design</p>
-          <p class="mode-card-desc">AI creates a custom design from your description, then places it on your body.</p>
+          <p class="mode-card-desc">Describe your tattoo — AI creates a unique design and places it on your body.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
       <button class="mode-card" id="btn-mode2">
-        <div class="mode-card-icon">◈</div>
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
         <div class="mode-card-text">
           <p class="mode-card-title">See my tattoo on my skin</p>
-          <p class="mode-card-desc">Already have a design? Upload it and see it rendered on your skin — exactly where you want it.</p>
+          <p class="mode-card-desc">Already have a design? Upload it and see it rendered on your body — exactly where you want it.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
       <button class="mode-card" id="btn-mode3">
-        <div class="mode-card-icon">🐾</div>
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
         <div class="mode-card-text">
-          <p class="mode-card-title">Pet portrait tattoo</p>
-          <p class="mode-card-desc">Upload a photo of your animal — AI turns it into a professional tattoo design.</p>
+          <p class="mode-card-title">Photo → Tattoo design</p>
+          <p class="mode-card-desc">Upload any photo — pet, portrait, landscape, object. AI transforms it into a professional tattoo.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
       <button class="mode-card" id="btn-mode4">
-        <div class="mode-card-icon">⚡</div>
+        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
         <div class="mode-card-text">
           <p class="mode-card-title">Merge designs into one</p>
           <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into a single unique masterpiece.</p>
@@ -622,7 +623,44 @@
 
     <div data-hidden class="card" id="mode1-card">
 
+      <!-- MODE TOGGLE -->
+      <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
+        <button id="toggle-guided" style="flex:1;padding:9px;background:var(--surface);border:none;color:var(--text);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s">✦ Guided quiz</button>
+        <button id="toggle-free" style="flex:1;padding:9px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s">✎ Free prompt</button>
+      </div>
+
+      <!-- FREE PROMPT MODE -->
+      <div data-hidden id="free-prompt-section">
+        <div class="field">
+          <label for="free-prompt-input">Describe your tattoo</label>
+          <textarea id="free-prompt-input" rows="4" placeholder="E.g. A Japanese dragon wrapping around a katana sword, black and grey realism, forearm sleeve…" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--text);font-size:0.88rem;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+        </div>
+        <div class="field">
+          <label>Reference image <span>(optional)</span></label>
+          <div class="upload-area" id="free-inspi-area">
+            <input type="file" id="free-inspi-input" accept="image/*" />
+            <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p><strong>Add a reference image</strong></p>
+            <p>A tattoo style you like…</p>
+          </div>
+          <div data-hidden id="free-inspi-preview-wrap" class="result-img-wrap" style="margin-top:0">
+            <img id="free-inspi-preview-img" src="" style="max-height:180px;object-fit:contain;background:#090909;" />
+            <button class="result-change" id="free-btn-remove-inspi">Remove</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-free-generate" disabled>Generate →</button>
+        <div class="status" id="free-status"></div>
+        <div data-hidden id="free-result">
+          <div class="result-img-wrap" style="margin-bottom:12px">
+            <img id="free-result-img" src="" alt="Generated design" />
+            <a id="free-btn-dl" class="result-change" style="cursor:pointer">↓ Download</a>
+          </div>
+          <button class="btn btn-secondary" id="free-btn-goto-step2">Place this design on my body ›</button>
+        </div>
+      </div>
+
       <!-- QUIZ PROGRESS -->
+      <div id="quiz-section">
       <div class="quiz-progress-wrap"><div class="quiz-progress-bar" id="quiz-bar"></div></div>
 
       <!-- QUIZ STEP 1 — Subject -->
@@ -720,8 +758,8 @@
           <label>Reference image <span>(optional)</span></label>
           <div class="upload-area" id="inspi-upload-area">
             <input type="file" id="inspi-input" accept="image/*" />
-            <span class="icon">🖼️</span>
-            <p><strong>Add a reference</strong></p>
+            <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p><strong>Add a reference image</strong></p>
             <p>A tattoo you like, a style image…</p>
           </div>
           <div data-hidden id="inspi-preview-wrap" class="result-img-wrap" style="margin-top:0">
@@ -739,6 +777,7 @@
       <input type="hidden" id="style-design" value="concept" />
       <input type="hidden" id="ambiance-design" value="epique" />
       <input type="hidden" id="zone-design" value="" />
+      </div><!-- end quiz-section -->
 
       <div class="status" id="status-design"></div>
 
@@ -834,8 +873,8 @@
         <div style="margin-top:16px">
           <div class="upload-area" id="upload-area">
             <input type="file" id="file-input" accept="image/*" />
-            <span class="icon">📷</span>
-            <p><strong>Tap here</strong> to add your photo</p>
+            <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p><strong>Add your photo</strong></p>
             <p>Take a photo · Choose from gallery</p>
           </div>
           <div data-hidden id="body-preview-wrap" class="result-img-wrap" style="margin-top:0">
@@ -945,8 +984,8 @@
         <label>Your tattoo designs <span>(2 to 4 images)</span></label>
         <div id="m4-dropzone" style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;">
           <input type="file" id="m4-file-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
-          <span style="font-size:2rem;">⚡</span>
-          <p style="margin:8px 0 4px;font-weight:600;">Tap to add your designs</p>
+          <svg style="width:36px;height:36px;color:var(--silver-dim);margin:0 auto 10px;display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p style="margin:0 0 4px;font-weight:500;font-size:0.85rem">Tap to add your designs</p>
           <p style="font-size:0.78rem;color:var(--text-muted);">2 minimum — 4 maximum</p>
         </div>
         <div id="m4-previews" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
@@ -983,8 +1022,8 @@
           <label>Your photo <span>(the area must be visible)</span></label>
           <div class="upload-area" id="m4-body-area">
             <input type="file" id="m4-body-input" accept="image/*" />
-            <span class="icon">📷</span>
-            <p><strong>Tap here</strong> to add your photo</p>
+            <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p><strong>Add your photo</strong></p>
           </div>
           <div data-hidden id="m4-body-preview-wrap" class="result-img-wrap" style="margin-top:8px">
             <img id="m4-body-preview-img" src="" alt="Your photo" />
@@ -1004,16 +1043,15 @@
 
     <!-- ══════════ MODE 3 — ANIMAL PORTRAIT ══════════ -->
     <div data-hidden class="card" id="mode3-card">
-      <p class="section-title">Pet portrait tattoo</p>
+      <p class="section-title">Photo → Tattoo design</p>
 
-      <!-- Photo de l'animal -->
       <div class="field">
-        <label>Photo of your animal <span>(clear, well-lit)</span></label>
+        <label>Your photo <span>(animal, portrait, landscape, object…)</span></label>
         <div class="upload-area" id="m3-photo-area">
           <input type="file" id="m3-photo-input" accept="image/*" />
-          <span class="icon">🐾</span>
-          <p><strong>Tap here</strong> to add a photo</p>
-          <p>Dog, cat, bird, horse… any animal</p>
+          <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Add any photo</strong></p>
+          <p>Pet, portrait, place, object — AI transforms it into a tattoo</p>
         </div>
         <div data-hidden id="m3-photo-preview-wrap" class="result-img-wrap" style="margin-top:8px">
           <img id="m3-photo-preview-img" src="" alt="Your animal" style="max-height:220px;object-fit:contain;background:#0a0a0a;" />
@@ -1055,8 +1093,8 @@
           <label>Your photo <span>(the area must be visible)</span></label>
           <div class="upload-area" id="m3-body-area">
             <input type="file" id="m3-body-input" accept="image/*" />
-            <span class="icon">📷</span>
-            <p><strong>Tap here</strong> to add your photo</p>
+            <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p><strong>Add your photo</strong></p>
           </div>
           <div data-hidden id="m3-body-preview-wrap" class="result-img-wrap" style="margin-top:8px">
             <img id="m3-body-preview-img" src="" alt="Your photo" />
@@ -1099,6 +1137,91 @@
   </section>
 
   <script>
+    // ── FREE PROMPT TOGGLE ────────────────────────────────────────
+    const toggleGuided  = document.getElementById('toggle-guided');
+    const toggleFree    = document.getElementById('toggle-free');
+    const quizSection   = document.getElementById('quiz-section');
+    const freeSection   = document.getElementById('free-prompt-section');
+    const activeToggleStyle   = 'flex:1;padding:9px;background:var(--surface);border:none;color:var(--text);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s';
+    const inactiveToggleStyle = 'flex:1;padding:9px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s';
+
+    toggleGuided.addEventListener('click', () => {
+      toggleGuided.style.cssText = activeToggleStyle;
+      toggleFree.style.cssText   = inactiveToggleStyle;
+      show(quizSection); hide(freeSection);
+    });
+    toggleFree.addEventListener('click', () => {
+      toggleFree.style.cssText   = activeToggleStyle;
+      toggleGuided.style.cssText = inactiveToggleStyle;
+      hide(quizSection); show(freeSection);
+    });
+
+    // Free prompt inputs
+    const freePromptInput   = document.getElementById('free-prompt-input');
+    const freeBtnGenerate   = document.getElementById('btn-free-generate');
+    const freeStatus        = document.getElementById('free-status');
+    const freeResult        = document.getElementById('free-result');
+    const freeResultImg     = document.getElementById('free-result-img');
+    const freeInspiInput    = document.getElementById('free-inspi-input');
+    const freeInspiArea     = document.getElementById('free-inspi-area');
+    const freeInspiPreview  = document.getElementById('free-inspi-preview-wrap');
+    const freeInspiImg      = document.getElementById('free-inspi-preview-img');
+    const freeBtnGotoStep2  = document.getElementById('free-btn-goto-step2');
+
+    freePromptInput.addEventListener('input', () => {
+      freeBtnGenerate.disabled = !freePromptInput.value.trim();
+    });
+
+    freeInspiInput.addEventListener('change', () => {
+      const file = freeInspiInput.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = e => { freeInspiImg.src = e.target.result; hide(freeInspiArea); show(freeInspiPreview); };
+      r.readAsDataURL(file);
+    });
+    document.getElementById('free-btn-remove-inspi').addEventListener('click', () => {
+      freeInspiInput.value = ''; freeInspiImg.src = '';
+      show(freeInspiArea); hide(freeInspiPreview);
+    });
+
+    freeBtnGenerate.addEventListener('click', async () => {
+      const prompt = freePromptInput.value.trim();
+      if (!prompt) return;
+      setLoading(freeStatus, 'Generating design… (30–60 s)');
+      freeBtnGenerate.disabled = true; hide(freeResult);
+      try {
+        const fd = new FormData();
+        fd.append('sujet', prompt);
+        fd.append('style', 'concept');
+        fd.append('ambiance', 'epique');
+        fd.append('mot', '');
+        fd.append('elements', '');
+        fd.append('zone', '');
+        fd.append('freePrompt', '1');
+        if (freeInspiInput.files[0]) fd.append('inspiration', await resizeImage(freeInspiInput.files[0]));
+        const resp = await fetch('/generate', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Server error.');
+        designImgUrl = data.imageUrl; designJobId = data.jobId;
+        if (data.zone) selectedZone = data.zone;
+        freeResultImg.src = data.imageUrl;
+        document.getElementById('free-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
+        hideStatus(freeStatus); show(freeResult);
+        saveProject({ type:'design', imageUrl: data.imageUrl, params:{ sujet: prompt } });
+      } catch(err) { setError(freeStatus, err.message); }
+      finally { freeBtnGenerate.disabled = !freePromptInput.value.trim(); }
+    });
+
+    freeBtnGotoStep2.addEventListener('click', () => {
+      designThumbImg.src = designImgUrl;
+      show(step2Section); indStep2.classList.add('active');
+      if (selectedZone) {
+        document.querySelectorAll('.zone-btn').forEach(b => b.classList.toggle('selected', b.dataset.zone === selectedZone));
+        updateBtnBody();
+      }
+      step2Section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // ── END FREE PROMPT ──────────────────────────────────────────
+
     let designJobId   = null;
     let designImgUrl  = null;
     let bodyJobId     = null;
