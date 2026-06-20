@@ -1470,38 +1470,74 @@
     function sobelStencil(img) {
       const w = img.naturalWidth || img.width;
       const h = img.naturalHeight || img.height;
+
+      // Step 1: draw original to canvas
       const src = document.createElement('canvas');
       src.width = w; src.height = h;
       const sCtx = src.getContext('2d');
       sCtx.drawImage(img, 0, 0);
       const srcData = sCtx.getImageData(0, 0, w, h).data;
 
-      // Convert to grayscale array
-      const gray = new Float32Array(w * h);
-      for (let i = 0; i < w * h; i++) {
+      // Step 2: grayscale
+      const gray = new Uint8ClampedArray(w * h);
+      for (let i = 0; i < w * h; i++)
         gray[i] = 0.299*srcData[i*4] + 0.587*srcData[i*4+1] + 0.114*srcData[i*4+2];
+
+      // Step 3: gaussian blur (radius 21) on inverted grayscale — pencil sketch technique
+      const radius = 21;
+      const sigma = radius / 3;
+      const kSize = radius * 2 + 1;
+      const kernel = new Float32Array(kSize);
+      let kSum = 0;
+      for (let i = 0; i < kSize; i++) {
+        const x = i - radius;
+        kernel[i] = Math.exp(-(x*x) / (2*sigma*sigma));
+        kSum += kernel[i];
+      }
+      for (let i = 0; i < kSize; i++) kernel[i] /= kSum;
+
+      // Invert grayscale
+      const inv = new Uint8ClampedArray(w * h);
+      for (let i = 0; i < w * h; i++) inv[i] = 255 - gray[i];
+
+      // Blur inverted (horizontal pass)
+      const blurH = new Float32Array(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let sum = 0;
+          for (let k = 0; k < kSize; k++) {
+            const xi = Math.max(0, Math.min(w-1, x + k - radius));
+            sum += inv[y*w+xi] * kernel[k];
+          }
+          blurH[y*w+x] = sum;
+        }
+      }
+      // Blur (vertical pass)
+      const blurred = new Float32Array(w * h);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let sum = 0;
+          for (let k = 0; k < kSize; k++) {
+            const yi = Math.max(0, Math.min(h-1, y + k - radius));
+            sum += blurH[yi*w+x] * kernel[k];
+          }
+          blurred[y*w+x] = sum;
+        }
       }
 
-      // Sobel kernels
+      // Step 4: Color Dodge blend — pencil sketch = dodge(gray, blurred_inv)
       const out = document.createElement('canvas');
       out.width = w; out.height = h;
       const oCtx = out.getContext('2d');
       const outData = oCtx.createImageData(w, h);
-
-      for (let y = 1; y < h-1; y++) {
-        for (let x = 1; x < w-1; x++) {
-          const tl = gray[(y-1)*w+(x-1)], tc = gray[(y-1)*w+x], tr = gray[(y-1)*w+(x+1)];
-          const ml = gray[y*w+(x-1)],                             mr = gray[y*w+(x+1)];
-          const bl = gray[(y+1)*w+(x-1)], bc = gray[(y+1)*w+x], br = gray[(y+1)*w+(x+1)];
-          const gx = -tl - 2*ml - bl + tr + 2*mr + br;
-          const gy = -tl - 2*tc - tr + bl + 2*bc + br;
-          const mag = Math.min(255, Math.sqrt(gx*gx + gy*gy));
-          // Edge = dark line on white background
-          const v = 255 - Math.min(255, mag * 2.2);
-          const idx = (y*w+x)*4;
-          outData.data[idx] = outData.data[idx+1] = outData.data[idx+2] = v;
-          outData.data[idx+3] = 255;
-        }
+      for (let i = 0; i < w * h; i++) {
+        const g = gray[i];
+        const b = blurred[i];
+        // dodge: result = base / (1 - blend) clamped to 255
+        const v = b >= 255 ? 255 : Math.min(255, Math.floor(g * 255 / (255 - b)));
+        const idx = i * 4;
+        outData.data[idx] = outData.data[idx+1] = outData.data[idx+2] = v;
+        outData.data[idx+3] = 255;
       }
       oCtx.putImageData(outData, 0, 0);
       return out.toDataURL('image/png');
