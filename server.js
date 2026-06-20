@@ -637,14 +637,30 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     console.log('   Style   :', style, '/ Ambiance :', ambiance);
     console.log('   Ref     :', inspFile ? 'oui' : 'non');
 
+    let payload;
+
     if (inspFile) {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
+      payload = {
+        model:      'gpt_image_2',
+        prompt,
+        images:     [fileToBase64(inspPath)],
+        resolution: '2k',
+      };
+    } else {
+      payload = {
+        model:  'gpt_image_2',
+        prompt,
+      };
     }
 
-    const imageUrl = await generateWithOpenAI(prompt, inspPath || null);
+    const { imageUrl, jobId } = await fetchHiggsfield(payload,
+      'La génération a été bloquée par le filtre du modèle.\n' +
+      'Essaie de reformuler ta description — évite les termes d\'armes, de violence ou de symboles religieux forts.'
+    );
 
-    res.json({ imageUrl, jobId: null, prompt, zone });
+    res.json({ imageUrl, jobId, prompt, zone });
 
   } catch (err) {
     console.error('❌ /generate :', err.message);
