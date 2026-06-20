@@ -240,7 +240,7 @@ const ZONE_PROMPTS = {
 
 // Modèles disponibles pour l'étape 2 (pose sur le corps)
 const BODY_MODELS = {
-  nano_banana_pro:  { apiModel: 'nano_banana_2', extras: { resolution: '2k' }, label: 'Standard' },
+  nano_banana_pro:  { apiModel: 'gpt_image_2', extras: { resolution: '2k' }, label: 'Standard' },
 };
 const DEFAULT_BODY_MODEL = 'nano_banana_pro';
 
@@ -520,7 +520,7 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 
       const fallbackImages = [`data:image/png;base64,${b64img}`];
       if (fusionFile) fallbackImages.push(`data:image/png;base64,${fs.readFileSync(fusionFile.path).toString('base64')}`);
       const fallbackPayload = {
-        model: 'nano_banana_2',
+        model: 'gpt_image_2',
         prompt: `${fullPrompt}`,
         images: fallbackImages,
         resolution: '2k',
@@ -752,7 +752,7 @@ app.post('/place-uploaded-design', upload.fields([
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
     const payload = {
-      model:      'nano_banana_2',
+      model:      'gpt_image_2',
       prompt,
       images:     [fileToBase64(photoPath), fileToBase64(designPath)],
       resolution: '2k',
@@ -813,7 +813,7 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
     console.log('   Details :', details || 'none');
 
     const payload = {
-      model:      'nano_banana_2',
+      model:      'gpt_image_2',
       prompt,
       images:     [fileToBase64(photoPath)],
       resolution: '2k',
@@ -887,7 +887,7 @@ app.post('/merge-tattoos', upload.fields([
     console.log(`\n⚡ Merge tattoos — ${base64Images.length} designs, style: ${style}`);
 
     const { imageUrl } = await fetchHiggsfield({
-      model:      'nano_banana_2',
+      model:      'gpt_image_2',
       prompt,
       images:     base64Images,
       resolution: '2k',
