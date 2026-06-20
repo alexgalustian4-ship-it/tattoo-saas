@@ -281,7 +281,7 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   // Soumettre le job
   const submitRes = await fetch(`${HF_API}/agents/jobs`, {
     method:  'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   });
   const submitted = await submitRes.json();
