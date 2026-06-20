@@ -1288,7 +1288,6 @@
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
         document.getElementById('btn-dl-body').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-body.jpg`, 'tattoo-on-body.jpg');
-        bodyResultImg.src = data.imageUrl;
         hideStatus(statusBody); show(bodyResult);
         saveProject({
           type: 'on-body',
@@ -1426,7 +1425,6 @@
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m2ResultImg.src = data.imageUrl;
         document.getElementById('m2-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-skin.jpg`, 'tattoo-on-skin.jpg');
-        m2ResultImg.src = data.imageUrl;
         hideStatus(m2Status); show(m2Result);
         m2Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
@@ -1565,7 +1563,6 @@
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m3BodyResultImg.src = data.imageUrl;
         document.getElementById('m3-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo-on-skin.jpg`, 'pet-tattoo-on-skin.jpg');
-        m3BodyResultImg.src = data.imageUrl;
         hideStatus(m3Status2); show(m3BodyResult);
         m3BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
@@ -1691,7 +1688,6 @@
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         m4BodyResultImg.src = data.imageUrl;
         document.getElementById('m4-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=merged-tattoo-on-skin.jpg`, 'merged-tattoo-on-skin.jpg');
-        m4BodyResultImg.src = data.imageUrl;
         hideStatus(m4Status2); show(m4BodyResult);
         m4BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {

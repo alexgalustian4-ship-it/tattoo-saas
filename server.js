@@ -212,9 +212,7 @@ const ZONE_PROMPTS = {
 
 // Modèles disponibles pour l'étape 2 (pose sur le corps)
 const BODY_MODELS = {
-  gpt_image_2:      { apiModel: 'gpt_image_2',                  extras: { quality: 'high' },    label: 'GPT Image 2' },
-  nano_banana_pro:  { apiModel: 'nano_banana_2',                 extras: { resolution: '2k' },   label: 'Nano Banana Pro' },
-  nano_banana_skin: { apiModel: 'nano_banana_2_skin_enhancer',   extras: { resolution: '2k' },   label: 'Nano Banana Skin' },
+  nano_banana_pro:  { apiModel: 'nano_banana_2', extras: { resolution: '2k' }, label: 'Standard' },
 };
 const DEFAULT_BODY_MODEL = 'nano_banana_pro';
 
@@ -238,21 +236,21 @@ async function urlToBase64(url) {
 // ─────────────────────────────────────────────────
 
 const MODEL_MAP = {
-  'image_auto':               'gpt_image_2',
-  'nano_banana_2':            'nano_banana_2',
+  'image_auto':                 'gpt_image_2',
+  'gpt_image_2':                'gpt_image_2',
+  'nano_banana_2':              'nano_banana_2',
+  'nano_banana_2_skin_enhancer':'nano_banana_2',
   'cinematic_studio_video_3_5': 'seedance_2_0',
 };
 
-async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 300_000, endpoint = 'generation/image') {
-  const model  = MODEL_MAP[payload.model] || payload.model || 'gpt_image_2';
+async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
+  const model  = MODEL_MAP[payload.model] || payload.model || 'nano_banana_2';
   const prompt = payload.prompt || '';
   const tmpFiles = [];
 
   try {
-    const args = ['generate', 'create', model, '--prompt', prompt, '--wait',
-                  '--wait-timeout', Math.round(timeoutMs / 1000) + 's'];
+    const args = ['generate', 'create', model, '--prompt', prompt, '--wait'];
 
-    // Images base64 → fichiers temporaires
     if (Array.isArray(payload.images)) {
       for (const b64 of payload.images) {
         const data = b64.replace(/^data:image\/\w+;base64,/, '');
@@ -278,7 +276,7 @@ function runCLI(args, timeoutMs, retry = true) {
     const hfBin = path.join(__dirname, 'node_modules', '.bin', 'higgsfield');
     const bin   = fs.existsSync(hfBin) ? hfBin : 'higgsfield';
 
-    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024 }, async (err, stdout, stderr) => {
+    execFile(bin, args, { timeout: timeoutMs, maxBuffer: 20 * 1024 * 1024 }, async (err, stdout, stderr) => {
       const errMsg = (stderr || err?.message || '').toLowerCase();
       if (err && errMsg.includes('session') && errMsg.includes('expired') && retry) {
         console.log('⚠ Session expired — attempting token refresh...');
@@ -295,7 +293,10 @@ function runCLI(args, timeoutMs, retry = true) {
         console.error('❌ CLI error:', stderr || err.message);
         return reject(new Error('Generation failed. Please try again.'));
       }
-      const url = stdout.trim().split('\n').filter(l => l.startsWith('http')).pop();
+      const url = stdout.trim().split('\n').map(l => {
+        const m = l.match(/https?:\/\/\S+/);
+        return m ? m[0] : null;
+      }).filter(Boolean).pop();
       if (!url) {
         console.error('❌ No URL in CLI output:', stdout.slice(0, 300));
         return reject(new Error('Generation failed. Please try again.'));
@@ -426,8 +427,9 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       };
     } else {
       payload = {
-        model:  'image_auto',
+        model:      'gpt_image_2',
         prompt,
+        resolution: '2k',
       };
     }
 
