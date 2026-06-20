@@ -444,8 +444,7 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
     console.log('\n🎨 Rework via OpenAI inpainting');
     console.log('   Prompt:', fullPrompt.slice(0, 120));
 
-    const { FormData: NodeFormData, File: NodeFile } = await import('undici');
-    const fd = new NodeFormData();
+    const fd = new FormData();
     fd.append('model', 'gpt-image-1');
     fd.append('prompt', fullPrompt);
     fd.append('size', '1024x1024');
@@ -453,11 +452,11 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }]), async 
     fd.append('n', '1');
 
     const imgBuffer = fs.readFileSync(imageFile.path);
-    fd.append('image[]', new NodeFile([imgBuffer], 'design.png', { type: 'image/png' }));
+    fd.append('image[]', new File([imgBuffer], 'design.png', { type: 'image/png' }));
 
     if (maskFile) {
       const maskBuffer = fs.readFileSync(maskFile.path);
-      fd.append('mask', new NodeFile([maskBuffer], 'mask.png', { type: 'image/png' }));
+      fd.append('mask', new File([maskBuffer], 'mask.png', { type: 'image/png' }));
     }
 
     const response = await fetch('https://api.openai.com/v1/images/edits', {
