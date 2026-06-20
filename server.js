@@ -392,48 +392,22 @@ function clientError(err) {
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
-// ── Diagnostic endpoint (remove after debugging) ──
+// ── Diagnostic endpoint ──
 app.get('/hf-debug', async (req, res) => {
-  const binName   = process.platform === 'win32' ? 'hf.exe' : 'hf';
-  const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
-  const binExists = fs.existsSync(vendorBin);
-  const apiKey    = process.env.HIGGSFIELD_API_KEY || '(not set)';
-  const refreshKey = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-  const credFile  = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
+  const apiKey = process.env.HIGGSFIELD_API_KEY || '';
+  const HF_API = 'https://fnf.higgsfield.ai';
+  const results = {};
 
-  // Lire l'état actuel du fichier credentials
-  let credFileContent = null;
-  try { credFileContent = JSON.parse(fs.readFileSync(credFile, 'utf8')); } catch {}
-
-  // Tester un refresh direct
-  let refreshResult = null;
-  if (refreshKey) {
-    try {
-      const r = await fetch('https://api.higgsfield.ai/auth/refresh', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshKey }),
-      });
-      const d = await r.json();
-      refreshResult = { status: r.status, hasAccessToken: !!d.access_token, prefix: d.access_token?.slice(0, 8) };
-      if (d.access_token) writeCredentials(d.access_token, d.refresh_token || refreshKey);
-    } catch (e) { refreshResult = { error: e.message }; }
-  }
-
-  if (!binExists) return res.json({ binExists, vendorBin, credFileContent, refreshResult });
-
-  const env = { ...process.env, HOME: os.homedir() };
-  execFile(vendorBin, ['auth', 'token'], { timeout: 10_000, env }, (err, stdout, stderr) => {
-    res.json({
-      binExists, platform: process.platform, home: os.homedir(),
-      apiKeyPrefix: apiKey.slice(0, 8),
-      refreshKeySet: !!refreshKey,
-      credFile,
-      credFilePrefix: credFileContent?.access_token?.slice(0, 8),
-      refreshResult,
-      tokenOut: (stdout || '').trim().slice(0, 20),
-      err: err ? (stderr || err.message).slice(0, 300) : null,
+  // Test 1: can we reach the API and is the token valid?
+  try {
+    const r = await fetch(`${HF_API}/agents/jobs?size=1`, {
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     });
-  });
+    const body = await r.text();
+    results.jobsEndpoint = { status: r.status, body: body.slice(0, 300) };
+  } catch (e) { results.jobsEndpoint = { error: e.message }; }
+
+  res.json({ apiKeyPrefix: apiKey.slice(0, 8), ...results });
 });
 
 // ── Download proxy (cross-origin image download) ──
