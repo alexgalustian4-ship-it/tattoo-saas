@@ -452,7 +452,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
       payload = {
-        model:      'nano_banana_2',  // seul modèle supportant les images de référence
+        model:      'gpt_image_2',
         prompt,
         images:     [fileToBase64(inspPath)],
         resolution: '2k',
