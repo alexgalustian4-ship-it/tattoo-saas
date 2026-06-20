@@ -1269,7 +1269,7 @@
 
     function updateBtnBody() {
       const hasPhoto = bodyPreviewImg.src && bodyPreviewImg.src !== window.location.href;
-      btnBody.disabled = !hasPhoto || !designJobId || !selectedZone;
+      btnBody.disabled = !hasPhoto || !designImgUrl || !selectedZone;
     }
 
     btnBody.addEventListener('click', async () => {
