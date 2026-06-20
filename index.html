@@ -816,12 +816,8 @@
   </section>
 
   <!-- ══ MODES / SERVICES ══ -->
-  <section id="modes" style="width:100%;padding:90px 5vw;border-top:1px solid var(--border);position:relative;overflow:hidden">
-    <video class="section-vid-bg" autoplay muted loop playsinline preload="none" poster="images/style-baroque.png">
-      <source src="videos/vid1.mp4" type="video/mp4">
-    </video>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,12,0.85) 0%,rgba(8,8,12,0.72) 50%,rgba(8,8,12,0.92) 100%);pointer-events:none"></div>
-    <div class="section-inner" style="position:relative;z-index:1">
+  <section id="modes" style="width:100%;padding:90px 5vw;border-top:1px solid var(--border)">
+    <div class="section-inner">
       <span class="section-label fade-up" style="text-align:center;display:block">What you can do</span>
       <h2 class="section-title fade-up d1" style="text-align:center">Four ways to design<br>your perfect tattoo</h2>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:40px">
@@ -867,12 +863,8 @@
   </section>
 
   <!-- ══ HOW ══ -->
-  <section id="how" style="position:relative;overflow:hidden">
-    <video class="section-vid-bg" autoplay muted loop playsinline preload="none">
-      <source src="videos/vid3.mp4" type="video/mp4">
-    </video>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,12,0.9) 0%,rgba(8,8,12,0.78) 50%,rgba(8,8,12,0.95) 100%);pointer-events:none"></div>
-    <div class="section-inner" style="position:relative;z-index:1">
+  <section id="how">
+    <div class="section-inner">
       <span class="section-label fade-up">Process</span>
       <h2 class="section-title fade-up d1">How it works</h2>
       <div class="how-grid">
@@ -938,26 +930,15 @@
   </section>
 
   <!-- ══ DECO VIDEO ══ -->
-  <section id="deco-video-section" style="padding:90px 5vw;border-top:1px solid var(--border)">
-    <div class="section-inner">
-      <span class="section-label fade-up" style="text-align:center;display:block">AI in motion</span>
-      <h2 class="section-title fade-up d1" style="text-align:center">Designs that come alive</h2>
-      <div class="deco-vid-grid fade-up d2">
-        <div class="deco-vid-wrap deco-vid-tall">
-          <video autoplay muted loop playsinline preload="none"><source src="videos/vid2.mp4" type="video/mp4"></video>
-          <div class="deco-vid-vignette"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="deco-vid-wrap">
-            <video autoplay muted loop playsinline preload="none"><source src="videos/vid4.mp4" type="video/mp4"></video>
-            <div class="deco-vid-vignette"></div>
-          </div>
-          <div class="deco-vid-wrap">
-            <video autoplay muted loop playsinline preload="none"><source src="videos/vid5.mp4" type="video/mp4"></video>
-            <div class="deco-vid-vignette"></div>
-          </div>
-        </div>
-      </div>
+  <section id="deco-video-section" style="padding: 80px 24px; display:flex; flex-direction:column; align-items:center; gap:24px;">
+    <span class="section-label fade-up" style="text-align:center;">AI in motion</span>
+    <h2 class="section-title fade-up d1" style="text-align:center; max-width:500px;">The art that moves<br>as much as you do</h2>
+    <div class="fade-up d2" style="position:relative; width:100%; max-width:420px; border-radius:18px; overflow:hidden; box-shadow: 0 0 80px rgba(176,180,194,0.07), 0 0 0 1px #1c1c22;">
+      <video autoplay muted loop playsinline preload="auto"
+        src="videos/deco.mp4"
+        style="display:block; width:100%; height:auto;">
+      </video>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 55%, rgba(8,8,8,0.55) 100%); pointer-events:none;"></div>
     </div>
   </section>
 
