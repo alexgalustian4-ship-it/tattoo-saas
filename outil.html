@@ -102,9 +102,9 @@
 
     /* ── CARTE ───────────────────────────────── */
     .card {
-      width: 100%; max-width: 560px;
+      width: 100%; max-width: 640px;
       background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 28px;
+      border-radius: 16px; padding: 32px;
       display: flex; flex-direction: column; gap: 20px;
     }
 
@@ -456,10 +456,13 @@
 
     #mode-back {
       font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em;
-      cursor: pointer; background: none; border: none; padding: 4px 0;
-      text-align: center; transition: color 0.2s; margin-bottom: 8px;
+      cursor: pointer; background: none;
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 7px 16px; text-align: center;
+      transition: color 0.2s, border-color 0.2s; margin-bottom: 12px;
+      align-self: flex-start;
     }
-    #mode-back:hover { color: var(--silver); }
+    #mode-back:hover { color: var(--silver); border-color: var(--border-hover); }
 
     @media (max-width: 600px) {
       #mode-selector { grid-template-columns: 1fr; }
@@ -2234,23 +2237,25 @@
     const mode1Card    = document.getElementById('mode1-card');
     const mode2Card    = document.getElementById('mode2-card');
 
+    const toolHeader = document.querySelector('.tool-header');
+
     function activateMode1() {
-      hide(modeSelector); hide(modeBack);
+      hide(modeSelector); hide(modeBack); hide(toolHeader);
       show(stepsEl); show(mode1Card); show(modeBack);
     }
     function activateMode2() {
-      hide(modeSelector); hide(modeBack);
+      hide(modeSelector); hide(modeBack); hide(toolHeader);
       show(mode2Card); show(modeBack);
     }
     const mode3Card = document.getElementById('mode3-card');
     function activateMode3() {
-      hide(modeSelector);
+      hide(modeSelector); hide(toolHeader);
       show(mode3Card); show(modeBack);
     }
 
     const mode4Card = document.getElementById('mode4-card');
     function activateMode4() {
-      hide(modeSelector);
+      hide(modeSelector); hide(toolHeader);
       show(mode4Card); show(modeBack);
     }
 
@@ -2261,7 +2266,7 @@
 
     const stencilStudio = document.getElementById('stencil-studio');
     function activateMode5() {
-      hide(modeSelector);
+      hide(modeSelector); hide(toolHeader);
       stencilStudio.scrollIntoView({ behavior: 'smooth', block: 'start' });
       show(modeBack);
     }
@@ -2269,8 +2274,10 @@
 
     modeBack.addEventListener('click', () => {
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
+      hide(stencilStudio);
       resetMode2();
-      show(modeSelector);
+      show(modeSelector); show(toolHeader);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     // ── MODE 2 LOGIQUE ───────────────────────────────
