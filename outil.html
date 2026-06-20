@@ -327,6 +327,25 @@
     }
     #mode-back:hover { color: var(--silver); }
 
+    /* ── TOOL SUBTITLE ─────────────────────── */
+    .tool-subtitle { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 6px; line-height: 1.6; }
+
+    /* ── MODE SELECTOR EXTRAS ───────────────── */
+    .ms-section-label { font-size: 0.6rem; letter-spacing: .2em; text-transform: uppercase; color: #3a3a50; margin-bottom: 10px; }
+    .mode-card-featured { flex-direction: row; align-items: center; }
+    .mode-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .mode-grid-2 .mode-card { flex-direction: column; align-items: flex-start; padding: 18px 20px; }
+    .mode-grid-2 .mode-card-arrow { display: none; }
+    .mode-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mode-grid-3 .mode-card { flex-direction: column; align-items: flex-start; padding: 16px; position: relative; }
+    .mode-grid-3 .mode-card-arrow { display: none; }
+    .mode-card-pro { border-color: rgba(139,92,246,.2) !important; }
+    .mode-card-pro:hover { border-color: rgba(139,92,246,.5) !important; }
+    .mode-pro-badge { position: absolute; top: 10px; right: 10px; font-size: 0.5rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8b5cf6; border: 1px solid rgba(139,92,246,.4); border-radius: 3px; padding: 2px 5px; }
+    .ms-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; }
+    .ms-divider span { font-size: 0.6rem; color: #3a3a50; letter-spacing: .15em; text-transform: uppercase; white-space: nowrap; }
+    .ms-divider::before, .ms-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
     /* ── HISTORIQUE ─────────────────────────── */
     .hist-card {
       background: var(--bg-card); border: 1px solid var(--border);
@@ -640,51 +659,81 @@
   <main>
     <div class="tool-header">
       <p class="tool-eyebrow">— Studio —</p>
-      <h1 class="tool-title">Design your tattoo</h1>
+      <h1 class="tool-title">Crée ton tatouage</h1>
+      <p class="tool-subtitle">De l'idée au pochoir — tous tes outils au même endroit.</p>
     </div>
 
     <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
     <div id="mode-selector">
-      <button class="mode-card" id="btn-mode1">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+
+      <p class="ms-section-label">Créer</p>
+
+      <button class="mode-card mode-card-featured" id="btn-mode1">
+        <div class="mode-card-icon">✦</div>
         <div class="mode-card-text">
-          <p class="mode-card-title">Generate my design</p>
-          <p class="mode-card-desc">Describe your tattoo — AI creates a unique design and places it on your body.</p>
+          <p class="mode-card-title">Générer un design</p>
+          <p class="mode-card-desc">Décris ton tatouage — l'IA crée un design pro unique dans ton style en 60 secondes.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
-      <button class="mode-card" id="btn-mode2">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+
+      <div class="mode-grid-2">
+        <button class="mode-card" id="btn-mode2">
+          <div class="mode-card-icon">◈</div>
+          <div class="mode-card-text">
+            <p class="mode-card-title">Voir sur ma peau</p>
+            <p class="mode-card-desc">Upload un design, vois-le rendu réaliste sur ton corps.</p>
+          </div>
+          <span class="mode-card-arrow">›</span>
+        </button>
+        <button class="mode-card" id="btn-mode3">
+          <div class="mode-card-icon">◧</div>
+          <div class="mode-card-text">
+            <p class="mode-card-title">Photo → Tatouage</p>
+            <p class="mode-card-desc">Transforme n'importe quelle photo en design encrable.</p>
+          </div>
+          <span class="mode-card-arrow">›</span>
+        </button>
+      </div>
+
+      <button class="mode-card mode-card-featured" id="btn-mode4">
+        <div class="mode-card-icon">⬡</div>
         <div class="mode-card-text">
-          <p class="mode-card-title">See my tattoo on my skin</p>
-          <p class="mode-card-desc">Already have a design? Upload it and see it rendered on your body — exactly where you want it.</p>
+          <p class="mode-card-title">Fusionner des designs</p>
+          <p class="mode-card-desc">Upload 2 à 4 designs — l'IA les fusionne en un chef-d'œuvre unique.</p>
         </div>
         <span class="mode-card-arrow">›</span>
       </button>
-      <button class="mode-card" id="btn-mode3">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Photo → Tattoo design</p>
-          <p class="mode-card-desc">Upload any photo — pet, portrait, landscape, object. AI transforms it into a professional tattoo.</p>
-        </div>
-        <span class="mode-card-arrow">›</span>
-      </button>
-      <button class="mode-card" id="btn-mode4">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Merge designs into one</p>
-          <p class="mode-card-desc">Upload 2–4 tattoo designs — AI fuses them into a single unique masterpiece.</p>
-        </div>
-        <span class="mode-card-arrow">›</span>
-      </button>
-      <button class="mode-card" id="btn-mode5">
-        <div class="mode-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
-        <div class="mode-card-text">
-          <p class="mode-card-title">Stencil — design existant</p>
-          <p class="mode-card-desc">Upload un tatouage ou design — génère le pochoir print-ready en 1 seconde.</p>
-        </div>
-        <span class="mode-card-arrow" style="color:#8b5cf6">PRO ›</span>
-      </button>
+
+      <div class="ms-divider"><span>Outils PRO</span></div>
+
+      <div class="mode-grid-3">
+        <button class="mode-card mode-card-pro" id="btn-mode5">
+          <span class="mode-pro-badge">PRO</span>
+          <div class="mode-card-icon" style="color:#8b5cf6">▦</div>
+          <div class="mode-card-text">
+            <p class="mode-card-title">Stencil</p>
+            <p class="mode-card-desc">Pochoir print-ready en 1 seconde.</p>
+          </div>
+        </button>
+        <button class="mode-card mode-card-pro" onclick="document.getElementById('history-section').scrollIntoView({behavior:'smooth'})">
+          <span class="mode-pro-badge">PRO</span>
+          <div class="mode-card-icon" style="color:#8b5cf6">✎</div>
+          <div class="mode-card-text">
+            <p class="mode-card-title">Rework</p>
+            <p class="mode-card-desc">Retouche précise avec le lasso.</p>
+          </div>
+        </button>
+        <button class="mode-card mode-card-pro" onclick="document.getElementById('history-section').scrollIntoView({behavior:'smooth'})">
+          <span class="mode-pro-badge">PRO</span>
+          <div class="mode-card-icon" style="color:#8b5cf6">✂</div>
+          <div class="mode-card-text">
+            <p class="mode-card-title">PNG transparent</p>
+            <p class="mode-card-desc">Fond supprimé pour impression.</p>
+          </div>
+        </button>
+      </div>
+
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
