@@ -2397,6 +2397,111 @@
     }
     document.getElementById('btn-mode5').addEventListener('click', activateMode5);
 
+    // ── STENCIL STUDIO LOGIC ─────────────────────────────
+    (function() {
+      const fileInput    = document.getElementById('studio-file-input');
+      const uploadLabel  = document.getElementById('studio-upload-label');
+      const resultWrap   = document.getElementById('studio-result-wrap');
+      const processing   = document.getElementById('studio-processing');
+      const beforeImg    = document.getElementById('studio-before-img');
+      const afterImg     = document.getElementById('studio-after-img');
+      const dlBtn        = document.getElementById('studio-dl-btn');
+      const resetBtn     = document.getElementById('studio-reset-btn');
+      const baWrap       = document.getElementById('studio-ba-wrap');
+      const baAfterLayer = document.getElementById('studio-after-layer');
+      const baLine       = document.getElementById('studio-ba-line');
+      const baKnob       = document.getElementById('studio-ba-knob');
+
+      function applyStencil(img) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const { data, width: w, height: h } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        // Grayscale
+        const gray = new Uint8ClampedArray(w * h);
+        for (let i = 0; i < w * h; i++)
+          gray[i] = 0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2];
+
+        // Sobel edge detection
+        const edges = new Float32Array(w * h);
+        for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+          const gx = -gray[(y-1)*w+(x-1)] - 2*gray[y*w+(x-1)] - gray[(y+1)*w+(x-1)]
+                    + gray[(y-1)*w+(x+1)] + 2*gray[y*w+(x+1)] + gray[(y+1)*w+(x+1)];
+          const gy = -gray[(y-1)*w+(x-1)] - 2*gray[(y-1)*w+x] - gray[(y-1)*w+(x+1)]
+                    + gray[(y+1)*w+(x-1)] + 2*gray[(y+1)*w+x] + gray[(y+1)*w+(x+1)];
+          edges[y*w+x] = Math.sqrt(gx*gx + gy*gy);
+        }
+        let maxE = 0;
+        for (let i = 0; i < w*h; i++) if (edges[i] > maxE) maxE = edges[i];
+
+        // Output: white bg + violet lines (hectograph stencil color)
+        const out = ctx.createImageData(w, h);
+        for (let i = 0; i < w*h; i++) {
+          let e = (edges[i] / maxE) * 255;
+          e = e < 40 ? 0 : Math.min(255, (e - 40) * 1.8);
+          const a = e / 255;
+          out.data[i*4]   = Math.round(255*(1-a) + 75*a);
+          out.data[i*4+1] = Math.round(255*(1-a) + 0*a);
+          out.data[i*4+2] = Math.round(255*(1-a) + 130*a);
+          out.data[i*4+3] = 255;
+        }
+        ctx.putImageData(out, 0, 0);
+        return canvas.toDataURL('image/png');
+      }
+
+      function processFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        uploadLabel.style.display = 'none';
+        processing.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const stencilUrl = applyStencil(img);
+            beforeImg.src = e.target.result;
+            afterImg.src = stencilUrl;
+            dlBtn.href = stencilUrl;
+            dlBtn.download = 'stencil.png';
+            processing.style.display = 'none';
+            resultWrap.style.display = 'block';
+            // Init slider
+            initSlider(baWrap, baAfterLayer, baLine, baKnob);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function initSlider(wrap, layer, line, knob) {
+        let dragging = false;
+        function setPos(x) {
+          const r = wrap.getBoundingClientRect();
+          const pct = Math.max(0, Math.min(1, (x - r.left) / r.width));
+          const p = (pct * 100).toFixed(1) + '%';
+          layer.style.clipPath = `inset(0 ${(100 - pct*100).toFixed(1)}% 0 0)`;
+          line.style.left = p; knob.style.left = p;
+        }
+        knob.addEventListener('mousedown', () => dragging = true);
+        knob.addEventListener('touchstart', () => dragging = true, { passive: true });
+        document.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+        document.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+        document.addEventListener('mouseup', () => dragging = false);
+        document.addEventListener('touchend', () => dragging = false);
+        setPos(wrap.getBoundingClientRect().left + wrap.offsetWidth * 0.5);
+      }
+
+      fileInput.addEventListener('change', () => processFile(fileInput.files[0]));
+      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#8b5cf6'; });
+      uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = '#2a2a3a'; });
+      uploadLabel.addEventListener('drop', e => { e.preventDefault(); uploadLabel.style.borderColor = '#2a2a3a'; processFile(e.dataTransfer.files[0]); });
+      resetBtn.addEventListener('click', () => {
+        fileInput.value = ''; resultWrap.style.display = 'none';
+        uploadLabel.style.display = 'flex';
+      });
+    })();
+
     modeBack.addEventListener('click', () => {
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
       hide(stencilStudio);
