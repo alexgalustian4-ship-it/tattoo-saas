@@ -312,7 +312,10 @@ async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
 
   // gpt_image_2 avec images → REST direct (le CLI ne supporte pas --image pour ce modèle)
   if (model === 'gpt_image_2' && Array.isArray(payload.images) && payload.images.length > 0) {
-    return fetchHiggsFieldREST({ job_set_type: model, prompt, images: payload.images, resolution: payload.resolution || '2k' }, timeoutMs);
+    return fetchHiggsFieldREST({
+      job_set_type: model,
+      params: { prompt, images: payload.images, resolution: payload.resolution || '2k' },
+    }, timeoutMs);
   }
 
   try {
