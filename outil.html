@@ -357,6 +357,45 @@
     /* ── TIMER ─────────────────────────────────── */
     .loading-timer { font-size: 0.72rem; color: #3a3a48; margin-top: 7px; letter-spacing: 0.03em; }
 
+    /* ── AI PROGRESS BAR ───────────────────────── */
+    .ai-progress { margin: 14px auto 4px; max-width: 340px; }
+    .ai-progress-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 9px; gap: 12px;
+    }
+    .ai-progress-phase {
+      font-size: 0.78rem; color: var(--silver); letter-spacing: 0.02em;
+      display: inline-flex; align-items: center; gap: 7px; min-height: 16px;
+    }
+    .ai-progress-phase::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.9);
+      animation: aiPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes aiPulse { 0%,100% { opacity: .35; transform: scale(.8);} 50% { opacity: 1; transform: scale(1.25);} }
+    .ai-progress-pct {
+      font-size: 0.74rem; color: var(--silver-dim); font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+    }
+    .ai-progress-track {
+      position: relative; height: 5px; border-radius: 99px;
+      background: rgba(176,180,194,0.07); overflow: hidden;
+    }
+    .ai-progress-fill {
+      position: absolute; inset: 0 auto 0 0; width: 0%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #52566a 0%, #b0b4c2 55%, #8b5cf6 100%);
+      box-shadow: 0 0 12px rgba(139,92,246,0.45);
+      transition: width 0.6s cubic-bezier(.25,.8,.3,1);
+    }
+    .ai-progress-fill::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+      transform: translateX(-100%);
+      animation: aiShimmer 1.6s ease-in-out infinite;
+    }
+    @keyframes aiShimmer { 100% { transform: translateX(100%); } }
+
 
     .spinner {
       display: inline-block; width: 13px; height: 13px;
@@ -1903,29 +1942,95 @@
     function hide(el) { el.dataset.hidden = ''; }
 
     let _timerInterval = null;
+    const AI_PHASES = [
+      'Analyse de ta demande…',
+      'Interprétation du style…',
+      'Composition de l\'œuvre…',
+      'Génération des formes…',
+      'Rendu des détails fins…',
+      'Affinage des ombres et lumières…',
+      'Touches finales…',
+    ];
+    let _progInterval = null, _phaseInterval = null;
+
     function setLoading(el, msg) {
       el.className = 'status loading'; el.style.display = 'block';
-      el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-        <span class="spinner"></span><span>${msg}</span>
-        <span class="loading-dots"><span></span><span></span><span></span></span>
-      </div>
-      <div class="loading-timer" id="loading-timer-txt">0s</div>`;
-      if (_timerInterval) clearInterval(_timerInterval);
+      el.innerHTML = `
+        <div style="font-size:0.82rem;color:var(--silver);">${msg}</div>
+        <div class="ai-progress">
+          <div class="ai-progress-head">
+            <span class="ai-progress-phase" id="ai-phase">${AI_PHASES[0]}</span>
+            <span class="ai-progress-pct" id="ai-pct">0%</span>
+          </div>
+          <div class="ai-progress-track"><div class="ai-progress-fill" id="ai-fill"></div></div>
+        </div>
+        <div class="loading-timer" id="loading-timer-txt">0s</div>`;
+
+      if (_timerInterval)  clearInterval(_timerInterval);
+      if (_progInterval)   clearInterval(_progInterval);
+      if (_phaseInterval)  clearInterval(_phaseInterval);
+
       const start = Date.now();
+      // Chrono
       _timerInterval = setInterval(() => {
-        const el2 = document.getElementById('loading-timer-txt');
-        if (el2) el2.textContent = Math.round((Date.now() - start) / 1000) + 's';
+        const t = document.getElementById('loading-timer-txt');
+        if (t) t.textContent = Math.round((Date.now() - start) / 1000) + 's';
       }, 1000);
+
+      // Progression simulée : avance vite au début puis ralentit, plafonne à ~95%
+      // (calée pour une génération typique d'environ 3 min)
+      let prog = 0;
+      _progInterval = setInterval(() => {
+        prog += (96 - prog) * 0.009;        // approche asymptotique lente
+        if (prog > 95) prog = 95;
+        const fill = document.getElementById('ai-fill');
+        const pct  = document.getElementById('ai-pct');
+        if (fill) fill.style.width = prog.toFixed(1) + '%';
+        if (pct)  pct.textContent  = Math.round(prog) + '%';
+      }, 800);
+
+      // Phases qui défilent (réparties sur ~2,5 min)
+      let phase = 0;
+      _phaseInterval = setInterval(() => {
+        phase = Math.min(phase + 1, AI_PHASES.length - 1);
+        const p = document.getElementById('ai-phase');
+        if (p) p.textContent = AI_PHASES[phase];
+      }, 21000);
+    }
+
+    // Termine proprement la barre (100%) avant de masquer
+    function finishLoading() {
+      const fill = document.getElementById('ai-fill');
+      const pct  = document.getElementById('ai-pct');
+      const ph   = document.getElementById('ai-phase');
+      if (fill) fill.style.width = '100%';
+      if (pct)  pct.textContent  = '100%';
+      if (ph)   ph.textContent   = 'Terminé ✓';
+      if (_progInterval)  { clearInterval(_progInterval);  _progInterval = null; }
+      if (_phaseInterval) { clearInterval(_phaseInterval); _phaseInterval = null; }
+    }
+    function _clearLoadingTimers() {
+      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+      if (_progInterval)  { clearInterval(_progInterval);  _progInterval = null; }
+      if (_phaseInterval) { clearInterval(_phaseInterval); _phaseInterval = null; }
     }
     function setError(el, msg) {
-      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+      _clearLoadingTimers();
       el.className = 'status error'; el.style.display = 'block';
       el.textContent = msg.includes('Failed to fetch')
         ? '❌ Server unreachable. Run node server.js in a terminal.'
         : '❌ ' + msg;
     }
     function hideStatus(el) {
-      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+      // Si une barre de progression IA est active, on la termine à 100% avant de masquer
+      const fill = el.querySelector && el.querySelector('.ai-progress-fill');
+      if (fill && el.classList.contains('loading')) {
+        finishLoading();
+        if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+        setTimeout(() => { el.style.display = 'none'; }, 500);
+        return;
+      }
+      _clearLoadingTimers();
       el.style.display = 'none';
     }
 
