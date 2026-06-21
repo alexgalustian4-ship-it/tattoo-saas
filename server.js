@@ -14,24 +14,49 @@ const PORT = process.env.PORT || 3000;
 // ── Higgsfield token refresh state ──
 let _refreshInProgress = null;
 
-// ── Bootstrap Higgsfield CLI credentials from env vars ──
+// ── Stockage persistant des credentials ──
+// Sur Railway, RAILWAY_VOLUME_MOUNT_PATH pointe vers un volume qui survit aux
+// redémarrages. Sinon on retombe sur le HOME (ex: en local). On force HOME vers
+// ce répertoire pour que le binaire CLI lise/écrive le MÊME fichier que nous.
+const PERSIST_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || os.homedir();
+process.env.HOME = PERSIST_DIR; // le CLI utilise ~/.config/higgsfield/credentials.json
+
+function credFilePath() {
+  return path.join(PERSIST_DIR, '.config', 'higgsfield', 'credentials.json');
+}
+
 function writeCredentials(access, refresh) {
-  const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
-  const credFile = path.join(credDir, 'credentials.json');
-  fs.mkdirSync(credDir, { recursive: true });
+  const credFile = credFilePath();
+  fs.mkdirSync(path.dirname(credFile), { recursive: true });
   fs.writeFileSync(credFile, JSON.stringify({ access_token: access, refresh_token: refresh || '' }));
   return credFile;
 }
 
+function readPersistedCredentials() {
+  try {
+    const creds = JSON.parse(fs.readFileSync(credFilePath(), 'utf8'));
+    if (creds.access_token) return creds;
+  } catch {}
+  return null;
+}
+
 async function bootstrapHiggsfieldAuth() {
-  const access  = process.env.HIGGSFIELD_API_KEY;
-  const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-  if (!access) { console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail'); return; }
+  // 1) Priorité au fichier persistant (token déjà rafraîchi lors d'un run précédent)
+  const persisted = readPersistedCredentials();
+  if (persisted) {
+    process.env.HIGGSFIELD_API_KEY = persisted.access_token;
+    if (persisted.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = persisted.refresh_token;
+    console.log('✓ Credentials chargés depuis le volume persistant, prefix =', persisted.access_token.slice(0, 8));
+  } else {
+    // 2) Premier démarrage : on seed depuis les variables d'env
+    const access  = process.env.HIGGSFIELD_API_KEY;
+    const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+    if (!access) { console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail'); return; }
+    writeCredentials(access, refresh);
+    console.log('✓ Credentials seedés depuis les variables d\'env. PERSIST_DIR =', PERSIST_DIR, '| prefix =', access.slice(0, 8));
+  }
 
-  writeCredentials(access, refresh);
-  console.log('✓ Higgsfield credentials written. HOME =', os.homedir(), '| token prefix =', access.slice(0, 8));
-
-  // Rafraîchit le token immédiatement au démarrage via le CLI binaire
+  // 3) Rafraîchit immédiatement au démarrage via le CLI binaire
   try {
     await refreshHiggsfieldToken();
   } catch (e) {
@@ -395,7 +420,7 @@ function runCLI(args, timeoutMs, retry = true) {
       ...process.env,
       HIGGSFIELD_API_KEY:       process.env.HIGGSFIELD_API_KEY || '',
       HIGGSFIELD_REFRESH_TOKEN: process.env.HIGGSFIELD_REFRESH_TOKEN || '',
-      HOME: os.homedir(),
+      HOME: PERSIST_DIR,
     };
 
     execFile(bin, args, { timeout: timeoutMs, maxBuffer: 20 * 1024 * 1024, env }, async (err, stdout, stderr) => {
@@ -439,7 +464,8 @@ function refreshHiggsfieldToken() {
     const bin       = fs.existsSync(vendorBin) ? vendorBin : binName;
 
     // Let the CLI binary auto-refresh the token and print it
-    execFile(bin, ['auth', 'token'], { timeout: 30_000, env: { ...process.env, HOME: os.homedir() } }, (err, stdout) => {
+    // HOME pointe vers PERSIST_DIR : le CLI lit/écrit le fichier persistant.
+    execFile(bin, ['auth', 'token'], { timeout: 30_000, env: { ...process.env, HOME: PERSIST_DIR } }, (err, stdout) => {
       _refreshInProgress = null;
       if (err) return reject(new Error('CLI auth token failed: ' + err.message));
 
@@ -447,10 +473,9 @@ function refreshHiggsfieldToken() {
       if (!newToken.startsWith('hf_')) return reject(new Error('Unexpected token: ' + newToken.slice(0, 30)));
 
       // Read updated credentials file (CLI may have written a new refresh token too)
-      const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
       let newRefresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
       try {
-        const creds = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+        const creds = JSON.parse(fs.readFileSync(credFilePath(), 'utf8'));
         if (creds.refresh_token) newRefresh = creds.refresh_token;
       } catch {}
 
