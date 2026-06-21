@@ -221,11 +221,12 @@ const ZONE_PROMPTS = {
     `forearm, and down to the wrist, wrapping naturally around the arm's cylindrical shape.`,
 
   'dos':
-    `Body zone: BACK. ` +
-    `Place the tattoo large and centered on the back. ` +
-    `The design should use the full back canvas, with the spine as the central vertical axis ` +
-    `and the composition spreading across both shoulder blades. ` +
-    `Large format, bold and imposing, proportional to the back.`,
+    `Body zone: UPPER BACK. ` +
+    `Place the tattoo centered on the upper and middle back, with the spine as the central vertical axis ` +
+    `and the composition spread across both shoulder blades. ` +
+    `Keep a clear margin of bare skin on all sides: the design must stop well ABOVE the waistband and shorts, ` +
+    `never reaching the lower back or hips. Do not fill the entire back edge to edge. ` +
+    `Proportional, bold, but contained within the bare skin of the upper back only.`,
 
   'pectoral':
     `Body zone: CHEST / PECTORAL. ` +
@@ -391,7 +392,7 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
 
   // Poll jusqu'au résultat
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 4000));
+    await new Promise(r => setTimeout(r, 2500));
     const pollRes  = await fetch(`${HF_API}/agents/jobs/${jobId}`, {
       headers: { 'Authorization': `Bearer ${apiKey()}` },
     });
@@ -765,13 +766,16 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
 
     const prompt =
       `Two images are provided: image 1 is a body photo, image 2 is a tattoo design on white background. ` +
-      `Apply the tattoo design from image 2 onto the skin in image 1. ` +
+      `Realistically tattoo the design from image 2 onto the bare skin in image 1, as if a professional tattoo artist inked it. ` +
       `${ZONE_PROMPTS[zone]} ` +
-      `CRITICAL: preserve the EXACT same framing, crop, zoom level, angle, perspective, and composition as image 1 — do NOT zoom in, do NOT reframe, do NOT change the camera distance. ` +
-      `The output image must have the identical framing as the input photo. ` +
-      `The tattoo ink must follow the skin's natural texture, lighting, highlights and shadows from the photo. ` +
-      `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
-      `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
+      `ABSOLUTELY CRITICAL — the tattoo must stay ENTIRELY on bare skin only. ` +
+      `Never let the tattoo extend onto, cover, or bleed over clothing, waistband, underwear, shorts, fabric, hair, or the photo background. ` +
+      `Leave a natural margin of bare skin around the design — do NOT stretch it edge to edge. Scale it to sit comfortably within the body zone. ` +
+      `The ink must wrap and conform to the body's three-dimensional curves and muscle contours, bending with the anatomy — NOT a flat sticker or decal pasted on top. ` +
+      `The ink must sit UNDER the skin: it follows the skin's real texture, pores, lighting, highlights, shadows and slight transparency, with ink density varying naturally over the curves. ` +
+      `Hyper-photorealistic real tattoo, indistinguishable from an actual healed tattoo on real skin, professional tattoo artist quality. ` +
+      `CRITICAL: preserve the EXACT same framing, crop, zoom level, angle, perspective and composition as image 1 — do NOT zoom, reframe or change camera distance. ` +
+      `Keep every detail of the background, clothing, body and surroundings completely unchanged except for the newly added tattoo on the skin.`;
 
     // Upload body photo to Higgsfield (uploadImageToHiggsfield handles 401 auto-refresh)
     console.log('   Uploading body photo...');
@@ -824,7 +828,7 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     const deadline = Date.now() + 270_000;
     let imageUrl;
     while (Date.now() < deadline) {
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise(r => setTimeout(r, 2500));
       const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, {
         headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
       });
