@@ -635,6 +635,43 @@
     }
 
     /* ── HISTORIQUE ─────────────────────────── */
+    .history-panel {
+      max-width: 1060px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(20,18,28,0.55) 0%, rgba(14,14,18,0.55) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 30px 36px;
+      backdrop-filter: blur(8px);
+    }
+    .history-head {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 28px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--violet-bright); margin-bottom: 9px;
+    }
+    .history-eyebrow::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--violet); box-shadow: 0 0 7px var(--violet-glow);
+    }
+    .history-title {
+      font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+      letter-spacing: -0.01em; color: var(--text);
+    }
+    .history-clear {
+      font-size: 0.64rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); background: none;
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 7px 16px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .history-clear:hover { color: #fca5a5; border-color: rgba(239,68,68,0.4); }
+    @media (max-width: 600px) {
+      .history-panel { padding: 24px 18px 28px; border-radius: 16px; }
+      .history-title { font-size: 1.25rem; }
+    }
+
     .hist-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 10px;
@@ -1753,24 +1790,23 @@
   </section>
 
   <!-- ══════════ MES PROJETS ══════════ -->
-  <section id="history-section" style="display:none; width:100%; padding:64px 24px 80px; border-top:1px solid #1c1c22;">
-    <div style="max-width:1060px; margin:0 auto;">
-      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:32px;">
+  <section id="history-section" style="display:none; width:100%; padding:56px 16px 80px; position:relative; z-index:1;">
+    <div class="history-panel">
+      <div class="history-head">
         <div>
-          <p style="font-size:0.6rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#52566a; margin-bottom:6px;">History</p>
-          <h2 style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; letter-spacing:-0.01em; color:#e0e0e6;">My projects</h2>
+          <p class="history-eyebrow">History</p>
+          <h2 class="history-title">My projects</h2>
         </div>
-        <button onclick="if(confirm('Clear all history?')){localStorage.removeItem('ink_projects');renderHistory();}"
-          style="font-size:0.65rem; color:#52566a; background:none; border:none; cursor:pointer; letter-spacing:0.06em; padding:6px 0;">
+        <button class="history-clear" onclick="if(confirm('Clear all history?')){localStorage.removeItem('ink_projects');renderHistory();}">
           Clear all
         </button>
       </div>
 
-      <div id="history-empty" style="display:none; text-align:center; padding:48px 0; color:#2e2e3a; font-size:0.82rem; line-height:1.8;">
+      <div id="history-empty" style="display:none; text-align:center; padding:56px 0; color:var(--text-muted); font-size:0.82rem; line-height:1.8;">
         Your generations will appear here.<br>Launch your first design above.
       </div>
 
-      <div id="history-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;"></div>
+      <div id="history-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:16px;"></div>
     </div>
   </section>
 
