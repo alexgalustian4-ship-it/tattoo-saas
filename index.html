@@ -602,9 +602,19 @@
 
     /* Mobile */
     @media (max-width: 768px) {
-      .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; }
+      .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 170px; }
       .bento-large { grid-column: span 2; grid-row: span 2; }
       .bento-wide  { grid-column: span 2; }
+      .bento-medium { grid-row: span 1; }
+    }
+    /* Mobile : une seule colonne, cartes uniformes et lisibles */
+    @media (max-width: 560px) {
+      .bento-grid { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 12px; }
+      .bento-card, .bento-large, .bento-medium, .bento-wide, .bento-small, .bento-mini {
+        grid-column: span 1 !important; grid-row: span 1 !important;
+        min-height: 0; padding: 22px 20px;
+      }
+      .bento-desc { display: block; }
     }
 
     /* ══ BEFORE/AFTER STENCIL SHOWCASE ════════ */
@@ -1032,7 +1042,7 @@
         </a>
 
         <!-- 4. Photo → Tattoo -->
-        <a href="outil.html?mode=pet" class="bento-card bento-small">
+        <a href="outil.html?mode=pet" class="bento-card bento-wide">
           <div class="bento-icon">◧</div>
           <p class="bento-title">Photo → Tattoo</p>
           <p class="bento-desc">Upload a photo — AI turns it into a tattoo-ready design.</p>
@@ -1040,35 +1050,11 @@
         </a>
 
         <!-- 5. Merge designs -->
-        <a href="outil.html?mode=merge" class="bento-card bento-small">
+        <a href="outil.html?mode=merge" class="bento-card bento-wide">
           <div class="bento-icon">⬡</div>
           <p class="bento-title">Merge designs</p>
           <p class="bento-desc">Fuse 2 to 4 designs into one unique masterpiece.</p>
           <p class="bento-cta">Try →</p>
-        </a>
-
-        <!-- 6. Precise rework — PRO -->
-        <a href="outil.html#history-section" class="bento-card bento-wide bento-pro">
-          <div class="bento-icon" style="color:#b0b4c2">✎</div>
-          <p class="bento-title">Precise rework</p>
-          <p class="bento-desc">Select any zone of your design with a lasso or rectangle — AI retouches only that area.</p>
-          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
-        </a>
-
-        <!-- 7. My projects -->
-        <a href="outil.html#history-section" class="bento-card bento-mini">
-          <div class="bento-icon" style="font-size:1rem">◫</div>
-          <p class="bento-title">My projects</p>
-          <p class="bento-desc">All your generations — download or rework anytime.</p>
-          <p class="bento-cta">View →</p>
-        </a>
-
-        <!-- 8. PNG transparent — PRO -->
-        <a href="outil.html#history-section" class="bento-card bento-mini bento-pro">
-          <div class="bento-icon" style="color:#b0b4c2;font-size:1rem">✂</div>
-          <p class="bento-title">PNG transparent</p>
-          <p class="bento-desc">Remove the white background — ready to print or share.</p>
-          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
         </a>
 
       </div>
