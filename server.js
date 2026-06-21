@@ -849,16 +849,22 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     console.log('   Zone   :', zone);
     console.log('   Modèle :', modelKey);
 
+    const ZONE_BODYPART = {
+      'avant-bras': 'forearm', 'bras-complet': 'arm', 'epaule': 'shoulder',
+      'dos': 'back', 'pectoral': 'chest', 'cuisse': 'thigh', 'mollet': 'calf', 'main': 'hand',
+    };
+    const bodyPart = ZONE_BODYPART[zone] || 'body';
+
+    // Prompt officiel utilisateur (préservation pixel-identique de la photo), rendu adaptable à la zone.
+    // IMAGE 1 = photo du corps, IMAGE 2 = design.
     const prompt =
-      `You are given two images: IMAGE 1 is a real photo of a person's body, IMAGE 2 is a tattoo design on a white background. ` +
-      `Realistically tattoo the design from IMAGE 2 onto the bare skin in IMAGE 1, as if a professional tattoo artist inked it. ` +
-      `${ZONE_PROMPTS[zone]} ` +
-      `ABSOLUTELY CRITICAL — the tattoo must stay ENTIRELY on bare skin only. Never let it extend onto or bleed over clothing, waistband, underwear, shorts, fabric, hair, or the background. ` +
-      `Leave a natural margin of bare skin around the design — do NOT stretch it edge to edge. Scale it to sit comfortably within the body zone. ` +
-      `The ink must wrap and conform to the body's three-dimensional curves and muscle contours — NOT a flat sticker pasted on top. ` +
-      `The ink sits UNDER the skin: it follows the skin's real texture, lighting, highlights, shadows and slight transparency, ink density varying naturally over the curves. ` +
-      `Hyper-photorealistic, indistinguishable from a real healed tattoo on real skin. ` +
-      `MOST IMPORTANT: keep the person, their body, pose, face, skin, the background and every other detail EXACTLY identical to IMAGE 1 — same framing, crop, zoom, angle and perspective. Change nothing except adding the tattoo on the skin.`;
+      `You are given two images: IMAGE 1 is a real photograph of a person, IMAGE 2 is a tattoo design on a white background. ` +
+      `Edit only the ${bodyPart} skin area of IMAGE 1. Preserve the original photograph exactly as it is. ` +
+      `Do not modify the person's pose, anatomy, lighting, colors, clothing, background, camera angle, or image composition. ` +
+      `Apply the provided tattoo design from IMAGE 2 exactly as given, without redesigning or simplifying it. ` +
+      `Warp the tattoo naturally to match the curvature of the ${bodyPart}, adjust opacity and skin texture realistically, and blend it as if it were a real healed black-and-grey tattoo. ` +
+      `Keep the tattoo entirely on bare skin — never on clothing, fabric or background. ` +
+      `The rest of the image must remain pixel-identical to the original photograph.`;
 
     // Récupère les octets du design (data URL OpenAI ou http) dans un fichier temporaire
     let designPath;
