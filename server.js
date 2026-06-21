@@ -561,17 +561,18 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
 
   if (referenceImagePath) {
     // With reference: use edits endpoint
-    const fd = new (require('form-data'))();
+    const fd = new FormData();
     fd.append('model', 'gpt-image-1');
     fd.append('prompt', prompt);
     fd.append('n', '1');
     fd.append('size', size);
     fd.append('quality', 'high');
-    fd.append('image[]', fs.createReadStream(referenceImagePath), { filename: 'reference.jpg', contentType: 'image/jpeg' });
+    const refIsPng = referenceImagePath.toLowerCase().endsWith('.png');
+    fd.append('image[]', new File([fs.readFileSync(referenceImagePath)], `reference.${refIsPng ? 'png' : 'jpg'}`, { type: refIsPng ? 'image/png' : 'image/jpeg' }));
 
     const resp = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, ...fd.getHeaders() },
+      headers: { 'Authorization': `Bearer ${apiKey}` },
       body: fd,
     });
     const data = await resp.json();
@@ -602,7 +603,7 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
 
-  const fd = new (require('form-data'))();
+  const fd = new FormData();
   fd.append('model', 'gpt-image-1');
   fd.append('prompt', prompt);
   fd.append('n', '1');
@@ -610,15 +611,12 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
   fd.append('quality', 'high');
   imagePaths.forEach((p, i) => {
     const isPng = p.toLowerCase().endsWith('.png');
-    fd.append('image[]', fs.createReadStream(p), {
-      filename: `img${i}.${isPng ? 'png' : 'jpg'}`,
-      contentType: isPng ? 'image/png' : 'image/jpeg',
-    });
+    fd.append('image[]', new File([fs.readFileSync(p)], `img${i}.${isPng ? 'png' : 'jpg'}`, { type: isPng ? 'image/png' : 'image/jpeg' }));
   });
 
   const resp = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, ...fd.getHeaders() },
+    headers: { 'Authorization': `Bearer ${apiKey}` },
     body: fd,
   });
   const data = await resp.json();
