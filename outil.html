@@ -27,10 +27,10 @@
       --red-bg:      #1a0606;
       --red-border:  #7f1d1d;
       /* Accent violet — désormais présent partout */
-      --violet:        #8b5cf6;
-      --violet-bright: #a78bfa;
-      --violet-soft:   rgba(139,92,246,0.14);
-      --violet-glow:   rgba(139,92,246,0.35);
+      --violet:        #b0b4c2;
+      --violet-bright: #cfd2dc;
+      --violet-soft:   rgba(176,180,194,0.14);
+      --violet-glow:   rgba(176,180,194,0.35);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,8 +81,8 @@
       text-transform: uppercase;
       color: var(--violet-bright); margin-bottom: 16px;
       padding: 5px 14px; border-radius: 20px;
-      border: 1px solid rgba(139,92,246,0.25);
-      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(176,180,194,0.25);
+      background: rgba(176,180,194,0.06);
     }
     .tool-eyebrow::before {
       content: ''; width: 6px; height: 6px; border-radius: 50%;
@@ -148,7 +148,7 @@
     textarea { resize: vertical; min-height: 72px; }
     textarea:focus, select:focus, input[type="text"]:focus {
       outline: none; border-color: var(--violet);
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+      box-shadow: 0 0 0 3px rgba(176,180,194,0.12);
     }
     textarea::placeholder, input[type="text"]::placeholder { color: var(--text-muted); font-size: 0.83rem; }
 
@@ -172,14 +172,14 @@
     .btn:disabled { opacity: 0.28; cursor: not-allowed; }
 
     .btn-primary {
-      border: 1px solid rgba(139,92,246,0.5);
-      background: linear-gradient(135deg, #8b5cf6 0%, #6d3fd4 100%);
-      color: #fff; font-weight: 600;
-      box-shadow: 0 6px 20px rgba(139,92,246,0.25);
+      border: 1px solid #fff;
+      background: #fff;
+      color: #0a0a0e; font-weight: 600;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
     }
     .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, #9d70f8 0%, #7b4ee0 100%);
-      box-shadow: 0 8px 30px rgba(139,92,246,0.45);
+      background: #e6e6ee; border-color: #e6e6ee;
+      box-shadow: 0 8px 28px rgba(255,255,255,0.12);
       transform: translateY(-1px);
     }
     .btn-primary:disabled {
@@ -197,7 +197,7 @@
       padding: 24px 16px; text-align: center; cursor: pointer;
       transition: border-color 0.2s, background 0.2s; position: relative;
     }
-    .upload-area:hover { border-color: rgba(139,92,246,0.45); background: rgba(139,92,246,0.03); }
+    .upload-area:hover { border-color: rgba(176,180,194,0.45); background: rgba(176,180,194,0.03); }
     .upload-area:hover .upload-svg { color: var(--violet-bright); }
     .upload-area input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
@@ -229,20 +229,20 @@
     }
     .ba-line {
       position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
-      background: #8b5cf6; transform: translateX(-50%);
+      background: #b0b4c2; transform: translateX(-50%);
       pointer-events: none; z-index: 2;
-      box-shadow: 0 0 12px rgba(139,92,246,0.6);
+      box-shadow: 0 0 12px rgba(176,180,194,0.6);
     }
     .ba-knob {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: 40px; height: 40px; border-radius: 50%;
-      background: #8b5cf6;
+      background: #b0b4c2;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 20px rgba(139,92,246,0.7), 0 2px 10px rgba(0,0,0,0.5);
+      box-shadow: 0 0 20px rgba(176,180,194,0.7), 0 2px 10px rgba(0,0,0,0.5);
       pointer-events: none; z-index: 3;
     }
-    .ba-knob svg { width: 16px; height: 16px; color: #fff; }
+    .ba-knob svg { width: 16px; height: 16px; color: #0a0a0e; }
     .ba-tags {
       position: absolute; top: 12px; left: 0; right: 0;
       display: flex; justify-content: space-between;
@@ -255,7 +255,7 @@
       padding: 5px 14px; border-radius: 20px;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .ba-tag.after { background: #8b5cf6; border-color: #8b5cf6; }
+    .ba-tag.after { background: #fff; border-color: #fff; color: #0a0a0e; }
 
     .result-change {
       position: absolute; top: 8px; right: 8px;
@@ -282,10 +282,10 @@
       color: var(--text-muted); font-size: 0.73rem; font-weight: 500;
       cursor: pointer; text-align: center; transition: all 0.15s; letter-spacing: 0.02em;
     }
-    .zone-btn:hover { border-color: rgba(139,92,246,0.35); color: var(--text); }
+    .zone-btn:hover { border-color: rgba(176,180,194,0.35); color: var(--text); }
     .zone-btn.selected {
-      border-color: rgba(139,92,246,0.6); background: rgba(139,92,246,0.10); color: var(--violet-bright);
-      box-shadow: 0 0 0 1px rgba(139,92,246,0.25);
+      border-color: rgba(176,180,194,0.6); background: rgba(176,180,194,0.10); color: var(--violet-bright);
+      box-shadow: 0 0 0 1px rgba(176,180,194,0.25);
     }
 
     /* ── MODE2 CARD ENHANCEMENTS ─────────────────── */
@@ -295,10 +295,10 @@
     }
     .m2-card-header-icon {
       width: 40px; height: 40px; border-radius: 10px;
-      background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+      background: rgba(176,180,194,0.1); border: 1px solid rgba(176,180,194,0.2);
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .m2-card-header-icon svg { width: 20px; height: 20px; color: #8b5cf6; }
+    .m2-card-header-icon svg { width: 20px; height: 20px; color: #b0b4c2; }
     .m2-card-header-text h3 {
       font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
       color: var(--text); margin: 0 0 2px;
@@ -315,7 +315,7 @@
       transition: border-color 0.2s, background 0.2s; position: relative;
       background: rgba(255,255,255,0.01);
     }
-    .m2-upload-area:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.03); }
+    .m2-upload-area:hover { border-color: rgba(176,180,194,0.4); background: rgba(176,180,194,0.03); }
     .m2-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .m2-upload-area svg { width: 32px; height: 32px; margin: 0 auto 12px; display: block; color: var(--text-muted); }
     .m2-upload-area .m2-upload-title { font-size: 0.85rem; font-weight: 500; color: var(--text); margin-bottom: 4px; }
@@ -335,21 +335,21 @@
     .m2-zone-btn:hover { border-color: var(--border-hover); color: var(--text); }
     .m2-zone-btn:hover svg { opacity: 0.8; }
     .m2-zone-btn.selected {
-      border-color: rgba(139,92,246,0.6); background: rgba(139,92,246,0.08);
-      color: #a78bfa;
+      border-color: rgba(176,180,194,0.6); background: rgba(176,180,194,0.08);
+      color: #cfd2dc;
     }
-    .m2-zone-btn.selected svg { opacity: 1; color: #8b5cf6; }
+    .m2-zone-btn.selected svg { opacity: 1; color: #b0b4c2; }
     .m2-btn-place {
       width: 100%; padding: 15px 20px; margin-top: 4px;
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      background: #fff;
       border: none; border-radius: 12px;
-      color: #fff; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.02em;
+      color: #0a0a0e; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.02em;
       cursor: pointer; transition: all 0.2s;
       display: flex; align-items: center; justify-content: center; gap: 10px;
     }
     .m2-btn-place:hover:not(:disabled) {
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-      box-shadow: 0 4px 24px rgba(139,92,246,0.3); transform: translateY(-1px);
+      background: #e6e6ee;
+      box-shadow: 0 4px 24px rgba(255,255,255,0.12); transform: translateY(-1px);
     }
     .m2-btn-place:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
     .m2-btn-place svg { width: 18px; height: 18px; }
@@ -400,7 +400,7 @@
     }
     .ai-progress-phase::before {
       content: ''; width: 6px; height: 6px; border-radius: 50%;
-      background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.9);
+      background: #b0b4c2; box-shadow: 0 0 8px rgba(176,180,194,0.9);
       animation: aiPulse 1.2s ease-in-out infinite;
     }
     @keyframes aiPulse { 0%,100% { opacity: .35; transform: scale(.8);} 50% { opacity: 1; transform: scale(1.25);} }
@@ -415,8 +415,8 @@
     .ai-progress-fill {
       position: absolute; inset: 0 auto 0 0; width: 0%;
       border-radius: 99px;
-      background: linear-gradient(90deg, #52566a 0%, #b0b4c2 55%, #8b5cf6 100%);
-      box-shadow: 0 0 12px rgba(139,92,246,0.45);
+      background: linear-gradient(90deg, #52566a 0%, #b0b4c2 55%, #b0b4c2 100%);
+      box-shadow: 0 0 12px rgba(176,180,194,0.45);
       transition: width 0.6s cubic-bezier(.25,.8,.3,1);
     }
     .ai-progress-fill::after {
@@ -440,7 +440,7 @@
     /* ── PAGE ATMOSPHERE ───────────────────────── */
     body {
       background:
-        radial-gradient(ellipse 70% 50% at 50% -5%, rgba(139,92,246,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% -5%, rgba(176,180,194,0.10) 0%, transparent 60%),
         radial-gradient(ellipse 90% 60% at 50% 110%, rgba(99,102,241,0.05) 0%, transparent 60%),
         var(--bg);
       background-attachment: fixed;
@@ -479,7 +479,7 @@
     .mode-card::after {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(circle at 70% 0%, rgba(139,92,246,0.10) 0%, transparent 55%);
+      background: radial-gradient(circle at 70% 0%, rgba(176,180,194,0.10) 0%, transparent 55%);
       opacity: 0; transition: opacity 0.35s; z-index: 1;
     }
     .mode-card:hover::after { opacity: 1; }
@@ -492,9 +492,9 @@
     .mode-card:hover .card-bg { opacity: 0.8; transform: scale(1.04); }
     .mode-card > *:not(.card-bg) { position: relative; z-index: 2; }
     .mode-card:hover {
-      border-color: rgba(139,92,246,0.35);
+      border-color: rgba(176,180,194,0.35);
       transform: translateY(-4px);
-      box-shadow: 0 20px 48px rgba(139,92,246,0.10), 0 8px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 48px rgba(176,180,194,0.10), 0 8px 20px rgba(0,0,0,0.5);
     }
 
     /* Featured card — spans full width, taller, identité violette */
@@ -502,9 +502,9 @@
       grid-column: span 2;
       min-height: 140px;
       padding: 32px 36px;
-      border-color: rgba(139,92,246,0.30);
+      border-color: rgba(176,180,194,0.30);
       background:
-        radial-gradient(ellipse 60% 120% at 0% 50%, rgba(139,92,246,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 120% at 0% 50%, rgba(176,180,194,0.12) 0%, transparent 60%),
         linear-gradient(135deg, #14121c 0%, #0e0e14 100%);
       flex-direction: row; align-items: center; gap: 28px;
     }
@@ -512,38 +512,38 @@
       content: '';
       position: absolute; top: -80px; right: -40px;
       width: 280px; height: 280px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(139,92,246,0.16) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(176,180,194,0.16) 0%, transparent 70%);
       pointer-events: none;
     }
     .mode-card.mode-featured:hover {
-      border-color: rgba(139,92,246,0.55);
+      border-color: rgba(176,180,194,0.55);
       transform: translateY(-4px);
-      box-shadow: 0 24px 60px rgba(139,92,246,0.18), 0 8px 24px rgba(0,0,0,0.5);
+      box-shadow: 0 24px 60px rgba(176,180,194,0.18), 0 8px 24px rgba(0,0,0,0.5);
     }
     .mode-featured .mode-card-icon {
       color: var(--violet-bright);
-      border-color: rgba(139,92,246,0.4);
-      background: rgba(139,92,246,0.10);
-      box-shadow: 0 0 24px rgba(139,92,246,0.18);
+      border-color: rgba(176,180,194,0.4);
+      background: rgba(176,180,194,0.10);
+      box-shadow: 0 0 24px rgba(176,180,194,0.18);
     }
     .mode-featured:hover .mode-card-icon {
-      color: #c4b5fd; border-color: rgba(139,92,246,0.7);
-      background: rgba(139,92,246,0.16);
+      color: #e6e6ee; border-color: rgba(176,180,194,0.7);
+      background: rgba(176,180,194,0.16);
     }
     .mode-featured .mode-card-arrow { color: var(--violet) !important; }
     .mode-card.mode-featured .mode-card-text { flex: 1; }
 
     /* PRO card */
     .mode-card.mode-pro {
-      border-color: rgba(139,92,246,0.15);
+      border-color: rgba(176,180,194,0.15);
       background: linear-gradient(135deg, #0e0e14 0%, #0c0c12 100%);
     }
     .mode-card.mode-pro::after {
-      background: radial-gradient(circle at 70% 0%, rgba(139,92,246,0.08) 0%, transparent 55%);
+      background: radial-gradient(circle at 70% 0%, rgba(176,180,194,0.08) 0%, transparent 55%);
     }
     .mode-card.mode-pro:hover {
-      border-color: rgba(139,92,246,0.4);
-      box-shadow: 0 20px 48px rgba(139,92,246,0.12);
+      border-color: rgba(176,180,194,0.4);
+      box-shadow: 0 20px 48px rgba(176,180,194,0.12);
     }
 
     /* Big muted number in corner */
@@ -563,9 +563,9 @@
       color: var(--silver-dim); transition: border-color 0.25s, color 0.25s, background 0.25s;
       margin-bottom: 20px;
     }
-    .mode-card:hover .mode-card-icon { border-color: rgba(139,92,246,0.4); color: var(--violet-bright); background: rgba(139,92,246,0.08); }
-    .mode-card.mode-pro .mode-card-icon { color: #9d7de8; border-color: rgba(139,92,246,0.28); background: rgba(139,92,246,0.06); }
-    .mode-card.mode-pro:hover .mode-card-icon { color: #b09af5; border-color: rgba(139,92,246,0.5); }
+    .mode-card:hover .mode-card-icon { border-color: rgba(176,180,194,0.4); color: var(--violet-bright); background: rgba(176,180,194,0.08); }
+    .mode-card.mode-pro .mode-card-icon { color: #b0b4c2; border-color: rgba(176,180,194,0.28); background: rgba(176,180,194,0.06); }
+    .mode-card.mode-pro:hover .mode-card-icon { color: #cfd2dc; border-color: rgba(176,180,194,0.5); }
 
     /* Featured icon — bigger, no bottom margin */
     .mode-featured .mode-card-icon {
@@ -592,7 +592,7 @@
       transition: color 0.2s, border-color 0.2s;
     }
     .mode-card:hover .mode-card-tag { color: var(--silver-dim); border-color: #2e2e3a; }
-    .mode-card.mode-pro .mode-card-tag { color: rgba(139,92,246,0.5); border-color: rgba(139,92,246,0.2); }
+    .mode-card.mode-pro .mode-card-tag { color: rgba(176,180,194,0.5); border-color: rgba(176,180,194,0.2); }
 
     /* Arrow */
     .mode-card-arrow {
@@ -605,15 +605,15 @@
       margin-top: 0; padding-top: 0;
       margin-left: 20px; align-self: center; font-size: 1.3rem; color: #3a3a48;
     }
-    .mode-card.mode-pro .mode-card-arrow { color: rgba(139,92,246,0.3); }
-    .mode-card.mode-pro:hover .mode-card-arrow { color: #9d7de8; }
+    .mode-card.mode-pro .mode-card-arrow { color: rgba(176,180,194,0.3); }
+    .mode-card.mode-pro:hover .mode-card-arrow { color: #b0b4c2; }
 
     /* PRO badge */
     .mode-pro-badge {
       position: absolute; top: 14px; right: 14px;
       font-size: 0.48rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-      color: #8b5cf6; border: 1px solid rgba(139,92,246,0.35);
-      padding: 3px 8px; border-radius: 4px; background: rgba(139,92,246,0.07);
+      color: #b0b4c2; border: 1px solid rgba(176,180,194,0.35);
+      padding: 3px 8px; border-radius: 4px; background: rgba(176,180,194,0.07);
     }
 
     /* Start here badge on featured */
@@ -783,8 +783,8 @@
     .hist-dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
     .hist-dd-pro {
       font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: #8b5cf6;
-      border: 1px solid #8b5cf6; border-radius: 3px; padding: 2px 5px; margin-left: 8px;
+      text-transform: uppercase; color: #b0b4c2;
+      border: 1px solid #b0b4c2; border-radius: 3px; padding: 2px 5px; margin-left: 8px;
     }
 
     /* ── QUIZ ───────────────────────────────── */
@@ -794,7 +794,7 @@
     }
     .quiz-progress-bar {
       height: 100%; border-radius: 2px;
-      background: linear-gradient(90deg, #6d3fd4, #a78bfa);
+      background: linear-gradient(90deg, #c8ccd8, #cfd2dc);
       box-shadow: 0 0 8px var(--violet-glow);
       transition: width 0.4s ease; width: 0%;
     }
@@ -829,11 +829,11 @@
       border-radius: 8px; padding: 13px 15px;
       cursor: pointer; text-align: left; transition: all 0.15s; width: 100%;
     }
-    .quiz-opt:hover { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.04); transform: translateY(-1px); }
+    .quiz-opt:hover { border-color: rgba(176,180,194,0.35); background: rgba(176,180,194,0.04); transform: translateY(-1px); }
     .quiz-opt.selected {
-      border-color: rgba(139,92,246,0.6);
-      background: rgba(139,92,246,0.10);
-      box-shadow: 0 0 0 1px rgba(139,92,246,0.3), 0 8px 24px rgba(139,92,246,0.12);
+      border-color: rgba(176,180,194,0.6);
+      background: rgba(176,180,194,0.10);
+      box-shadow: 0 0 0 1px rgba(176,180,194,0.3), 0 8px 24px rgba(176,180,194,0.12);
     }
     .quiz-opt.selected .quiz-opt-icon { color: var(--violet-bright); }
     .quiz-opt.selected .quiz-opt-name { color: #fff; }
@@ -1023,7 +1023,6 @@
 
       <!-- Featured: Generate a design -->
       <button class="mode-card mode-featured" id="btn-mode1">
-        <span class="card-bg" style="background-image:url('images/card-generate.png');background-position:center top;background-size:auto 150%"></span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
@@ -1037,7 +1036,6 @@
 
       <!-- Place on skin -->
       <button class="mode-card" id="btn-mode2">
-        <span class="card-bg" style="background-image:url('images/card-place.png')"></span>
         <span class="mode-card-num">02</span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -1066,7 +1064,6 @@
 
       <!-- Merge designs -->
       <button class="mode-card" id="btn-mode4">
-        <span class="card-bg" style="background-image:url('images/card-merge.png')"></span>
         <span class="mode-card-num">04</span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1081,7 +1078,6 @@
 
       <!-- Instant stencil — PRO -->
       <button class="mode-card mode-pro" id="btn-mode5">
-        <span class="card-bg" style="background-image:url('images/card-stencil.png')"></span>
         <span class="mode-pro-badge">PRO</span>
         <span class="mode-card-num">05</span>
         <div class="mode-card-icon">
@@ -1122,7 +1118,7 @@
 
       <!-- MODE TOGGLE -->
       <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <button id="toggle-guided" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(139,92,246,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(139,92,246,0.4)">✦ Guided quiz</button>
+        <button id="toggle-guided" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(176,180,194,0.22),rgba(176,180,194,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(176,180,194,0.4)">✦ Guided quiz</button>
         <button id="toggle-free" style="flex:1;padding:10px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s">✎ Free prompt</button>
       </div>
 
@@ -1780,7 +1776,7 @@
       <!-- Upload zone -->
       <label id="studio-upload-label" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;background:#0e0e16;border:2px dashed #2a2a3a;border-radius:14px;cursor:pointer;transition:border-color 0.2s;margin-bottom:20px">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p style="font-size:0.85rem;color:#666;margin:0">Drop your image here or <span style="color:#8b5cf6;font-weight:600">click to choose</span></p>
+        <p style="font-size:0.85rem;color:#666;margin:0">Drop your image here or <span style="color:#b0b4c2;font-weight:600">click to choose</span></p>
         <p style="font-size:0.72rem;color:#444;margin:0">PNG, JPG, WEBP — max 10 MB</p>
         <input type="file" id="studio-file-input" accept="image/*" style="display:none" />
       </label>
@@ -1806,7 +1802,7 @@
       </div>
 
       <div id="studio-processing" style="display:none;text-align:center;padding:24px">
-        <div style="width:28px;height:28px;border:2px solid #8b5cf6;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div>
+        <div style="width:28px;height:28px;border:2px solid #b0b4c2;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div>
         <p style="font-size:0.8rem;color:var(--text-muted)">Génération du stencil…</p>
       </div>
     </div>
@@ -1839,7 +1835,7 @@
     const toggleFree    = document.getElementById('toggle-free');
     const quizSection   = document.getElementById('quiz-section');
     const freeSection   = document.getElementById('free-prompt-section');
-    const activeToggleStyle   = 'flex:1;padding:10px;background:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(139,92,246,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(139,92,246,0.4)';
+    const activeToggleStyle   = 'flex:1;padding:10px;background:linear-gradient(135deg,rgba(176,180,194,0.22),rgba(176,180,194,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(176,180,194,0.4)';
     const inactiveToggleStyle = 'flex:1;padding:10px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s';
 
     toggleGuided.addEventListener('click', () => {
@@ -2780,7 +2776,7 @@
       }
 
       fileInput.addEventListener('change', () => processFile(fileInput.files[0]));
-      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#8b5cf6'; });
+      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#b0b4c2'; });
       uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = '#2a2a3a'; });
       uploadLabel.addEventListener('drop', e => { e.preventDefault(); uploadLabel.style.borderColor = '#2a2a3a'; processFile(e.dataTransfer.files[0]); });
       resetBtn.addEventListener('click', () => {
@@ -3390,7 +3386,7 @@
       fileInput.addEventListener('change', e => processFile(e.target.files[0]));
 
       // Drag & drop
-      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#8b5cf6'; });
+      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#b0b4c2'; });
       uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = '#2a2a3a'; });
       uploadLabel.addEventListener('drop', e => {
         e.preventDefault();

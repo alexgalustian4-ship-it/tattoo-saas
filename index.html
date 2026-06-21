@@ -249,12 +249,12 @@
     }
     .atool-card:hover { border-color: var(--border-m); transform: translateY(-3px); }
     .atool-featured { grid-column: span 2; }
-    .atool-pro { border-color: rgba(139,92,246,0.2); }
-    .atool-pro:hover { border-color: rgba(139,92,246,0.5); }
+    .atool-pro { border-color: rgba(176,180,194,0.2); }
+    .atool-pro:hover { border-color: rgba(176,180,194,0.5); }
     .atool-pro-badge {
       position: absolute; top: 10px; right: 10px;
       font-size: 0.5rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-      color: #8b5cf6; border: 1px solid rgba(139,92,246,.4); border-radius: 3px; padding: 2px 5px;
+      color: #b0b4c2; border: 1px solid rgba(176,180,194,.4); border-radius: 3px; padding: 2px 5px;
     }
     .atool-icon {
       width: 34px; height: 34px; border-radius: 7px;
@@ -553,7 +553,7 @@
       transform: translateY(-3px);
       box-shadow: 0 16px 40px rgba(0,0,0,0.4);
     }
-    .bento-card.bento-pro:hover { border-color: #5b3fa0; box-shadow: 0 16px 40px rgba(139,92,246,0.15); }
+    .bento-card.bento-pro:hover { border-color: #3a3a44; box-shadow: 0 16px 40px rgba(176,180,194,0.15); }
     .bento-card.bento-glow:hover { box-shadow: 0 16px 40px rgba(150,150,180,0.1); }
 
     /* Sizes */
@@ -595,9 +595,9 @@
     .bento-pro-badge {
       position: absolute; top: 14px; right: 14px;
       font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em;
-      color: #8b5cf6; border: 1px solid #8b5cf6;
+      color: #b0b4c2; border: 1px solid #b0b4c2;
       padding: 3px 8px; border-radius: 20px;
-      background: rgba(139,92,246,0.08);
+      background: rgba(176,180,194,0.08);
     }
 
     /* Mobile */
@@ -646,20 +646,20 @@
     .ss-line {
       position: absolute; top: 0; bottom: 0; left: 50%;
       width: 2px; transform: translateX(-50%);
-      background: #8b5cf6;
-      box-shadow: 0 0 14px rgba(139,92,246,0.8);
+      background: #b0b4c2;
+      box-shadow: 0 0 14px rgba(176,180,194,0.8);
       pointer-events: none; z-index: 2;
     }
     .ss-knob {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: 44px; height: 44px; border-radius: 50%;
-      background: #8b5cf6;
+      background: #b0b4c2;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 24px rgba(139,92,246,0.8);
+      box-shadow: 0 0 24px rgba(176,180,194,0.8);
       pointer-events: none; z-index: 3;
     }
-    .ss-knob svg { width: 18px; height: 18px; fill: #fff; }
+    .ss-knob svg { width: 18px; height: 18px; fill: #0a0a0e; }
     .ss-badges {
       position: absolute; top: 14px; left: 0; right: 0;
       display: flex; justify-content: space-between;
@@ -671,7 +671,7 @@
       background: rgba(15,15,25,0.8); backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .ss-badge.after { background: #8b5cf6; border-color: #8b5cf6; }
+    .ss-badge.after { background: #fff; border-color: #fff; color: #0a0a0e; }
     .ss-caption {
       text-align: center; margin-top: 14px;
       font-size: 0.75rem; color: var(--muted); letter-spacing: 0.03em;
@@ -690,12 +690,12 @@
     }
     .ss-cta {
       display: inline-flex; align-items: center; gap: 10px;
-      background: #8b5cf6; color: #fff;
+      background: #fff; color: #0a0a0e;
       font-size: 0.82rem; font-weight: 600; letter-spacing: 0.05em;
       padding: 13px 26px; border-radius: 30px; text-decoration: none;
       transition: box-shadow 0.25s, transform 0.2s;
     }
-    .ss-cta:hover { box-shadow: 0 0 28px rgba(139,92,246,0.5); transform: translateY(-2px); }
+    .ss-cta:hover { box-shadow: 0 0 28px rgba(255,255,255,0.18); transform: translateY(-2px); }
     #ps-showcase {
       padding: 100px 5vw;
       border-top: 1px solid var(--border);
@@ -706,7 +706,7 @@
       position: absolute; left: -10%; top: 50%;
       transform: translateY(-50%);
       width: 600px; height: 600px;
-      background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%);
+      background: radial-gradient(ellipse, rgba(176,180,194,0.1) 0%, transparent 70%);
       pointer-events: none;
     }
     @media (max-width: 900px) {
@@ -1013,7 +1013,6 @@
           <p class="bento-title">Generate a design</p>
           <p class="bento-desc">Describe your idea — AI creates a unique pro design in your style in under 60 seconds.</p>
           <p class="bento-cta">Try →</p>
-          <div class="bento-preview" style="background-image:url('images/card-generate.png');background-position:center top;background-size:auto 150%"></div>
         </a>
 
         <!-- 2. Place on skin -->
@@ -1022,17 +1021,15 @@
           <p class="bento-title">Place on skin</p>
           <p class="bento-desc">Upload your design and see it rendered realistically on your body, exactly where you want it.</p>
           <p class="bento-cta">Try →</p>
-          <div class="bento-preview" style="background-image:url('images/card-place.png')"></div>
         </a>
 
         <!-- 3. Stencil — PRO -->
         <a href="outil.html?mode=stencil" class="bento-card bento-medium bento-pro">
           <span class="bento-pro-badge">PRO</span>
-          <div class="bento-icon" style="color:#8b5cf6">▦</div>
+          <div class="bento-icon" style="color:#b0b4c2">▦</div>
           <p class="bento-title">Instant stencil</p>
           <p class="bento-desc">Convert any design into a print-ready stencil in 1 second. No Photoshop needed.</p>
-          <p class="bento-cta" style="color:#8b5cf6">Try →</p>
-          <div class="bento-preview" style="background-image:url('images/card-stencil.png')"></div>
+          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
         </a>
 
         <!-- 4. Photo → Tattoo -->
@@ -1049,16 +1046,15 @@
           <p class="bento-title">Merge designs</p>
           <p class="bento-desc">Fuse 2 to 4 designs into one unique masterpiece.</p>
           <p class="bento-cta">Try →</p>
-          <div class="bento-preview" style="background-image:url('images/card-merge.png')"></div>
         </a>
 
         <!-- 6. Precise rework — PRO -->
         <a href="outil.html#history-section" class="bento-card bento-wide bento-pro">
           <span class="bento-pro-badge">PRO</span>
-          <div class="bento-icon" style="color:#8b5cf6">✎</div>
+          <div class="bento-icon" style="color:#b0b4c2">✎</div>
           <p class="bento-title">Precise rework</p>
           <p class="bento-desc">Select any zone of your design with a lasso or rectangle — AI retouches only that area.</p>
-          <p class="bento-cta" style="color:#8b5cf6">Try →</p>
+          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
         </a>
 
         <!-- 7. My projects -->
@@ -1072,10 +1068,10 @@
         <!-- 8. PNG transparent — PRO -->
         <a href="outil.html#history-section" class="bento-card bento-mini bento-pro">
           <span class="bento-pro-badge">PRO</span>
-          <div class="bento-icon" style="color:#8b5cf6;font-size:1rem">✂</div>
+          <div class="bento-icon" style="color:#b0b4c2;font-size:1rem">✂</div>
           <p class="bento-title">PNG transparent</p>
           <p class="bento-desc">Remove the white background — ready to print or share.</p>
-          <p class="bento-cta" style="color:#8b5cf6">Try →</p>
+          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
         </a>
 
       </div>
@@ -1157,13 +1153,13 @@
         <p>Upload your design and a photo — AI places the tattoo exactly where you want it, in real conditions. Show it to your artist before committing.</p>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> Any placement — arm, chest, back, thigh…
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> Any placement — arm, chest, back, thigh…
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> Photorealistic result in under 60 seconds
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> Photorealistic result in under 60 seconds
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> Free — no account required
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> Free — no account required
           </div>
         </div>
         <a href="outil.html?mode=body" class="ss-cta">Try for free →</a>
@@ -1202,16 +1198,16 @@
         <p>Upload your design or generate one with AI — instantly convert it into a print-ready stencil. Clean lines, depth preserved. No Photoshop needed.</p>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> No software required
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> No software required
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> Result in under one second
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> Result in under one second
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> High-resolution PNG download
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> High-resolution PNG download
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#8b5cf6;font-size:1rem">✓</span> Works with any existing design
+            <span style="color:#b0b4c2;font-size:1rem">✓</span> Works with any existing design
           </div>
         </div>
         <a href="outil.html?mode=stencil" class="ss-cta" style="margin-top:24px">Try Instant Stencil →</a>
@@ -1225,7 +1221,7 @@
   <section id="how" style="width:100%;padding:110px 5vw;border-top:1px solid var(--border);position:relative;z-index:1;overflow:hidden;">
 
     <!-- subtle glow -->
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(139,92,246,0.05) 0%,transparent 70%);pointer-events:none;"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(176,180,194,0.05) 0%,transparent 70%);pointer-events:none;"></div>
 
     <div class="section-inner" style="position:relative;">
 
@@ -1337,19 +1333,19 @@
       box-shadow: 0 0 20px rgba(176,180,194,0.08);
     }
     .how-step-circle-accent {
-      background: rgba(139,92,246,0.1);
-      border-color: rgba(139,92,246,0.35) !important;
-      color: #a78bfa;
+      background: rgba(176,180,194,0.1);
+      border-color: rgba(176,180,194,0.35) !important;
+      color: #cfd2dc;
     }
     .how-step-v2:hover .how-step-circle-accent {
-      box-shadow: 0 0 24px rgba(139,92,246,0.2) !important;
+      box-shadow: 0 0 24px rgba(176,180,194,0.2) !important;
     }
     .how-step-num {
       font-family: 'Syne', sans-serif; font-size: 0.68rem;
       font-weight: 700; letter-spacing: 0.12em;
       color: var(--border-m);
     }
-    .how-step-num-accent { color: rgba(139,92,246,0.5); }
+    .how-step-num-accent { color: rgba(176,180,194,0.5); }
 
     .how-step-body { flex: 1; margin-bottom: 20px; }
     .how-step-title {
@@ -1374,10 +1370,10 @@
     }
     .how-step-v2:hover .how-step-tag { border-color: var(--border-m); color: var(--muted); }
     .how-step-tag-accent {
-      color: rgba(139,92,246,0.7);
-      border-color: rgba(139,92,246,0.2);
+      color: rgba(176,180,194,0.7);
+      border-color: rgba(176,180,194,0.2);
     }
-    .how-step-v2:hover .how-step-tag-accent { color: #a78bfa; border-color: rgba(139,92,246,0.4); }
+    .how-step-v2:hover .how-step-tag-accent { color: #cfd2dc; border-color: rgba(176,180,194,0.4); }
 
     @media (max-width: 900px) {
       #how .how-step-v2 { padding: 0 0 40px 0; border-bottom: 1px solid var(--border); }
@@ -1631,11 +1627,11 @@
       const isOwn = tab === 'own';
       document.getElementById('ss-panel-own').style.display = isOwn ? 'block' : 'none';
       document.getElementById('ss-panel-ai').style.display  = isOwn ? 'none'  : 'block';
-      document.getElementById('ss-tab-own').style.background = isOwn ? '#8b5cf6' : 'transparent';
-      document.getElementById('ss-tab-own').style.borderColor = '#8b5cf6';
+      document.getElementById('ss-tab-own').style.background = isOwn ? '#b0b4c2' : 'transparent';
+      document.getElementById('ss-tab-own').style.borderColor = '#b0b4c2';
       document.getElementById('ss-tab-own').style.color = isOwn ? '#fff' : 'var(--muted)';
-      document.getElementById('ss-tab-ai').style.background = isOwn ? 'transparent' : '#8b5cf6';
-      document.getElementById('ss-tab-ai').style.borderColor = isOwn ? '#2a2a3a' : '#8b5cf6';
+      document.getElementById('ss-tab-ai').style.background = isOwn ? 'transparent' : '#b0b4c2';
+      document.getElementById('ss-tab-ai').style.borderColor = isOwn ? '#2a2a3a' : '#b0b4c2';
       document.getElementById('ss-tab-ai').style.color = isOwn ? 'var(--muted)' : '#fff';
     }
     window.ssTab = ssTab;
@@ -1673,7 +1669,7 @@
     const ssInput = document.getElementById('ss-file-input');
     const ssLabel = document.getElementById('ss-upload-label');
     ssInput.addEventListener('change', e => ssProcessFile(e.target.files[0]));
-    ssLabel.addEventListener('dragover', e => { e.preventDefault(); ssLabel.style.borderColor = '#8b5cf6'; });
+    ssLabel.addEventListener('dragover', e => { e.preventDefault(); ssLabel.style.borderColor = '#b0b4c2'; });
     ssLabel.addEventListener('dragleave', () => { ssLabel.style.borderColor = '#2a2a3a'; });
     ssLabel.addEventListener('drop', e => { e.preventDefault(); ssLabel.style.borderColor = '#2a2a3a'; ssProcessFile(e.dataTransfer.files[0]); });
   </script>
