@@ -408,6 +408,8 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
     const url = job.result_url || (job.results && job.results[0] && job.results[0].url);
     console.log('REST poll:', job.status, url || '');
     if (job.status === 'completed' && url) return { imageUrl: url, jobId };
+    // Statuts terminaux d'échec — on échoue tout de suite, sans attendre le timeout
+    if (job.status === 'nsfw') throw new Error('NSFW_BLOCKED');
     if (job.status === 'failed' || job.status === 'canceled') throw new Error('Job failed: ' + JSON.stringify(job).slice(0, 200));
   }
   throw new Error('Timeout waiting for REST job (last status: ' + lastStatus + ')');
@@ -502,7 +504,16 @@ function sleep(ms) {
 
 // Retourne un message d'erreur safe pour le client (jamais de détails techniques)
 function clientError(err) {
-  return err.message || 'Generation failed. Please try again in a moment.';
+  const msg = err.message || '';
+  if (msg === 'NSFW_BLOCKED' || /nsfw/i.test(msg)) {
+    return 'Ta description a été bloquée par le filtre de contenu de l\'IA. ' +
+           'Reformule en évitant : nudité, corps dénudés, anges/figures torse nu, violence, armes, sang ou symboles trop sensibles. ' +
+           'Décris plutôt une figure habillée, en armure ou en drapé couvrant.';
+  }
+  if (/timeout/i.test(msg)) {
+    return 'La génération a pris trop de temps (serveur Higgsfield surchargé). Réessaie dans un instant.';
+  }
+  return msg || 'Generation failed. Please try again in a moment.';
 }
 
 const upload = multer({ dest: 'uploads/' });
@@ -850,6 +861,7 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       const url  = job.result_url || (job.results && job.results[0] && job.results[0].url);
       console.log('   Poll:', job.status, url || '');
       if (job.status === 'completed' && url) { imageUrl = url; break; }
+      if (job.status === 'nsfw') throw new Error('NSFW_BLOCKED');
       if (job.status === 'failed' || job.status === 'canceled') throw new Error('Job failed');
     }
     if (!imageUrl) throw new Error('Timeout');
