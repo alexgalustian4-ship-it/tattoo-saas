@@ -85,6 +85,17 @@ const DESIGN_SYSTEM_PROMPT =
   `Only use the explicitly requested style. Never create generic AI-looking artwork — every composition must feel intentional, premium and unique.`;
 
 // ─────────────────────────────────────────────────
+// Prompt Stencil (photo → stencil pro Spirit) pour gpt-image-1
+// ─────────────────────────────────────────────────
+const STENCIL_PROMPT =
+  `Convert this photograph into a professional tattoo stencil with maximum fidelity. The goal is to create a production-ready stencil identical to the original reference, without artistic reinterpretation. ` +
+  `Preserve with absolute accuracy: proportions, anatomy, perspective, rotation, scale, composition, placement of every element, facial expression, structural details. ` +
+  `Output requirements: thin, crisp, uniform stencil lines; authentic Spirit stencil purple (#7A4DFF approximately); pure white background; vector-like precision; print-ready quality; no anti-aliasing; no sketch effect; no painterly effect; no artistic interpretation; no textures; no grayscale; no black fills; no color variations; no photographic remnants. ` +
+  `Include: complete outer silhouette; facial structure; eyes, nose, lips, eyebrows; ears; hair flow; muscles and anatomy; hands and fingers; clothing outlines; essential folds; jewelry and accessories; wings, feathers, weapons, ornaments, decorative elements; important internal construction lines; all tattoo-relevant details. Simplify only visual noise while preserving tattoo readability. ` +
+  `Shadow Mapping Layer: Using the exact same Spirit Purple color, indicate shadow guides only with dashed contour lines. Outline four value groups: deepest shadows, dark shadows, mid-tone shadows, light shadow transitions. Do not add labels, arrows, numbers, symbols or text. The dashed contours must only define the boundaries of each shadow mass. ` +
+  `The final result must look exactly like a professional stencil prepared by an experienced tattoo artist using Spirit transfer paper — clean, highly readable, technically accurate, and immediately ready for printing and tattoo transfer.`;
+
+// ─────────────────────────────────────────────────
 // Recettes de style — prompts officiels (gpt-image-1)
 // ─────────────────────────────────────────────────
 const STYLE_RECIPES = {
@@ -998,6 +1009,30 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
     res.status(500).json({ error: clientError(err) });
   } finally {
     if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
+  }
+});
+
+// ─────────────────────────────────────────────────
+// POST /stencil — Outil Stencil via gpt-image-1 (photo → stencil Spirit violet)
+// File  : image
+// Retour: { imageUrl }
+// ─────────────────────────────────────────────────
+app.post('/stencil', upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Aucune image reçue.' });
+  if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY non configurée.' });
+
+  const imgPath = req.file.path + '.png';
+  fs.renameSync(req.file.path, imgPath);
+
+  try {
+    console.log('\n🖊 Stencil via OpenAI gpt-image-1');
+    const imageUrl = await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto');
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('❌ /stencil :', err.message);
+    res.status(500).json({ error: clientError(err) });
+  } finally {
+    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
   }
 });
 

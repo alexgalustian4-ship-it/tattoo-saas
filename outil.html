@@ -2718,27 +2718,35 @@
         return canvas.toDataURL('image/png');
       }
 
-      function processFile(file) {
+      async function processFile(file) {
         if (!file || !file.type.startsWith('image/')) return;
         uploadLabel.style.display = 'none';
         processing.style.display = 'block';
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = new Image();
-          img.onload = () => {
-            const stencilUrl = applyStencil(img);
-            beforeImg.src = e.target.result;
-            afterImg.src = stencilUrl;
-            dlBtn.href = stencilUrl;
-            dlBtn.download = 'stencil.png';
-            processing.style.display = 'none';
-            resultWrap.style.display = 'block';
-            // Init slider
-            initSlider(baWrap, baAfterLayer, baLine, baKnob);
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+
+        // Affiche tout de suite l'image d'origine dans le "avant"
+        const originalUrl = URL.createObjectURL(file);
+        beforeImg.src = originalUrl;
+
+        try {
+          // Redimensionne avant l'envoi pour accélérer
+          const resized = await resizeImage(file, 1536);
+          const fd = new FormData();
+          fd.append('image', resized);
+          const res = await fetch('/stencil', { method: 'POST', body: fd });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Erreur stencil');
+
+          afterImg.src = data.imageUrl;
+          dlBtn.href = data.imageUrl;
+          dlBtn.download = 'stencil.png';
+          processing.style.display = 'none';
+          resultWrap.style.display = 'block';
+          initSlider(baWrap, baAfterLayer, baLine, baKnob);
+        } catch (err) {
+          processing.style.display = 'none';
+          uploadLabel.style.display = 'flex';
+          alert('❌ ' + (err.message || 'Erreur lors de la génération du stencil'));
+        }
       }
 
       function initSlider(wrap, layer, line, knob) {
