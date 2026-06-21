@@ -147,7 +147,8 @@
     }
     textarea { resize: vertical; min-height: 72px; }
     textarea:focus, select:focus, input[type="text"]:focus {
-      outline: none; border-color: var(--silver-dim);
+      outline: none; border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
     }
     textarea::placeholder, input[type="text"]::placeholder { color: var(--text-muted); font-size: 0.83rem; }
 
@@ -196,7 +197,8 @@
       padding: 24px 16px; text-align: center; cursor: pointer;
       transition: border-color 0.2s, background 0.2s; position: relative;
     }
-    .upload-area:hover { border-color: var(--silver-dim); background: rgba(255,255,255,0.012); }
+    .upload-area:hover { border-color: rgba(139,92,246,0.45); background: rgba(139,92,246,0.03); }
+    .upload-area:hover .upload-svg { color: var(--violet-bright); }
     .upload-area input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
@@ -280,9 +282,10 @@
       color: var(--text-muted); font-size: 0.73rem; font-weight: 500;
       cursor: pointer; text-align: center; transition: all 0.15s; letter-spacing: 0.02em;
     }
-    .zone-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .zone-btn:hover { border-color: rgba(139,92,246,0.35); color: var(--text); }
     .zone-btn.selected {
-      border-color: var(--silver-dim); background: rgba(176,180,194,0.05); color: var(--silver);
+      border-color: rgba(139,92,246,0.6); background: rgba(139,92,246,0.10); color: var(--violet-bright);
+      box-shadow: 0 0 0 1px rgba(139,92,246,0.25);
     }
 
     /* ── MODE2 CARD ENHANCEMENTS ─────────────────── */
@@ -782,7 +785,9 @@
       margin-bottom: 4px;
     }
     .quiz-progress-bar {
-      height: 100%; background: var(--silver-dim); border-radius: 2px;
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, #6d3fd4, #a78bfa);
+      box-shadow: 0 0 8px var(--violet-glow);
       transition: width 0.4s ease; width: 0%;
     }
     .quiz-step { display: none; flex-direction: column; gap: 20px; }
@@ -806,7 +811,7 @@
       color: var(--text); font-size: 0.95rem; font-family: 'Inter', sans-serif;
       padding: 10px 0; resize: none; min-height: 72px; transition: border-color 0.2s;
     }
-    .quiz-textarea:focus { outline: none; border-bottom-color: var(--silver-dim); }
+    .quiz-textarea:focus { outline: none; border-bottom-color: var(--violet); box-shadow: 0 1px 0 var(--violet); }
     .quiz-textarea::placeholder { color: var(--text-muted); font-size: 0.84rem; }
     .quiz-opts { display: flex; flex-direction: column; gap: 7px; }
     .quiz-opts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
@@ -816,9 +821,15 @@
       border-radius: 8px; padding: 13px 15px;
       cursor: pointer; text-align: left; transition: all 0.15s; width: 100%;
     }
-    .quiz-opt:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.018); }
-    .quiz-opt.selected { border-color: var(--silver-dim); background: rgba(176,180,194,0.06); }
-    .quiz-opt-icon { font-size: 1rem; color: var(--silver-dim); flex-shrink: 0; width: 20px; text-align: center; }
+    .quiz-opt:hover { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.04); transform: translateY(-1px); }
+    .quiz-opt.selected {
+      border-color: rgba(139,92,246,0.6);
+      background: rgba(139,92,246,0.10);
+      box-shadow: 0 0 0 1px rgba(139,92,246,0.3), 0 8px 24px rgba(139,92,246,0.12);
+    }
+    .quiz-opt.selected .quiz-opt-icon { color: var(--violet-bright); }
+    .quiz-opt.selected .quiz-opt-name { color: #fff; }
+    .quiz-opt-icon { font-size: 1rem; color: var(--silver-dim); flex-shrink: 0; width: 20px; text-align: center; transition: color 0.15s; }
     .quiz-opt-name {
       font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
       color: var(--text); letter-spacing: 0.02em;
@@ -1099,8 +1110,8 @@
 
       <!-- MODE TOGGLE -->
       <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <button id="toggle-guided" style="flex:1;padding:9px;background:var(--surface);border:none;color:var(--text);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s">✦ Guided quiz</button>
-        <button id="toggle-free" style="flex:1;padding:9px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s">✎ Free prompt</button>
+        <button id="toggle-guided" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(139,92,246,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(139,92,246,0.4)">✦ Guided quiz</button>
+        <button id="toggle-free" style="flex:1;padding:10px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s">✎ Free prompt</button>
       </div>
 
       <!-- FREE PROMPT MODE -->
@@ -1816,8 +1827,8 @@
     const toggleFree    = document.getElementById('toggle-free');
     const quizSection   = document.getElementById('quiz-section');
     const freeSection   = document.getElementById('free-prompt-section');
-    const activeToggleStyle   = 'flex:1;padding:9px;background:var(--surface);border:none;color:var(--text);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s';
-    const inactiveToggleStyle = 'flex:1;padding:9px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:background .2s';
+    const activeToggleStyle   = 'flex:1;padding:10px;background:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(139,92,246,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(139,92,246,0.4)';
+    const inactiveToggleStyle = 'flex:1;padding:10px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s';
 
     toggleGuided.addEventListener('click', () => {
       toggleGuided.style.cssText = activeToggleStyle;
