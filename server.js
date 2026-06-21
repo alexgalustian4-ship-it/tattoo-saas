@@ -778,8 +778,9 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     const photoBuffer = fs.readFileSync(photoPath);
     const photoMedia  = await uploadImageToHiggsfield(photoBuffer, 'image/jpeg');
 
-    // Extract design job ID from Higgsfield CDN URL (no re-upload needed)
-    const designJobId = (designUrl.match(/hf_\d+_([a-f0-9-]{36})\./) || [])[1];
+    // Extract design job ID (UUID) from Higgsfield CDN URL (no re-upload needed)
+    // Format: .../hf_20260621_092235_28b6da44-46c7-444b-b69b-f8adcae18644.png
+    const designJobId = (designUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/) || [])[1];
     const designMedia = designJobId
       ? { id: designJobId, type: 'image_auto_job' }
       : { id: photoMedia.id, type: 'media_input' }; // fallback
