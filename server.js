@@ -72,46 +72,60 @@ setInterval(() => {
 }, 45 * 60 * 1000);
 
 // ─────────────────────────────────────────────────
-// Recettes de style — une par style de tatouage.
+// Prompt système designer — base de toute génération de design
+// ─────────────────────────────────────────────────
+const DESIGN_SYSTEM_PROMPT =
+  `You are an expert tattoo designer specialized in creating original, high-quality tattoo concepts. ` +
+  `Transform the idea into a visually balanced tattoo composition, not a random illustration. ` +
+  `Always prioritize composition, readability, body flow, and long-term tattoo quality. ` +
+  `Create a unique composition with one dominant focal point. Avoid clutter, duplicated objects, repetitive patterns and random decorative elements. ` +
+  `Every element must have a purpose. Balance negative space and detailed areas. Keep proportions realistic and the design tattooable by a professional artist. ` +
+  `Build with a main subject, supporting elements, background only when it improves the composition, depth through layering, natural visual flow, balanced spacing, strong silhouette. ` +
+  `The design must remain readable from a distance, have clean shapes, logical lighting, preserve important details and avoid muddy areas. ` +
+  `Only use the explicitly requested style. Never create generic AI-looking artwork — every composition must feel intentional, premium and unique.`;
+
+// ─────────────────────────────────────────────────
+// Recettes de style — prompts officiels (gpt-image-1)
 // ─────────────────────────────────────────────────
 const STYLE_RECIPES = {
   concept:
-    `Concept tattoo design composition in black and grey realism: ` +
-    `the main subject surrounded by fine geometric construction lines, circles, and architectural elements ` +
-    `(gothic cathedral rosette, greco-roman structures, or classical architecture) in the background. ` +
-    `Faint handwritten script and blueprint-style markings floating around the composition. ` +
-    `Subtle fine-line geometric accents and dots. ` +
-    `Predominantly black and grey with occasional minimal red accents.`,
+    `Create the tattoo in a Concept style, built around visual storytelling rather than simple illustration — every element contributes to a larger symbolic narrative, like an artistic concept piece by a high-end tattoo designer. ` +
+    `Strong central subject, supporting elements connected through symbolism, intelligent composition rather than decoration, minimal but meaningful background, clean hierarchy, large areas of breathing space. ` +
+    `Build with multiple layers: primary subject, secondary symbolic elements, architectural or environmental details when relevant, geometric construction only if it strengthens the composition, atmospheric depth. Every object interacts with the others; avoid isolated floating elements. ` +
+    `The tattoo must communicate an idea, emotion or philosophy; every symbol has a purpose; avoid generic symbolism or random combinations. ` +
+    `Mix realism with conceptual composition, allow natural overlap, create tension between positive and negative space, use scale creatively. Keep the focal point highly detailed while secondary elements become progressively lighter. ` +
+    `Look like a luxury custom tattoo concept by an elite artist — unique, intelligent, emotionally powerful, premium, never generic AI-generated.`,
 
   baroque:
-    `Baroque tattoo composition: dramatic chiaroscuro with deep shadows and brilliant highlights ` +
-    `in the style of Caravaggio and the Italian masters. ` +
-    `Ornate decorative elements — acanthus scrolls, laurel wreaths, gilded ornaments, roses, draped fabric. ` +
-    `Grand architectural details: columns, arches, cathedral vaults. ` +
+    `Create the tattoo in a Baroque style inspired by the grandeur of Baroque and Renaissance art, combining dramatic realism, ornate architecture and rich decorative details; luxurious, timeless and sculptural. ` +
+    `Central focal subject, ornate architectural structures, decorative Baroque frames and flourishes, sculptures/statues/classical figures when relevant, columns, arches, domes or cathedral details, elegant symmetry or controlled asymmetry, soft atmospheric depth. ` +
+    `Incorporate authentic Baroque/Renaissance influences when appropriate: ornamental scrollwork, Corinthian columns, cathedral windows, domes, marble sculptures, decorative moldings, royal emblems, arches, classical reliefs, stone textures — architecture frames the artwork naturally. ` +
     `Any human or angelic figures are fully clothed in flowing robes and drapery — no nudity, no bare skin, modest and reverent. ` +
-    `Dynamic diagonal composition, theatrical and grandiose. ` +
-    `High contrast black and grey, luxurious and imposing.`,
+    `Dramatic lighting inspired by classical paintings: strong highlights, deep shadows, powerful contrast emphasizing volume and architectural depth. Intricate detail in carvings, marble, drapery and flourishes, fading toward the edges for readability. ` +
+    `Look like a masterpiece carved from marble surrounded by magnificent Baroque architecture — regal, timeless, sophisticated, worthy of a luxury custom tattoo, never a generic AI illustration.`,
 
   japonais:
-    `Traditional Japanese irezumi tattoo composition. ` +
-    `Bold confident outlines in the woodblock print tradition of Utagawa Kuniyoshi. ` +
-    `Decorative wind bars (kaze), stylized clouds (kumo), crashing waves (nami). ` +
-    `Strong use of negative space, fluid movement throughout the composition. ` +
-    `Black and grey with classic Japanese flat shading and bold outlines.`,
+    `Create the tattoo in a Japanese (Irezumi) style inspired by traditional Japanese tattooing with modern interpretation — harmonious, powerful, symbolic and fluid, following the body's anatomy. ` +
+    `One dominant central subject, supporting symbolic elements, natural environmental elements, flowing background textures, continuous movement throughout. Every element connects naturally; avoid isolated or randomly placed objects. ` +
+    `When relevant incorporate authentic Japanese symbolism (dragons, koi, tigers, phoenix, samurai, oni/hannya masks, snakes, cranes, cherry blossoms, peonies, maple leaves, waves, wind bars, clouds, smoke, moon, sun) — only elements that strengthen the concept. ` +
+    `Subjects emerge from waves, clouds, wind or smoke rather than floating; strong energy and direction. Intricate detail in scales, fur, feathers, armor, fabric folds, flowers, waves and clouds; focal point detailed while secondary elements breathe. ` +
+    `If color is requested use a traditional Japanese palette (deep black, crimson, vermilion, indigo, emerald, muted gold, ivory); otherwise powerful black and grey. ` +
+    `Look like an authentic high-end Irezumi masterpiece — dynamic, symbolic, timeless, balanced and visually powerful.`,
 
   geometrique:
-    `Sacred geometry tattoo composition. ` +
-    `Precise geometric patterns: mandalas, Flower of Life, Metatron's Cube, platonic solids. ` +
-    `Fine dotwork and single-needle linework. Perfectly symmetrical and mathematically precise. ` +
-    `Black and grey, clean white negative space, no gradients — only linework and dots. ` +
-    `Architectural precision meeting spiritual sacred geometry.`,
+    `Create the tattoo in a Geometric style based on precision, balance, symmetry and mathematical harmony — every line, shape and proportion intentional and perfectly constructed; geometry enhances the subject, never overpowers it. ` +
+    `One dominant central subject, geometric structures supporting the composition, balanced spacing, controlled repetition, layered geometric depth, clear focal point; avoid random decorative geometry. ` +
+    `When appropriate incorporate sacred geometry, Metatron's Cube, Flower of Life, golden ratio, Fibonacci spiral, platonic solids, hexagons, triangles, circles, mandalas, polygonal structures, radial patterns, blueprint construction lines, fine dotwork — only elements that support the concept. ` +
+    `Perfectly straight lines, smooth curves, consistent line weight, crisp intersections, clean circles, accurate angles; no shaky or unnecessary lines. Detail through dotwork, repeating patterns, geometric textures and subtle construction lines. ` +
+    `Look like a premium geometric tattoo designed with architectural precision — balanced, intelligent, elegant, timeless, visually striking and technically tattooable.`,
 
   realisme:
-    `Hyperrealistic black and grey tattoo composition. ` +
-    `Photorealistic detail with precise rendering of every texture: skin, fur, feather, metal, stone. ` +
-    `Deep contrasts between pure black shadows and brilliant white highlights. ` +
-    `Dramatic studio lighting, photographic quality. ` +
-    `Fine detail work, every element rendered with anatomical and material accuracy.`,
+    `Create the tattoo in a Realism style — lifelike imagery with exceptional accuracy, natural proportions and realistic depth; authentic, dimensional, emotionally expressive, fully tattooable. Premium black & grey realism unless color is explicitly requested. ` +
+    `One dominant realistic subject, supporting elements only when they strengthen the story, natural layering, balanced negative space, smooth visual flow, strong depth and perspective; avoid unnecessary decorative elements. ` +
+    `Preserve realistic anatomy, authentic proportions, natural perspective, facial accuracy, believable expressions, realistic textures, correct lighting and physical depth; never stylized or cartoon-like. ` +
+    `Realistic directional lighting, smooth value transitions, deep shadows, bright highlights, natural contrast defining volume. Authentic textures (skin, marble, stone, metal, fabric, feathers, fur, hair, leather, smoke, water) that never become noisy. ` +
+    `Exceptional detail in eyes, facial features, hands, muscles, hair, clothing folds and key objects, reducing detail away from the focal point. Depth via foreground/midground/background and atmospheric perspective. Prioritize tattoo longevity over photographic perfection. ` +
+    `Look like a world-class black and grey realism tattoo by an elite artist — authentic, emotionally powerful, technically flawless, timeless, never AI-generated or a manipulated photograph.`,
 };
 
 // ─────────────────────────────────────────────────
@@ -192,15 +206,15 @@ function buildPrompt({ sujet, style = 'concept', ambiance = 'epique', mot = '', 
       : '';
 
   return [
-    `Professional tattoo studio concept art, strictly safe for work, fully clothed figures only, no nudity, no bare skin, non-violent artistic illustration.`,
+    DESIGN_SYSTEM_PROMPT,
+    `Strictly safe for work, fully clothed figures only, no nudity, no bare skin, non-violent.`,
     refPart,
-    `${sujet}, as the central figure.`,
+    `Subject (the central focal point of the tattoo): ${sujet}.`,
     recipe,
     mood,
     zonePart,
     motPart,
     elementsPart,
-    `Highly detailed, fine line work, professional tattoo concept art, sharp clean linework.`,
     TECHNICAL_REQUIREMENTS,
   ].filter(Boolean).join(' ');
 }
@@ -572,6 +586,37 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
   }
 }
 
+// Édition gpt-image-1 avec PLUSIEURS images d'entrée (ex: photo du corps + design)
+async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
+
+  const fd = new (require('form-data'))();
+  fd.append('model', 'gpt-image-1');
+  fd.append('prompt', prompt);
+  fd.append('n', '1');
+  fd.append('size', size);
+  fd.append('quality', 'high');
+  imagePaths.forEach((p, i) => {
+    const isPng = p.toLowerCase().endsWith('.png');
+    fd.append('image[]', fs.createReadStream(p), {
+      filename: `img${i}.${isPng ? 'png' : 'jpg'}`,
+      contentType: isPng ? 'image/png' : 'image/jpeg',
+    });
+  });
+
+  const resp = await fetch('https://api.openai.com/v1/images/edits', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, ...fd.getHeaders() },
+    body: fd,
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error('OpenAI edits error: ' + JSON.stringify(data).slice(0, 300));
+  const b64 = data.data?.[0]?.b64_json;
+  if (!b64) throw new Error('No image returned from OpenAI edits');
+  return `data:image/png;base64,${b64}`;
+}
+
 // ─────────────────────────────────────────────────
 // POST /rework — Inpainting précis via OpenAI gpt-image-1
 // ─────────────────────────────────────────────────
@@ -796,112 +841,40 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     console.log('   Modèle :', modelKey);
 
     const prompt =
-      `Two images are provided: image 1 is a body photo, image 2 is a tattoo design on white background. ` +
-      `Realistically tattoo the design from image 2 onto the bare skin in image 1, as if a professional tattoo artist inked it. ` +
+      `You are given two images: IMAGE 1 is a real photo of a person's body, IMAGE 2 is a tattoo design on a white background. ` +
+      `Realistically tattoo the design from IMAGE 2 onto the bare skin in IMAGE 1, as if a professional tattoo artist inked it. ` +
       `${ZONE_PROMPTS[zone]} ` +
-      `ABSOLUTELY CRITICAL — the tattoo must stay ENTIRELY on bare skin only. ` +
-      `Never let the tattoo extend onto, cover, or bleed over clothing, waistband, underwear, shorts, fabric, hair, or the photo background. ` +
+      `ABSOLUTELY CRITICAL — the tattoo must stay ENTIRELY on bare skin only. Never let it extend onto or bleed over clothing, waistband, underwear, shorts, fabric, hair, or the background. ` +
       `Leave a natural margin of bare skin around the design — do NOT stretch it edge to edge. Scale it to sit comfortably within the body zone. ` +
-      `The ink must wrap and conform to the body's three-dimensional curves and muscle contours, bending with the anatomy — NOT a flat sticker or decal pasted on top. ` +
-      `The ink must sit UNDER the skin: it follows the skin's real texture, pores, lighting, highlights, shadows and slight transparency, with ink density varying naturally over the curves. ` +
-      `Hyper-photorealistic real tattoo, indistinguishable from an actual healed tattoo on real skin, professional tattoo artist quality. ` +
-      `CRITICAL: preserve the EXACT same framing, crop, zoom level, angle, perspective and composition as image 1 — do NOT zoom, reframe or change camera distance. ` +
-      `Keep every detail of the background, clothing, body and surroundings completely unchanged except for the newly added tattoo on the skin.`;
+      `The ink must wrap and conform to the body's three-dimensional curves and muscle contours — NOT a flat sticker pasted on top. ` +
+      `The ink sits UNDER the skin: it follows the skin's real texture, lighting, highlights, shadows and slight transparency, ink density varying naturally over the curves. ` +
+      `Hyper-photorealistic, indistinguishable from a real healed tattoo on real skin. ` +
+      `MOST IMPORTANT: keep the person, their body, pose, face, skin, the background and every other detail EXACTLY identical to IMAGE 1 — same framing, crop, zoom, angle and perspective. Change nothing except adding the tattoo on the skin.`;
 
-    // Upload body photo to Higgsfield (uploadImageToHiggsfield handles 401 auto-refresh)
-    console.log('   Uploading body photo...');
-    const photoBuffer = fs.readFileSync(photoPath);
-    const photoMedia  = await uploadImageToHiggsfield(photoBuffer, 'image/jpeg');
-
-    // Le design peut venir de Higgsfield (URL CDN avec un job UUID) OU d'OpenAI
-    // (data URL / autre). On détecte les deux cas.
-    const isHiggsfieldCdn = /cloudfront\.net.*hf_\d+_/.test(designUrl);
-    const designJobId = isHiggsfieldCdn
-      ? (designUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/) || [])[1]
-      : null;
-
-    let designMedia;
-    if (designJobId) {
-      // Design Higgsfield : on référence directement le job (pas de ré-upload)
-      designMedia = { id: designJobId, type: 'image_auto_job' };
-      console.log('   Design = job Higgsfield', designJobId);
+    // Récupère les octets du design (data URL OpenAI ou http) dans un fichier temporaire
+    let designPath;
+    if (designUrl.startsWith('data:')) {
+      const designBuf = Buffer.from(designUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      designPath = path.join(os.tmpdir(), `design-${Date.now()}.png`);
+      fs.writeFileSync(designPath, designBuf);
     } else {
-      // Design externe (OpenAI data URL ou http) : on télécharge ses octets et on l'upload à Higgsfield
-      console.log('   Design externe — upload vers Higgsfield...');
-      let designBuf, designMime = 'image/png';
-      if (designUrl.startsWith('data:')) {
-        designMime = (designUrl.match(/^data:(image\/\w+);/) || [])[1] || 'image/png';
-        designBuf  = Buffer.from(designUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-      } else {
-        const dlRes = await fetch(designUrl);
-        if (!dlRes.ok) throw new Error('Impossible de récupérer le design: ' + dlRes.status);
-        designMime = dlRes.headers.get('content-type') || 'image/png';
-        designBuf  = Buffer.from(await dlRes.arrayBuffer());
-      }
-      const uploaded = await uploadImageToHiggsfield(designBuf, designMime);
-      designMedia = { id: uploaded.id, url: uploaded.url, type: 'media_input' };
+      const dlRes = await fetch(designUrl);
+      if (!dlRes.ok) throw new Error('Impossible de récupérer le design: ' + dlRes.status);
+      const designBuf = Buffer.from(await dlRes.arrayBuffer());
+      designPath = path.join(os.tmpdir(), `design-${Date.now()}.png`);
+      fs.writeFileSync(designPath, designBuf);
     }
 
-    console.log('   Photo UUID:', photoMedia.id);
-
-    // Submit nano_banana_2 with proper input_images
-    const submitBody = {
-      job_set_type: 'nano_banana_2',
-      params: {
-        prompt,
-        resolution: '2k',
-        input_images: [
-          { id: photoMedia.id, url: photoMedia.url, type: 'media_input' },
-          designMedia,
-        ],
-      },
-    };
-
-    let submitRes = await fetch(`${HF_API}/agents/jobs`, {
-      method:  'POST',
-      headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
-      body:    JSON.stringify(submitBody),
-    });
-    if (submitRes.status === 401) {
-      console.log('🔄 generate-on-body submit 401 — refreshing token and retrying...');
-      await refreshHiggsfieldToken();
-      submitRes = await fetch(`${HF_API}/agents/jobs`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify(submitBody),
-      });
-    }
-    const submitted = await submitRes.json();
-    const jobIdHF   = Array.isArray(submitted) ? submitted[0] : submitted.id;
-    if (!submitRes.ok || !jobIdHF) throw new Error('Job submit failed: ' + JSON.stringify(submitted).slice(0, 200));
-
-    console.log('   Job submitted:', jobIdHF);
-
-    // Poll for result
-    const deadline = Date.now() + 270_000;
+    console.log('   Moteur : OpenAI gpt-image-1 (edit photo + design)');
     let imageUrl;
-    while (Date.now() < deadline) {
-      await new Promise(r => setTimeout(r, 2500));
-      const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, {
-        headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
-      });
-      if (poll.status === 401) {
-        console.log('🔄 Poll 401 — refreshing token mid-poll...');
-        await refreshHiggsfieldToken().catch(() => {});
-        continue;
-      }
-      const job  = await poll.json();
-      const url  = job.result_url || (job.results && job.results[0] && job.results[0].url);
-      console.log('   Poll:', job.status, url || '');
-      if (job.status === 'completed' && url) { imageUrl = url; break; }
-      if (job.status === 'nsfw') throw new Error('NSFW_BLOCKED');
-      if (job.status === 'failed' || job.status === 'canceled') throw new Error('Job failed');
+    try {
+      // gpt-image-1 edits avec 2 images : la photo du corps + le design
+      imageUrl = await openAIEditMulti(prompt, [photoPath, designPath], 'auto');
+    } finally {
+      if (designPath && fs.existsSync(designPath)) fs.unlinkSync(designPath);
     }
-    if (!imageUrl) throw new Error('Timeout');
 
-    const { jobId } = { jobId: jobIdHF };
-
-    res.json({ imageUrl, jobId, model: modelKey });
+    res.json({ imageUrl, jobId: null, model: 'gpt-image-1' });
 
   } catch (err) {
     console.error('❌ /generate-on-body :', err.message);
