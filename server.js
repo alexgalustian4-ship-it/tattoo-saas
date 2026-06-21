@@ -11,6 +11,9 @@ const { execFile } = require('child_process');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Higgsfield token refresh state ──
+let _refreshInProgress = null;
+
 // ── Bootstrap Higgsfield CLI credentials from env vars ──
 function writeCredentials(access, refresh) {
   const credDir  = path.join(os.homedir(), '.config', 'higgsfield');
@@ -28,28 +31,20 @@ async function bootstrapHiggsfieldAuth() {
   writeCredentials(access, refresh);
   console.log('✓ Higgsfield credentials written. HOME =', os.homedir(), '| token prefix =', access.slice(0, 8));
 
-  // Rafraîchit le token immédiatement au démarrage
-  if (refresh) {
-    try {
-      const r = await fetch('https://api.higgsfield.ai/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refresh }),
-      });
-      const d = await r.json();
-      if (d.access_token) {
-        writeCredentials(d.access_token, d.refresh_token || refresh);
-        console.log('✓ Token refreshed at startup, new prefix =', d.access_token.slice(0, 8));
-      } else {
-        console.warn('⚠ Refresh response:', JSON.stringify(d).slice(0, 200));
-      }
-    } catch (e) {
-      console.warn('⚠ Startup token refresh failed:', e.message);
-    }
+  // Rafraîchit le token immédiatement au démarrage via le CLI binaire
+  try {
+    await refreshHiggsfieldToken();
+  } catch (e) {
+    console.warn('⚠ Startup token refresh failed:', e.message);
   }
 }
 
 bootstrapHiggsfieldAuth();
+
+// Refresh proactif toutes les 45 min pour ne jamais expirer
+setInterval(() => {
+  refreshHiggsfieldToken().catch(e => console.warn('⚠ Periodic token refresh failed:', e.message));
+}, 45 * 60 * 1000);
 
 // ─────────────────────────────────────────────────
 // Recettes de style — une par style de tatouage.
@@ -274,7 +269,7 @@ const MODEL_MAP = {
 const HF_API = 'https://fnf.higgsfield.ai';
 
 // Upload an image buffer to Higgsfield media — returns {id, url}
-async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
+async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg', retry = true) {
   const apiKey = process.env.HIGGSFIELD_API_KEY || '';
 
   // Build multipart body manually for maximum compatibility
@@ -295,6 +290,13 @@ async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
     },
     body,
   });
+
+  if (initRes.status === 401 && retry) {
+    console.log('🔄 Upload 401 — refreshing token and retrying...');
+    await refreshHiggsfieldToken();
+    return uploadImageToHiggsfield(buffer, mimeType, false);
+  }
+
   const initText = await initRes.text();
   if (!initRes.ok) throw new Error('Upload init failed: ' + initText.slice(0, 200));
   const { id, url, upload_url } = JSON.parse(initText);
@@ -313,7 +315,8 @@ async function uploadImageToHiggsfield(buffer, mimeType = 'image/jpeg') {
 
 // Appel REST direct — utilisé quand le CLI ne supporte pas l'option (ex: gpt_image_2 + image)
 async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
-  const apiKey = process.env.HIGGSFIELD_API_KEY || '';
+  // Read token dynamically so refresh within this call is picked up
+  const apiKey = () => process.env.HIGGSFIELD_API_KEY || '';
   const { model, prompt, resolution, images } = payload;
 
   let input_images;
@@ -338,11 +341,22 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const body = { job_set_type: model, params };
 
   // Soumettre le job
-  const submitRes = await fetch(`${HF_API}/agents/jobs`, {
+  let submitRes = await fetch(`${HF_API}/agents/jobs`, {
     method:  'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${apiKey()}`, 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   });
+
+  if (submitRes.status === 401) {
+    console.log('🔄 Submit 401 — refreshing token and retrying...');
+    await refreshHiggsfieldToken();
+    submitRes = await fetch(`${HF_API}/agents/jobs`, {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+  }
+
   const submitted = await submitRes.json();
   console.log('REST submit:', JSON.stringify(submitted).slice(0, 300));
   // API returns either ["jobId"] or {id: "jobId"}
@@ -354,7 +368,7 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 4000));
     const pollRes  = await fetch(`${HF_API}/agents/jobs/${jobId}`, {
-      headers: { 'Authorization': `Bearer ${apiKey}` },
+      headers: { 'Authorization': `Bearer ${apiKey()}` },
     });
     const job = await pollRes.json();
     console.log('REST poll:', job.status, job.result_url || '');
@@ -416,41 +430,39 @@ function runCLI(args, timeoutMs, retry = true) {
 }
 
 function refreshHiggsfieldToken() {
-  return new Promise((resolve, reject) => {
-    const refreshToken = process.env.HIGGSFIELD_REFRESH_TOKEN;
-    if (!refreshToken) return reject(new Error('No refresh token available'));
+  // Deduplicate concurrent refresh calls
+  if (_refreshInProgress) return _refreshInProgress;
 
-    const https = require('https');
-    const body  = JSON.stringify({ refresh_token: refreshToken });
-    const opts  = {
-      hostname: 'api.higgsfield.ai',
-      path:     '/auth/refresh',
-      method:   'POST',
-      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
-    };
-    const req = https.request(opts, res => {
-      let data = '';
-      res.on('data', c => { data += c; });
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (j.access_token) {
-            process.env.HIGGSFIELD_API_KEY = j.access_token;
-            if (j.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = j.refresh_token;
-            const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
-            try { fs.writeFileSync(credFile, JSON.stringify({ access_token: j.access_token, refresh_token: j.refresh_token || refreshToken })); } catch {}
-            console.log('✓ Higgsfield token refreshed');
-            resolve();
-          } else {
-            reject(new Error('Refresh response: ' + data.slice(0, 100)));
-          }
-        } catch (e) { reject(e); }
-      });
+  _refreshInProgress = new Promise((resolve, reject) => {
+    const binName   = process.platform === 'win32' ? 'hf.exe' : 'hf';
+    const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
+    const bin       = fs.existsSync(vendorBin) ? vendorBin : binName;
+
+    // Let the CLI binary auto-refresh the token and print it
+    execFile(bin, ['auth', 'token'], { timeout: 30_000, env: { ...process.env, HOME: os.homedir() } }, (err, stdout) => {
+      _refreshInProgress = null;
+      if (err) return reject(new Error('CLI auth token failed: ' + err.message));
+
+      const newToken = stdout.trim();
+      if (!newToken.startsWith('hf_')) return reject(new Error('Unexpected token: ' + newToken.slice(0, 30)));
+
+      // Read updated credentials file (CLI may have written a new refresh token too)
+      const credFile = path.join(os.homedir(), '.config', 'higgsfield', 'credentials.json');
+      let newRefresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+      try {
+        const creds = JSON.parse(fs.readFileSync(credFile, 'utf8'));
+        if (creds.refresh_token) newRefresh = creds.refresh_token;
+      } catch {}
+
+      process.env.HIGGSFIELD_API_KEY = newToken;
+      if (newRefresh) process.env.HIGGSFIELD_REFRESH_TOKEN = newRefresh;
+      writeCredentials(newToken, newRefresh);
+      console.log('✓ Higgsfield token refreshed via CLI, new prefix =', newToken.slice(0, 8));
+      resolve();
     });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
   });
+
+  return _refreshInProgress;
 }
 
 function sleep(ms) {
@@ -740,9 +752,7 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
-    const apiKey = process.env.HIGGSFIELD_API_KEY || '';
-
-    // Upload body photo to Higgsfield
+    // Upload body photo to Higgsfield (uploadImageToHiggsfield handles 401 auto-refresh)
     console.log('   Uploading body photo...');
     const photoBuffer = fs.readFileSync(photoPath);
     const photoMedia  = await uploadImageToHiggsfield(photoBuffer, 'image/jpeg');
@@ -768,11 +778,20 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       },
     };
 
-    const submitRes = await fetch(`${HF_API}/agents/jobs`, {
+    let submitRes = await fetch(`${HF_API}/agents/jobs`, {
       method:  'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
       body:    JSON.stringify(submitBody),
     });
+    if (submitRes.status === 401) {
+      console.log('🔄 generate-on-body submit 401 — refreshing token and retrying...');
+      await refreshHiggsfieldToken();
+      submitRes = await fetch(`${HF_API}/agents/jobs`, {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify(submitBody),
+      });
+    }
     const submitted = await submitRes.json();
     const jobIdHF   = Array.isArray(submitted) ? submitted[0] : submitted.id;
     if (!submitRes.ok || !jobIdHF) throw new Error('Job submit failed: ' + JSON.stringify(submitted).slice(0, 200));
@@ -784,7 +803,9 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     let imageUrl;
     while (Date.now() < deadline) {
       await new Promise(r => setTimeout(r, 5000));
-      const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+      const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, {
+        headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
+      });
       const job  = await poll.json();
       console.log('   Poll:', job.status, job.result_url || '');
       if (job.status === 'completed' && job.result_url) { imageUrl = job.result_url; break; }
