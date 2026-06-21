@@ -995,16 +995,11 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
     console.log('   Style   :', style);
     console.log('   Details :', details || 'none');
 
-    const payload = {
-      model:      'gpt_image_2',
-      prompt,
-      images:     [fileToBase64(photoPath)],
-      resolution: '2k',
-    };
-
-    const { imageUrl } = await fetchHiggsfield(payload,
-      'The photo was blocked by the content filter. Try a clearer, well-lit photo of the animal.'
-    );
+    // gpt-image-1 edit : design de tatouage inspiré de la photo, fond blanc
+    const petPrompt =
+      `${prompt} Flat 2D tattoo flash design isolated on a pure solid white background (#FFFFFF), ` +
+      `no photographic scene, no dark background. Centered, full design visible, clean crisp linework.`;
+    const imageUrl = await openAIEditMulti(petPrompt, [photoPath], '1024x1024');
 
     res.json({ imageUrl, zone });
 
@@ -1091,14 +1086,12 @@ app.post('/merge-tattoos', upload.fields([
     `White background, professional tattoo flash art composition, high resolution, ready to tattoo.`;
 
   try {
-    console.log(`\n⚡ Merge tattoos — ${base64Images.length} designs, style: ${style}`);
+    console.log(`\n⚡ Merge tattoos — ${tmpFiles.length} designs, style: ${style}`);
 
-    const { imageUrl } = await fetchHiggsfield({
-      model:      'gpt_image_2',
-      prompt,
-      images:     base64Images,
-      resolution: '2k',
-    }, 'One of the designs was blocked by the content filter. Try with different images.');
+    const mergePrompt =
+      `${prompt} Flat 2D tattoo flash design on a pure solid white background (#FFFFFF), ` +
+      `no photographic scene, no dark background, centered, clean crisp linework.`;
+    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024');
 
     res.json({ imageUrl });
   } catch (err) {
