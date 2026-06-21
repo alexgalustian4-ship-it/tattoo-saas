@@ -584,11 +584,13 @@
     /* Background preview image on large card */
     .bento-preview {
       position: absolute; inset: 0; z-index: 0;
-      background-size: cover; background-position: center;
-      opacity: 0.08; transition: opacity 0.4s;
+      background-size: cover; background-position: center top;
+      opacity: 0.45; transition: opacity 0.4s, transform 0.5s cubic-bezier(.22,1,.36,1);
       pointer-events: none;
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.45) 55%, transparent 90%);
+      mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.45) 55%, transparent 90%);
     }
-    .bento-card:hover .bento-preview { opacity: 0.14; }
+    .bento-card:hover .bento-preview { opacity: 0.7; transform: scale(1.05); }
     .bento-card > *:not(.bento-preview) { position: relative; z-index: 1; }
 
     /* PRO badge */
@@ -1013,7 +1015,7 @@
           <p class="bento-title">Generate a design</p>
           <p class="bento-desc">Describe your idea — AI creates a unique pro design in your style in under 60 seconds.</p>
           <p class="bento-cta">Try →</p>
-          <div class="bento-preview" style="background-image:url('images/style-japonais.png')"></div>
+          <div class="bento-preview" style="background-image:url('images/card-generate.png')"></div>
         </a>
 
         <!-- 2. Place on skin -->
@@ -1022,6 +1024,7 @@
           <p class="bento-title">Place on skin</p>
           <p class="bento-desc">Upload your design and see it rendered realistically on your body, exactly where you want it.</p>
           <p class="bento-cta">Try →</p>
+          <div class="bento-preview" style="background-image:url('images/card-place.png')"></div>
         </a>
 
         <!-- 3. Stencil — PRO -->
@@ -1031,6 +1034,7 @@
           <p class="bento-title">Instant stencil</p>
           <p class="bento-desc">Convert any design into a print-ready stencil in 1 second. No Photoshop needed.</p>
           <p class="bento-cta" style="color:#8b5cf6">Try →</p>
+          <div class="bento-preview" style="background-image:url('images/card-stencil.png')"></div>
         </a>
 
         <!-- 4. Photo → Tattoo -->
@@ -1047,6 +1051,7 @@
           <p class="bento-title">Merge designs</p>
           <p class="bento-desc">Fuse 2 to 4 designs into one unique masterpiece.</p>
           <p class="bento-cta">Try →</p>
+          <div class="bento-preview" style="background-image:url('images/card-merge.png')"></div>
         </a>
 
         <!-- 6. Precise rework — PRO -->
