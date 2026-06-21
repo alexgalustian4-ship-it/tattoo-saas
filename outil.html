@@ -486,12 +486,10 @@
     /* Image de fond thématique estompée par carte */
     .mode-card .card-bg {
       position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background-size: cover; background-position: center top;
+      background-size: contain; background-position: center center; background-repeat: no-repeat;
       opacity: 0.55; transition: opacity 0.35s, transform 0.5s cubic-bezier(.22,1,.36,1);
-      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.55) 50%, transparent 85%);
-      mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.55) 50%, transparent 85%);
     }
-    .mode-card:hover .card-bg { opacity: 0.8; transform: scale(1.05); }
+    .mode-card:hover .card-bg { opacity: 0.8; transform: scale(1.04); }
     .mode-card > *:not(.card-bg) { position: relative; z-index: 2; }
     .mode-card:hover {
       border-color: rgba(139,92,246,0.35);

@@ -584,13 +584,11 @@
     /* Background preview image on large card */
     .bento-preview {
       position: absolute; inset: 0; z-index: 0;
-      background-size: cover; background-position: center top;
-      opacity: 0.45; transition: opacity 0.4s, transform 0.5s cubic-bezier(.22,1,.36,1);
+      background-size: contain; background-position: center center; background-repeat: no-repeat;
+      opacity: 0.5; transition: opacity 0.4s, transform 0.5s cubic-bezier(.22,1,.36,1);
       pointer-events: none;
-      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.45) 55%, transparent 90%);
-      mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.45) 55%, transparent 90%);
     }
-    .bento-card:hover .bento-preview { opacity: 0.7; transform: scale(1.05); }
+    .bento-card:hover .bento-preview { opacity: 0.75; transform: scale(1.04); }
     .bento-card > *:not(.bento-preview) { position: relative; z-index: 1; }
 
     /* PRO badge */
