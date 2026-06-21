@@ -463,26 +463,22 @@ function refreshHiggsfieldToken() {
     const vendorBin = path.join(__dirname, 'node_modules', '@higgsfield', 'cli', 'vendor', binName);
     const bin       = fs.existsSync(vendorBin) ? vendorBin : binName;
 
-    // Let the CLI binary auto-refresh the token and print it
+    // IMPORTANT : `auth token` n'affiche que le token stocké sans le rafraîchir.
+    // Pour forcer un VRAI refresh, on lance un appel API authentifié léger
+    // (`account status`). Si le token est expiré, le CLI le rafraîchit
+    // automatiquement et réécrit credentials.json avec un token neuf.
     // HOME pointe vers PERSIST_DIR : le CLI lit/écrit le fichier persistant.
-    execFile(bin, ['auth', 'token'], { timeout: 30_000, env: { ...process.env, HOME: PERSIST_DIR } }, (err, stdout) => {
+    execFile(bin, ['account', 'status'], { timeout: 30_000, env: { ...process.env, HOME: PERSIST_DIR } }, (err, stdout, stderr) => {
       _refreshInProgress = null;
-      if (err) return reject(new Error('CLI auth token failed: ' + err.message));
+      if (err) return reject(new Error('CLI account status failed: ' + (stderr || err.message).slice(0, 200)));
 
-      const newToken = stdout.trim();
-      if (!newToken.startsWith('hf_')) return reject(new Error('Unexpected token: ' + newToken.slice(0, 30)));
+      // Le CLI a (potentiellement) réécrit credentials.json avec un token neuf : on le relit
+      const creds = readPersistedCredentials();
+      if (!creds || !creds.access_token) return reject(new Error('No credentials after refresh'));
 
-      // Read updated credentials file (CLI may have written a new refresh token too)
-      let newRefresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-      try {
-        const creds = JSON.parse(fs.readFileSync(credFilePath(), 'utf8'));
-        if (creds.refresh_token) newRefresh = creds.refresh_token;
-      } catch {}
-
-      process.env.HIGGSFIELD_API_KEY = newToken;
-      if (newRefresh) process.env.HIGGSFIELD_REFRESH_TOKEN = newRefresh;
-      writeCredentials(newToken, newRefresh);
-      console.log('✓ Higgsfield token refreshed via CLI, new prefix =', newToken.slice(0, 8));
+      process.env.HIGGSFIELD_API_KEY = creds.access_token;
+      if (creds.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = creds.refresh_token;
+      console.log('✓ Higgsfield token refreshed via CLI (account status), new prefix =', creds.access_token.slice(0, 8));
       resolve();
     });
   });
