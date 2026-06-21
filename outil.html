@@ -6,6 +6,9 @@
   <title>INK.STUDIO — Design your tattoo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- CDN des images générées : on ouvre la connexion en avance pour un affichage plus rapide -->
+  <link rel="preconnect" href="https://d8j0ntlcm91z4.cloudfront.net" crossorigin>
+  <link rel="dns-prefetch" href="https://d8j0ntlcm91z4.cloudfront.net">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -741,18 +744,26 @@
 
     /* ── RESPONSIVE ──────────────────────────── */
     @media (max-width: 480px) {
-      nav { padding: 0 16px; }
-      .nav-links a:not(:last-child) { display: none; }
-      main { padding: 80px 12px 40px; }
-      .tool-title { font-size: 1.15rem; }
+      nav { padding: 0 14px; gap: 10px; }
+      .nav-links { gap: 16px; }
+      /* On garde "All tools" + le dernier lien accessibles, on masque le superflu */
+      .nav-links a:nth-child(2), .nav-links a:nth-child(3) { display: none; }
+      main { padding: 78px 14px 40px; }
+      .tool-header { margin-bottom: 30px; }
+      .tool-title { font-size: 1.5rem; }
+      .tool-subtitle { font-size: 0.8rem; }
       .card { padding: 20px 14px; gap: 16px; }
       .field-row { grid-template-columns: 1fr; }
       .zone-grid { grid-template-columns: 1fr 1fr; }
-      .btn { padding: 15px; }
+      .btn { padding: 15px; font-size: 0.82rem; }
       .zone-btn { padding: 12px 4px; }
       .upload-area { padding: 32px 16px; }
       .m2-zone-grid { grid-template-columns: repeat(4, 1fr); }
       .m2-zone-btn { font-size: 0.62rem; padding: 9px 2px 7px; }
+      /* La barre de progression IA prend toute la largeur sur petit écran */
+      .ai-progress { max-width: 100%; }
+      /* Meilleures cibles tactiles */
+      .mode-card { min-height: 64px; }
     }
 
     /* ── AUTH MODAL ───────────────────────────── */
