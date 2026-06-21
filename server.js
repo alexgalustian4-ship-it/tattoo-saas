@@ -391,17 +391,26 @@ async function fetchHiggsFieldREST(payload, timeoutMs = 270_000) {
   const deadline = Date.now() + timeoutMs;
 
   // Poll jusqu'au résultat
+  let lastStatus = 'queued';
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 2500));
-    const pollRes  = await fetch(`${HF_API}/agents/jobs/${jobId}`, {
+    let pollRes = await fetch(`${HF_API}/agents/jobs/${jobId}`, {
       headers: { 'Authorization': `Bearer ${apiKey()}` },
     });
+    // Token expiré pendant le polling : on rafraîchit et on continue (pas un échec)
+    if (pollRes.status === 401) {
+      console.log('🔄 Poll 401 — refreshing token mid-poll...');
+      await refreshHiggsfieldToken().catch(() => {});
+      continue;
+    }
     const job = await pollRes.json();
-    console.log('REST poll:', job.status, job.result_url || '');
-    if (job.status === 'completed' && job.result_url) return { imageUrl: job.result_url, jobId };
-    if (job.status === 'failed') throw new Error('Job failed: ' + JSON.stringify(job).slice(0, 200));
+    lastStatus = job.status || lastStatus;
+    const url = job.result_url || (job.results && job.results[0] && job.results[0].url);
+    console.log('REST poll:', job.status, url || '');
+    if (job.status === 'completed' && url) return { imageUrl: url, jobId };
+    if (job.status === 'failed' || job.status === 'canceled') throw new Error('Job failed: ' + JSON.stringify(job).slice(0, 200));
   }
-  throw new Error('Timeout waiting for REST job');
+  throw new Error('Timeout waiting for REST job (last status: ' + lastStatus + ')');
 }
 
 async function fetchHiggsfield(payload, nsfwMsg, timeoutMs = 270_000) {
@@ -832,10 +841,16 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       const poll = await fetch(`${HF_API}/agents/jobs/${jobIdHF}`, {
         headers: { 'Authorization': `Bearer ${process.env.HIGGSFIELD_API_KEY}` },
       });
+      if (poll.status === 401) {
+        console.log('🔄 Poll 401 — refreshing token mid-poll...');
+        await refreshHiggsfieldToken().catch(() => {});
+        continue;
+      }
       const job  = await poll.json();
-      console.log('   Poll:', job.status, job.result_url || '');
-      if (job.status === 'completed' && job.result_url) { imageUrl = job.result_url; break; }
-      if (job.status === 'failed') throw new Error('Job failed');
+      const url  = job.result_url || (job.results && job.results[0] && job.results[0].url);
+      console.log('   Poll:', job.status, url || '');
+      if (job.status === 'completed' && url) { imageUrl = url; break; }
+      if (job.status === 'failed' || job.status === 'canceled') throw new Error('Job failed');
     }
     if (!imageUrl) throw new Error('Timeout');
 
