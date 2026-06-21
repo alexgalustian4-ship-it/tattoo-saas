@@ -523,18 +523,24 @@ if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 // ─────────────────────────────────────────────────
 // OpenAI image generation — gpt-image-1 (best quality)
 // ─────────────────────────────────────────────────
-async function generateWithOpenAI(prompt, referenceImagePath = null) {
+// Choisit le format gpt-image-1 selon la zone du corps
+function openAISizeForZone(zone) {
+  const tall = ['avant-bras', 'bras-complet', 'cuisse', 'mollet', 'dos'];
+  if (tall.includes(zone)) return '1024x1536';   // portrait
+  return '1024x1024';                              // carré (poitrine, épaule, main, défaut)
+}
+
+async function generateWithOpenAI(prompt, referenceImagePath = null, size = '1024x1024') {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
 
   if (referenceImagePath) {
     // With reference: use edits endpoint
-    const FormData = (await import('node:buffer')).Blob ? (await import('formdata-node')).FormData : require('form-data');
     const fd = new (require('form-data'))();
     fd.append('model', 'gpt-image-1');
     fd.append('prompt', prompt);
     fd.append('n', '1');
-    fd.append('size', '1024x1024');
+    fd.append('size', size);
     fd.append('quality', 'high');
     fd.append('image[]', fs.createReadStream(referenceImagePath), { filename: 'reference.jpg', contentType: 'image/jpeg' });
 
@@ -547,10 +553,6 @@ async function generateWithOpenAI(prompt, referenceImagePath = null) {
     if (!resp.ok) throw new Error('OpenAI edits error: ' + JSON.stringify(data).slice(0, 300));
     const b64 = data.data?.[0]?.b64_json;
     if (!b64) throw new Error('No image returned from OpenAI edits');
-    // Save to temp file and return as data URL
-    const tmpPath = path.join(os.tmpdir(), `openai-${Date.now()}.png`);
-    fs.writeFileSync(tmpPath, Buffer.from(b64, 'base64'));
-    // Return as data URL so existing pipeline works
     return `data:image/png;base64,${b64}`;
 
   } else {
@@ -558,7 +560,7 @@ async function generateWithOpenAI(prompt, referenceImagePath = null) {
     const resp = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size: '1024x1024', quality: 'high' }),
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size, quality: 'high' }),
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error('OpenAI generations error: ' + JSON.stringify(data).slice(0, 300));
@@ -728,28 +730,29 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     console.log('   Style   :', style, '/ Ambiance :', ambiance);
     console.log('   Ref     :', inspFile ? 'oui' : 'non');
 
-    let payload;
-
     if (inspFile) {
       inspPath = inspFile.path + '.jpg';
       fs.renameSync(inspFile.path, inspPath);
-      payload = {
-        model:      'gpt_image_2',
-        prompt,
-        images:     [fileToBase64(inspPath)],
-        resolution: '2k',
-      };
-    } else {
-      payload = {
-        model:  'gpt_image_2',
-        prompt,
-      };
     }
 
-    const { imageUrl, jobId } = await fetchHiggsfield(payload,
-      'La génération a été bloquée par le filtre du modèle.\n' +
-      'Essaie de reformuler ta description — évite les termes d\'armes, de violence ou de symboles religieux forts.'
-    );
+    let imageUrl, jobId = null;
+
+    if (process.env.OPENAI_API_KEY) {
+      // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
+      console.log('   Moteur  : OpenAI gpt-image-1');
+      const size = openAISizeForZone(zone);
+      imageUrl = await generateWithOpenAI(prompt, inspPath, size);
+    } else {
+      // ── Fallback : Higgsfield ──
+      console.log('   Moteur  : Higgsfield (fallback)');
+      const payload = inspFile
+        ? { model: 'gpt_image_2', prompt, images: [fileToBase64(inspPath)], resolution: '2k' }
+        : { model: 'gpt_image_2', prompt };
+      const r = await fetchHiggsfield(payload,
+        'La génération a été bloquée par le filtre du modèle.\n' +
+        'Essaie de reformuler ta description.');
+      imageUrl = r.imageUrl; jobId = r.jobId;
+    }
 
     res.json({ imageUrl, jobId, prompt, zone });
 
@@ -803,14 +806,36 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
     const photoBuffer = fs.readFileSync(photoPath);
     const photoMedia  = await uploadImageToHiggsfield(photoBuffer, 'image/jpeg');
 
-    // Extract design job ID (UUID) from Higgsfield CDN URL (no re-upload needed)
-    // Format: .../hf_20260621_092235_28b6da44-46c7-444b-b69b-f8adcae18644.png
-    const designJobId = (designUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/) || [])[1];
-    const designMedia = designJobId
-      ? { id: designJobId, type: 'image_auto_job' }
-      : { id: photoMedia.id, type: 'media_input' }; // fallback
+    // Le design peut venir de Higgsfield (URL CDN avec un job UUID) OU d'OpenAI
+    // (data URL / autre). On détecte les deux cas.
+    const isHiggsfieldCdn = /cloudfront\.net.*hf_\d+_/.test(designUrl);
+    const designJobId = isHiggsfieldCdn
+      ? (designUrl.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/) || [])[1]
+      : null;
 
-    console.log('   Photo UUID:', photoMedia.id, '| Design job ID:', designJobId || 'not found');
+    let designMedia;
+    if (designJobId) {
+      // Design Higgsfield : on référence directement le job (pas de ré-upload)
+      designMedia = { id: designJobId, type: 'image_auto_job' };
+      console.log('   Design = job Higgsfield', designJobId);
+    } else {
+      // Design externe (OpenAI data URL ou http) : on télécharge ses octets et on l'upload à Higgsfield
+      console.log('   Design externe — upload vers Higgsfield...');
+      let designBuf, designMime = 'image/png';
+      if (designUrl.startsWith('data:')) {
+        designMime = (designUrl.match(/^data:(image\/\w+);/) || [])[1] || 'image/png';
+        designBuf  = Buffer.from(designUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      } else {
+        const dlRes = await fetch(designUrl);
+        if (!dlRes.ok) throw new Error('Impossible de récupérer le design: ' + dlRes.status);
+        designMime = dlRes.headers.get('content-type') || 'image/png';
+        designBuf  = Buffer.from(await dlRes.arrayBuffer());
+      }
+      const uploaded = await uploadImageToHiggsfield(designBuf, designMime);
+      designMedia = { id: uploaded.id, url: uploaded.url, type: 'media_input' };
+    }
+
+    console.log('   Photo UUID:', photoMedia.id);
 
     // Submit nano_banana_2 with proper input_images
     const submitBody = {
