@@ -741,7 +741,14 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
       console.log('   Moteur  : OpenAI gpt-image-1');
       const size = openAISizeForZone(zone);
-      imageUrl = await generateWithOpenAI(prompt, inspPath, size);
+      // Wrapper spécifique OpenAI : force fond blanc pur + flash de tatouage plat
+      const openaiPrompt =
+        `Flat 2D tattoo flash design, isolated on a pure solid white background (#FFFFFF), like a tattoo stencil sheet. ` +
+        `The artwork is the tattoo design ONLY — black and grey ink illustration, no photographic scene, no dark background, no skin, no body, no frame. ` +
+        `${prompt} ` +
+        `STRICT: pure white background, the entire area around the design must be plain white #FFFFFF with absolutely no dark fill, no scenery, no shading behind the subject. ` +
+        `Centered, full design visible, clean crisp linework, professional tattoo flash art ready to be tattooed.`;
+      imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
     } else {
       // ── Fallback : Higgsfield ──
       console.log('   Moteur  : Higgsfield (fallback)');
