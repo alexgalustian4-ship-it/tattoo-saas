@@ -86,8 +86,9 @@ const STYLE_RECIPES = {
   baroque:
     `Baroque tattoo composition: dramatic chiaroscuro with deep shadows and brilliant highlights ` +
     `in the style of Caravaggio and the Italian masters. ` +
-    `Ornate decorative elements — acanthus scrolls, cherubs, laurel wreaths, gilded ornaments. ` +
+    `Ornate decorative elements — acanthus scrolls, laurel wreaths, gilded ornaments, roses, draped fabric. ` +
     `Grand architectural details: columns, arches, cathedral vaults. ` +
+    `Any human or angelic figures are fully clothed in flowing robes and drapery — no nudity, no bare skin, modest and reverent. ` +
     `Dynamic diagonal composition, theatrical and grandiose. ` +
     `High contrast black and grey, luxurious and imposing.`,
 
@@ -191,7 +192,7 @@ function buildPrompt({ sujet, style = 'concept', ambiance = 'epique', mot = '', 
       : '';
 
   return [
-    `Professional tattoo studio concept art, safe for work, non-violent artistic illustration.`,
+    `Professional tattoo studio concept art, strictly safe for work, fully clothed figures only, no nudity, no bare skin, non-violent artistic illustration.`,
     refPart,
     `${sujet}, as the central figure.`,
     recipe,
