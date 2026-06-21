@@ -480,9 +480,19 @@
       content: '';
       position: absolute; inset: 0;
       background: radial-gradient(circle at 70% 0%, rgba(139,92,246,0.10) 0%, transparent 55%);
-      opacity: 0; transition: opacity 0.35s;
+      opacity: 0; transition: opacity 0.35s; z-index: 1;
     }
     .mode-card:hover::after { opacity: 1; }
+    /* Image de fond thématique estompée par carte */
+    .mode-card .card-bg {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-size: cover; background-position: center top;
+      opacity: 0.16; transition: opacity 0.35s, transform 0.5s cubic-bezier(.22,1,.36,1);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.5) 45%, transparent 80%);
+      mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.5) 45%, transparent 80%);
+    }
+    .mode-card:hover .card-bg { opacity: 0.30; transform: scale(1.05); }
+    .mode-card > *:not(.card-bg) { position: relative; z-index: 2; }
     .mode-card:hover {
       border-color: rgba(139,92,246,0.35);
       transform: translateY(-4px);
@@ -1015,6 +1025,7 @@
 
       <!-- Featured: Generate a design -->
       <button class="mode-card mode-featured" id="btn-mode1">
+        <span class="card-bg" style="background-image:url('images/style-japonais.png')"></span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
@@ -1028,6 +1039,7 @@
 
       <!-- Place on skin -->
       <button class="mode-card" id="btn-mode2">
+        <span class="card-bg" style="background-image:url('images/skin-after.png')"></span>
         <span class="mode-card-num">02</span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -1042,6 +1054,7 @@
 
       <!-- Photo → Tattoo -->
       <button class="mode-card" id="btn-mode3">
+        <span class="card-bg" style="background-image:url('images/style-realisme.png')"></span>
         <span class="mode-card-num">03</span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -1056,6 +1069,7 @@
 
       <!-- Merge designs -->
       <button class="mode-card" id="btn-mode4">
+        <span class="card-bg" style="background-image:url('images/style-baroque.png')"></span>
         <span class="mode-card-num">04</span>
         <div class="mode-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -1070,6 +1084,7 @@
 
       <!-- Instant stencil — PRO -->
       <button class="mode-card mode-pro" id="btn-mode5">
+        <span class="card-bg" style="background-image:url('images/style-geometrique.png')"></span>
         <span class="mode-pro-badge">PRO</span>
         <span class="mode-card-num">05</span>
         <div class="mode-card-icon">
