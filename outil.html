@@ -965,6 +965,99 @@
       justify-content: center; font-size: 0.65rem; color: #888;
       overflow: hidden;
     }
+    /* ═══════════ AI HUB (chat central style Apple) ═══════════ */
+    .ai-hub { width: 100%; max-width: 760px; margin: 0 auto; }
+    .ai-chat {
+      background: linear-gradient(180deg, rgba(22,22,28,0.9) 0%, rgba(14,14,18,0.9) 100%);
+      border: 1px solid var(--border-hover);
+      border-radius: 24px; padding: 10px 10px 14px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .ai-chat:focus-within { border-color: rgba(255,255,255,0.22); box-shadow: 0 30px 90px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.04); }
+    .ai-chat-input {
+      width: 100%; background: transparent; border: none; outline: none; resize: none;
+      color: var(--text); font-family: inherit; font-size: 1.05rem; line-height: 1.55;
+      padding: 16px 16px 8px; min-height: 88px;
+    }
+    .ai-chat-input::placeholder { color: #5a5e74; }
+    .ai-chat-bar { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+    .ai-attach {
+      width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px;
+      border: 1px solid var(--border-hover); background: rgba(255,255,255,0.02);
+      color: var(--silver); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .ai-attach:hover { border-color: var(--silver-dim); color: #fff; background: rgba(255,255,255,0.05); }
+    .ai-attach input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .ai-attach svg { width: 18px; height: 18px; }
+    .ai-attached { display: none; align-items: center; gap: 8px; font-size: 0.74rem; color: var(--silver); }
+    .ai-attached.show { display: flex; }
+    .ai-attached img { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; border: 1px solid var(--border-hover); }
+    .ai-attached button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; line-height: 1; }
+    .ai-generate {
+      margin-left: auto; flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 14px;
+      background: #fff; color: #0a0a0e; border: none;
+      font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.02em;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+    }
+    .ai-generate:hover:not(:disabled) { background: #e6e6ee; transform: translateY(-1px); box-shadow: 0 8px 26px rgba(255,255,255,0.12); }
+    .ai-generate:disabled { background: #1c1c22; color: #4a4e60; cursor: not-allowed; box-shadow: none; }
+    .ai-generate svg { width: 16px; height: 16px; }
+
+    /* Style chips */
+    .ai-styles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+    .ai-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 14px 7px 7px; border-radius: 30px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-muted); font-size: 0.76rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .ai-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .ai-chip:hover { border-color: var(--silver-dim); color: var(--text); }
+    .ai-chip.active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.06); }
+
+    /* Example prompts */
+    .ai-examples { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+    .ai-example {
+      padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); font-size: 0.73rem; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ai-example:hover { border-color: var(--silver-dim); color: var(--silver); }
+
+    /* Other tools row (small pills around) */
+    .ai-tools-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 34px; }
+    .ai-tool-pill {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 11px 18px; border-radius: 14px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-muted); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .ai-tool-pill:hover { border-color: var(--silver-dim); color: #fff; transform: translateY(-2px); }
+    .ai-tool-pill svg { width: 17px; height: 17px; color: var(--silver); }
+    .ai-tools-label { text-align: center; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin: 38px 0 0; }
+
+    /* Hub result */
+    .ai-result { max-width: 520px; margin: 28px auto 0; display: none; }
+    .ai-result.show { display: block; }
+    .ai-result img { width: 100%; border-radius: 16px; border: 1px solid var(--border); display: block; }
+    .ai-result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .ai-guided-link { display: block; text-align: center; margin-top: 16px; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; background: none; border: none; width: 100%; transition: color 0.2s; }
+    .ai-guided-link:hover { color: var(--silver); }
+    .ai-guided-link u { text-underline-offset: 3px; }
+
+    @media (max-width: 600px) {
+      .ai-chat-input { font-size: 0.95rem; min-height: 72px; }
+      .ai-generate { padding: 10px 16px; font-size: 0.76rem; }
+      .ai-tools-row { gap: 8px; }
+      .ai-tool-pill { padding: 9px 13px; font-size: 0.74rem; }
+    }
   </style>
 </head>
 <body>
@@ -1014,12 +1107,84 @@
   <main>
     <div class="tool-header">
       <p class="tool-eyebrow">AI Tattoo Studio</p>
-      <h1 class="tool-title">What do you want<br>to create?</h1>
-      <p class="tool-subtitle">Pick a tool below — each one takes you somewhere different.</p>
+      <h1 class="tool-title">Design your tattoo<br>with AI</h1>
+      <p class="tool-subtitle">Describe your idea — the AI creates a unique design in seconds.</p>
     </div>
 
-    <!-- ══════════ SÉLECTEUR DE PARCOURS ══════════ -->
-    <div id="mode-selector">
+    <!-- ══════════ AI HUB (chat central) ══════════ -->
+    <div class="ai-hub" id="ai-hub">
+      <div class="ai-chat">
+        <textarea class="ai-chat-input" id="hub-input" rows="3" placeholder="Describe your tattoo… e.g. a roaring lion with sacred geometry, black & grey realism"></textarea>
+        <div class="ai-chat-bar">
+          <label class="ai-attach" title="Add a reference image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            <input type="file" id="hub-file" accept="image/*">
+          </label>
+          <div class="ai-attached" id="hub-attached">
+            <img id="hub-attached-img" src="" alt="">
+            <button type="button" id="hub-attached-remove" title="Remove">×</button>
+          </div>
+          <button class="ai-generate" id="hub-generate" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- Style chips -->
+      <div class="ai-styles" id="hub-styles">
+        <button class="ai-chip active" data-style="realisme"><img src="images/style-realisme.png" alt="">Realism</button>
+        <button class="ai-chip" data-style="concept"><img src="images/style-concept.png" alt="">Concept</button>
+        <button class="ai-chip" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
+        <button class="ai-chip" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
+        <button class="ai-chip" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
+      </div>
+
+      <!-- Example prompts -->
+      <div class="ai-examples">
+        <button class="ai-example">A Japanese dragon wrapping a katana</button>
+        <button class="ai-example">A baroque archangel with a cross</button>
+        <button class="ai-example">A geometric lion and mountains</button>
+        <button class="ai-example">A realistic rose with a compass</button>
+      </div>
+
+      <!-- Status + result -->
+      <div id="hub-status" class="status" style="margin-top:22px"></div>
+      <div class="ai-result" id="hub-result">
+        <img id="hub-result-img" src="" alt="Your tattoo design">
+        <div class="ai-result-actions">
+          <button class="btn btn-primary" id="hub-dl" style="width:auto;padding:11px 22px">↓ Download</button>
+          <button class="btn btn-secondary" id="hub-place" style="width:auto;padding:11px 22px">Place on skin →</button>
+          <button class="btn btn-secondary" id="hub-regen" style="width:auto;padding:11px 22px">↻ Regenerate</button>
+        </div>
+      </div>
+
+      <button class="ai-guided-link" id="hub-guided">Prefer a guided step-by-step? <u>Use the quiz</u> →</button>
+
+      <!-- Other tools -->
+      <p class="ai-tools-label">Or use another tool</p>
+      <div class="ai-tools-row">
+        <button class="ai-tool-pill" onclick="activateMode2()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          Place on skin
+        </button>
+        <button class="ai-tool-pill" onclick="activateMode3()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Photo → Tattoo
+        </button>
+        <button class="ai-tool-pill" onclick="activateMode4()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Merge designs
+        </button>
+        <button class="ai-tool-pill" onclick="activateMode5()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          Instant stencil
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ SÉLECTEUR DE PARCOURS (legacy, caché) ══════════ -->
+    <div id="mode-selector" data-hidden>
 
       <!-- Featured: Generate a design -->
       <button class="mode-card mode-featured" id="btn-mode1">
@@ -2587,24 +2752,25 @@
     const mode2Card    = document.getElementById('mode2-card');
 
     const toolHeader = document.querySelector('.tool-header');
+    const aiHub = document.getElementById('ai-hub');
 
     function activateMode1() {
-      hide(modeSelector); hide(modeBack); hide(toolHeader);
+      hide(modeSelector); hide(modeBack); hide(toolHeader); hide(aiHub);
       show(stepsEl); show(mode1Card); show(modeBack);
     }
     function activateMode2() {
-      hide(modeSelector); hide(modeBack); hide(toolHeader);
+      hide(modeSelector); hide(modeBack); hide(toolHeader); hide(aiHub);
       show(mode2Card); show(modeBack);
     }
     const mode3Card = document.getElementById('mode3-card');
     function activateMode3() {
-      hide(modeSelector); hide(toolHeader);
+      hide(modeSelector); hide(toolHeader); hide(aiHub);
       show(mode3Card); show(modeBack);
     }
 
     const mode4Card = document.getElementById('mode4-card');
     function activateMode4() {
-      hide(modeSelector); hide(toolHeader);
+      hide(modeSelector); hide(toolHeader); hide(aiHub);
       show(mode4Card); show(modeBack);
     }
 
@@ -2615,12 +2781,89 @@
 
     const stencilStudio = document.getElementById('stencil-studio');
     function activateMode5() {
-      hide(modeSelector); hide(toolHeader);
+      hide(modeSelector); hide(toolHeader); hide(aiHub);
       show(stencilStudio);
       stencilStudio.scrollIntoView({ behavior: 'smooth', block: 'start' });
       show(modeBack);
     }
     document.getElementById('btn-mode5').addEventListener('click', activateMode5);
+
+    // ── AI HUB (chat central) ───────────────────────────
+    (function(){
+      const input    = document.getElementById('hub-input');
+      const gen      = document.getElementById('hub-generate');
+      const fileInp  = document.getElementById('hub-file');
+      const attached = document.getElementById('hub-attached');
+      const attImg   = document.getElementById('hub-attached-img');
+      const status   = document.getElementById('hub-status');
+      const resWrap  = document.getElementById('hub-result');
+      const resImg   = document.getElementById('hub-result-img');
+      let hubStyle = 'realisme';
+
+      input.addEventListener('input', () => { gen.disabled = !input.value.trim(); });
+
+      document.querySelectorAll('#hub-styles .ai-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('#hub-styles .ai-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active'); hubStyle = chip.dataset.style;
+        });
+      });
+
+      document.querySelectorAll('.ai-example').forEach(ex => {
+        ex.addEventListener('click', () => { input.value = ex.textContent.trim(); gen.disabled = false; input.focus(); });
+      });
+
+      fileInp.addEventListener('change', () => {
+        const f = fileInp.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = e => { attImg.src = e.target.result; attached.classList.add('show'); };
+        r.readAsDataURL(f);
+      });
+      document.getElementById('hub-attached-remove').addEventListener('click', () => {
+        fileInp.value = ''; attached.classList.remove('show');
+      });
+
+      async function generate() {
+        const prompt = input.value.trim(); if (!prompt) return;
+        gen.disabled = true; resWrap.classList.remove('show');
+        setLoading(status, 'Generating your design…');
+        try {
+          const fd = new FormData();
+          fd.append('sujet', prompt);
+          fd.append('style', hubStyle);
+          fd.append('ambiance', 'epique');
+          fd.append('zone', '');
+          fd.append('freePrompt', '0');
+          if (fileInp.files[0]) fd.append('inspiration', await resizeImage(fileInp.files[0]));
+          const resp = await fetch('/generate', { method: 'POST', body: fd });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Server error.');
+          designImgUrl = data.imageUrl; designJobId = data.jobId;
+          resImg.src = data.imageUrl;
+          hideStatus(status); resWrap.classList.add('show');
+          document.getElementById('hub-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
+          saveProject({ type:'design', imageUrl: data.imageUrl, params:{ sujet: prompt } });
+          resWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) { setError(status, err.message); }
+        finally { gen.disabled = !input.value.trim(); }
+      }
+      gen.addEventListener('click', generate);
+      document.getElementById('hub-regen').addEventListener('click', generate);
+
+      document.getElementById('hub-place').addEventListener('click', () => {
+        if (!designImgUrl) return;
+        activateMode1();
+        const goto = document.getElementById('free-btn-goto-step2');
+        if (goto) goto.click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      document.getElementById('hub-guided').addEventListener('click', () => {
+        activateMode1();
+        const tg = document.getElementById('toggle-guided'); if (tg) tg.click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
 
     // ── STENCIL STUDIO LOGIC ─────────────────────────────
     (function() {
@@ -2788,7 +3031,7 @@
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
       hide(stencilStudio);
       resetMode2();
-      show(modeSelector); show(toolHeader);
+      show(toolHeader); show(aiHub);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
@@ -2883,7 +3126,7 @@
 
     // Pré-sélectionne le mode si ?mode= présent dans l'URL
     const urlMode = new URLSearchParams(window.location.search).get('mode');
-    if (urlMode === 'create')  activateMode1();
+    // 'create' = le hub central (par défaut), pas besoin d'activer un mode
     if (urlMode === 'body')    activateMode2();
     if (urlMode === 'pet')     activateMode3();
     if (urlMode === 'merge')   activateMode4();
