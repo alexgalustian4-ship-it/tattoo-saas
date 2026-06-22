@@ -1333,13 +1333,13 @@
 
     <div data-hidden class="card" id="mode1-card">
 
-      <!-- MODE TOGGLE -->
-      <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
+      <!-- MODE TOGGLE (masqué : le chat central gère le free prompt) -->
+      <div data-hidden style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
         <button id="toggle-guided" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(176,180,194,0.22),rgba(176,180,194,0.12));border:none;color:#fff;font-weight:600;font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s;box-shadow:inset 0 0 0 1px rgba(176,180,194,0.4)">✦ Guided quiz</button>
         <button id="toggle-free" style="flex:1;padding:10px;background:transparent;border:none;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.06em;cursor:pointer;transition:all .2s">✎ Free prompt</button>
       </div>
 
-      <!-- FREE PROMPT MODE -->
+      <!-- FREE PROMPT MODE (masqué : remplacé par le chat central) -->
       <div data-hidden id="free-prompt-section">
         <div class="field">
           <label for="free-prompt-input">Describe your tattoo</label>
@@ -2956,7 +2956,11 @@
 
       document.getElementById('hub-guided').addEventListener('click', () => {
         activateMode1();
-        const tg = document.getElementById('toggle-guided'); if (tg) tg.click();
+        // affiche directement le quiz (le free prompt est géré par le chat central)
+        const free = document.getElementById('free-prompt-section');
+        const quiz = document.getElementById('quiz-section');
+        if (free) free.dataset.hidden = '';
+        if (quiz) delete quiz.dataset.hidden;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     })();
