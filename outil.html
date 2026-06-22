@@ -1201,7 +1201,7 @@
         </div>
       </div>
 
-      <button class="ai-guided-link" id="hub-guided">Prefer a guided step-by-step? <u>Use the quiz</u> →</button>
+      <button class="ai-guided-link" id="hub-guided" data-hidden>Prefer a guided step-by-step? <u>Use the quiz</u> →</button>
 
       <!-- Other tools -->
       <p class="ai-tools-label">Or use another tool</p>
@@ -3231,8 +3231,14 @@
     }
 
     // Pré-sélectionne le style et active mode 1 si ?style= présent dans l'URL
+    // Clic sur un style depuis l'accueil → reste sur le chat central et sélectionne le style
     const urlStyle = new URLSearchParams(window.location.search).get('style');
-    if (urlStyle && styleDesign) { styleDesign.value = urlStyle; activateMode1(); }
+    if (urlStyle) {
+      const chip = document.querySelector('#hub-styles .ai-chip[data-style="' + urlStyle + '"]');
+      if (chip) chip.click();
+      const hubInput = document.getElementById('hub-input');
+      if (hubInput) { hubInput.focus(); document.getElementById('ai-hub')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }
 
     // Pré-sélectionne le mode si ?mode= présent dans l'URL
     const urlMode = new URLSearchParams(window.location.search).get('mode');
