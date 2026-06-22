@@ -725,7 +725,9 @@
     .hist-info { padding: 12px 14px 14px; }
     .hist-sujet {
       font-size: 0.78rem; font-weight: 500; color: var(--text);
-      margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .hist-date { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 12px; }
 
@@ -1182,14 +1184,6 @@
         <button class="ai-chip" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
         <button class="ai-chip" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
         <button class="ai-chip" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
-      </div>
-
-      <!-- Example prompts -->
-      <div class="ai-examples">
-        <button class="ai-example">A Japanese dragon wrapping a katana</button>
-        <button class="ai-example">A baroque archangel with a cross</button>
-        <button class="ai-example">A geometric lion and mountains</button>
-        <button class="ai-example">A realistic rose with a compass</button>
       </div>
 
       <!-- Status + result -->
@@ -4341,6 +4335,23 @@
       img.src = imageUrl;
     }
 
+    // Réutiliser un ancien prompt : revient au chat central, le pré-remplit et applique le style
+    function reusePrompt(sujet, style) {
+      const input = document.getElementById('hub-input');
+      if (!input) return;
+      // Revenir à la vue chat central
+      ['mode1-card','mode2-card','mode3-card','mode4-card','stencil-studio','tool-switcher','mode-back'].forEach(id => {
+        const e = document.getElementById(id); if (e) e.dataset.hidden = '';
+      });
+      const hub = document.getElementById('ai-hub'); if (hub) delete hub.dataset.hidden;
+      const th = document.querySelector('.tool-header'); if (th) delete th.dataset.hidden;
+      input.value = decodeURIComponent(sujet);
+      input.dispatchEvent(new Event('input'));
+      if (style) { const chip = document.querySelector('#hub-styles .ai-chip[data-style="' + style + '"]'); if (chip) chip.click(); }
+      (hub || input).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      input.focus();
+    }
+
     function renderHistory() {
       const projects = loadProjects();
       const section  = document.getElementById('history-section');
@@ -4385,6 +4396,7 @@
                 <div class="hist-menu-wrap">
                   <button class="hist-menu-btn" onclick="toggleHistMenu('menu-${p.id}')" title="Plus d'actions">···</button>
                   <div class="hist-dropdown" id="menu-${p.id}">
+                    ${sujet ? `<button class="hist-dd-item" onclick="closeHistMenus();reusePrompt('${sujet.replace(/'/g, '%27')}','${p.params?.style || ''}')">♻️ Reuse prompt</button>` : ''}
                     ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();retoucherProject(${paramsJson})">✏️ Rework</button>` : ''}
                     ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();placeOnSkinFromHistory('${p.imageUrl.replace(/'/g, '%27')}')">🖼 Place on skin</button>` : ''}
                     ${!isOnBody ? `<button class="hist-dd-item" onclick="closeHistMenus();histStencil('${p.imageUrl.replace(/'/g, '%27')}')">⬛ Stencil <span class="hist-dd-pro">PRO</span></button>` : ''}
