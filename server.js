@@ -795,13 +795,15 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
       console.log('   Moteur  : OpenAI gpt-image-1');
       const size = openAISizeForZone(zone);
-      // Wrapper spécifique OpenAI : force fond blanc pur + flash de tatouage plat
+      // Wrapper spécifique OpenAI : force le rendu "flash de tatouage premium" sur fond blanc
       const openaiPrompt =
-        `Flat 2D tattoo flash design, isolated on a pure solid white background (#FFFFFF), like a tattoo stencil sheet. ` +
-        `The artwork is the tattoo design ONLY — black and grey ink illustration, no photographic scene, no dark background, no skin, no body, no frame. ` +
+        `Museum-quality professional black and grey tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
+        `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic black-and-grey shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
+        `Black, grey and white ink only (no color), rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
+        `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
         `${prompt} ` +
         `STRICT: pure white background, the entire area around the design must be plain white #FFFFFF with absolutely no dark fill, no scenery, no shading behind the subject. ` +
-        `Centered, full design visible, clean crisp linework, professional tattoo flash art ready to be tattooed.`;
+        `Centered, full design visible, clean crisp linework, ready to be tattooed.`;
       imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
     } else {
       // ── Fallback : Higgsfield ──
