@@ -98,46 +98,86 @@ const STENCIL_PROMPT =
 // ─────────────────────────────────────────────────
 // Recettes de style — prompts officiels (gpt-image-1)
 // ─────────────────────────────────────────────────
-const STYLE_RECIPES = {
-  concept:
-    `Create the tattoo in a Concept style, built around visual storytelling rather than simple illustration — every element contributes to a larger symbolic narrative, like an artistic concept piece by a high-end tattoo designer. ` +
-    `Strong central subject, supporting elements connected through symbolism, intelligent composition rather than decoration, minimal but meaningful background, clean hierarchy, large areas of breathing space. ` +
-    `Build with multiple layers: primary subject, secondary symbolic elements, architectural or environmental details when relevant, geometric construction only if it strengthens the composition, atmospheric depth. Every object interacts with the others; avoid isolated floating elements. ` +
-    `The tattoo must communicate an idea, emotion or philosophy; every symbol has a purpose; avoid generic symbolism or random combinations. ` +
-    `Mix realism with conceptual composition, allow natural overlap, create tension between positive and negative space, use scale creatively. Keep the focal point highly detailed while secondary elements become progressively lighter. ` +
-    `Look like a luxury custom tattoo concept by an elite artist — unique, intelligent, emotionally powerful, premium, never generic AI-generated.`,
+// ═══════════════════════════════════════════════════
+// STYLE ENGINE — source unique de vérité par style
+// recipe = description complète · keyMarkers = ancrage visuel (placé EN PREMIER)
+// defaultFormat = format si pas de zone · colorByDefault = couleur par défaut
+// ═══════════════════════════════════════════════════
+const STYLES = {
+  concept: {
+    label: 'Concept',
+    defaultFormat: 'portrait',
+    colorByDefault: false,
+    keyMarkers: 'symbolic black & grey concept composition, one strong central subject, fine drafting lines, sacred-geometry construction, generous negative space, premium editorial layout',
+    recipe:
+      `Create the tattoo in a Concept style, built around visual storytelling rather than simple illustration — every element contributes to a larger symbolic narrative, like an artistic concept piece by a high-end tattoo designer. ` +
+      `Strong central subject, supporting elements connected through symbolism, intelligent composition rather than decoration, minimal but meaningful background, clean hierarchy, large areas of breathing space. ` +
+      `Build with multiple layers: primary subject, secondary symbolic elements, architectural or environmental details when relevant, geometric construction only if it strengthens the composition, atmospheric depth. Every object interacts with the others; avoid isolated floating elements. ` +
+      `The tattoo must communicate an idea, emotion or philosophy; every symbol has a purpose; avoid generic symbolism or random combinations. ` +
+      `Mix realism with conceptual composition, allow natural overlap, create tension between positive and negative space, use scale creatively. Keep the focal point highly detailed while secondary elements become progressively lighter. ` +
+      `Look like a luxury custom tattoo concept by an elite artist — unique, intelligent, emotionally powerful, premium, never generic AI-generated.`,
+  },
 
-  baroque:
-    `Create the tattoo in a Baroque style inspired by the grandeur of Baroque and Renaissance art, combining dramatic realism, ornate architecture and rich decorative details; luxurious, timeless and sculptural. ` +
-    `Central focal subject, ornate architectural structures, decorative Baroque frames and flourishes, sculptures/statues/classical figures when relevant, columns, arches, domes or cathedral details, elegant symmetry or controlled asymmetry, soft atmospheric depth. ` +
-    `Incorporate authentic Baroque/Renaissance influences when appropriate: ornamental scrollwork, Corinthian columns, cathedral windows, domes, marble sculptures, decorative moldings, royal emblems, arches, classical reliefs, stone textures — architecture frames the artwork naturally. ` +
-    `Any human or angelic figures are fully clothed in flowing robes and drapery — no nudity, no bare skin, modest and reverent. ` +
-    `Dramatic lighting inspired by classical paintings: strong highlights, deep shadows, powerful contrast emphasizing volume and architectural depth. Intricate detail in carvings, marble, drapery and flourishes, fading toward the edges for readability. ` +
-    `Look like a masterpiece carved from marble surrounded by magnificent Baroque architecture — regal, timeless, sophisticated, worthy of a luxury custom tattoo, never a generic AI illustration.`,
+  baroque: {
+    label: 'Baroque',
+    defaultFormat: 'portrait',
+    colorByDefault: false,
+    keyMarkers: 'dramatic black & grey baroque composition, marble sculpture realism, ornate scrollwork and Corinthian columns, cathedral architecture, deep chiaroscuro, regal and luxurious',
+    recipe:
+      `Create the tattoo in a Baroque style inspired by the grandeur of Baroque and Renaissance art, combining dramatic realism, ornate architecture and rich decorative details; luxurious, timeless and sculptural. ` +
+      `Central focal subject, ornate architectural structures, decorative Baroque frames and flourishes, sculptures/statues/classical figures when relevant, columns, arches, domes or cathedral details, elegant symmetry or controlled asymmetry, soft atmospheric depth. ` +
+      `Incorporate authentic Baroque/Renaissance influences when appropriate: ornamental scrollwork, Corinthian columns, cathedral windows, domes, marble sculptures, decorative moldings, royal emblems, arches, classical reliefs, stone textures — architecture frames the artwork naturally. ` +
+      `Any human or angelic figures are fully clothed in flowing robes and drapery — no nudity, no bare skin, modest and reverent. ` +
+      `Dramatic lighting inspired by classical paintings: strong highlights, deep shadows, powerful contrast emphasizing volume and architectural depth. Intricate detail in carvings, marble, drapery and flourishes, fading toward the edges for readability. ` +
+      `Look like a masterpiece carved from marble surrounded by magnificent Baroque architecture — regal, timeless, sophisticated, worthy of a luxury custom tattoo, never a generic AI illustration.`,
+  },
 
-  japonais:
-    `Create the tattoo in a Japanese (Irezumi) style inspired by traditional Japanese tattooing with modern interpretation — harmonious, powerful, symbolic and fluid, following the body's anatomy. ` +
-    `One dominant central subject, supporting symbolic elements, natural environmental elements, flowing background textures, continuous movement throughout. Every element connects naturally; avoid isolated or randomly placed objects. ` +
-    `When relevant incorporate authentic Japanese symbolism (dragons, koi, tigers, phoenix, samurai, oni/hannya masks, snakes, cranes, cherry blossoms, peonies, maple leaves, waves, wind bars, clouds, smoke, moon, sun) — only elements that strengthen the concept. ` +
-    `Subjects emerge from waves, clouds, wind or smoke rather than floating; strong energy and direction. Intricate detail in scales, fur, feathers, armor, fabric folds, flowers, waves and clouds; focal point detailed while secondary elements breathe. ` +
-    `If color is requested use a traditional Japanese palette (deep black, crimson, vermilion, indigo, emerald, muted gold, ivory); otherwise powerful black and grey. ` +
-    `Look like an authentic high-end Irezumi masterpiece — dynamic, symbolic, timeless, balanced and visually powerful.`,
+  japonais: {
+    label: 'Japanese',
+    defaultFormat: 'portrait',
+    colorByDefault: false,
+    keyMarkers: 'Japanese irezumi composition, bold confident outlines, flowing waves/clouds/wind, dynamic movement, traditional symbolism, balanced negative space',
+    recipe:
+      `Create the tattoo in a Japanese (Irezumi) style inspired by traditional Japanese tattooing with modern interpretation — harmonious, powerful, symbolic and fluid, following the body's anatomy. ` +
+      `One dominant central subject, supporting symbolic elements, natural environmental elements, flowing background textures, continuous movement throughout. Every element connects naturally; avoid isolated or randomly placed objects. ` +
+      `When relevant incorporate authentic Japanese symbolism (dragons, koi, tigers, phoenix, samurai, oni/hannya masks, snakes, cranes, cherry blossoms, peonies, maple leaves, waves, wind bars, clouds, smoke, moon, sun) — only elements that strengthen the concept. ` +
+      `Subjects emerge from waves, clouds, wind or smoke rather than floating; strong energy and direction. Intricate detail in scales, fur, feathers, armor, fabric folds, flowers, waves and clouds; focal point detailed while secondary elements breathe. ` +
+      `If color is requested use a traditional Japanese palette (deep black, crimson, vermilion, indigo, emerald, muted gold, ivory); otherwise powerful black and grey. ` +
+      `Look like an authentic high-end Irezumi masterpiece — dynamic, symbolic, timeless, balanced and visually powerful.`,
+  },
 
-  geometrique:
-    `Create the tattoo in a Geometric style based on precision, balance, symmetry and mathematical harmony — every line, shape and proportion intentional and perfectly constructed; geometry enhances the subject, never overpowers it. ` +
-    `One dominant central subject, geometric structures supporting the composition, balanced spacing, controlled repetition, layered geometric depth, clear focal point; avoid random decorative geometry. ` +
-    `When appropriate incorporate sacred geometry, Metatron's Cube, Flower of Life, golden ratio, Fibonacci spiral, platonic solids, hexagons, triangles, circles, mandalas, polygonal structures, radial patterns, blueprint construction lines, fine dotwork — only elements that support the concept. ` +
-    `Perfectly straight lines, smooth curves, consistent line weight, crisp intersections, clean circles, accurate angles; no shaky or unnecessary lines. Detail through dotwork, repeating patterns, geometric textures and subtle construction lines. ` +
-    `Look like a premium geometric tattoo designed with architectural precision — balanced, intelligent, elegant, timeless, visually striking and technically tattooable.`,
+  geometrique: {
+    label: 'Geometric',
+    defaultFormat: 'portrait',
+    colorByDefault: false,
+    keyMarkers: 'precise black & grey geometric design, sacred geometry, fine dotwork, perfectly clean straight lines and circles, mathematical symmetry, blueprint construction lines',
+    recipe:
+      `Create the tattoo in a Geometric style based on precision, balance, symmetry and mathematical harmony — every line, shape and proportion intentional and perfectly constructed; geometry enhances the subject, never overpowers it. ` +
+      `One dominant central subject, geometric structures supporting the composition, balanced spacing, controlled repetition, layered geometric depth, clear focal point; avoid random decorative geometry. ` +
+      `When appropriate incorporate sacred geometry, Metatron's Cube, Flower of Life, golden ratio, Fibonacci spiral, platonic solids, hexagons, triangles, circles, mandalas, polygonal structures, radial patterns, blueprint construction lines, fine dotwork — only elements that support the concept. ` +
+      `Perfectly straight lines, smooth curves, consistent line weight, crisp intersections, clean circles, accurate angles; no shaky or unnecessary lines. Detail through dotwork, repeating patterns, geometric textures and subtle construction lines. ` +
+      `Look like a premium geometric tattoo designed with architectural precision — balanced, intelligent, elegant, timeless, visually striking and technically tattooable.`,
+  },
 
-  realisme:
-    `Create the tattoo in a Realism style — lifelike imagery with exceptional accuracy, natural proportions and realistic depth; authentic, dimensional, emotionally expressive, fully tattooable. Premium black & grey realism unless color is explicitly requested. ` +
-    `One dominant realistic subject, supporting elements only when they strengthen the story, natural layering, balanced negative space, smooth visual flow, strong depth and perspective; avoid unnecessary decorative elements. ` +
-    `Preserve realistic anatomy, authentic proportions, natural perspective, facial accuracy, believable expressions, realistic textures, correct lighting and physical depth; never stylized or cartoon-like. ` +
-    `Realistic directional lighting, smooth value transitions, deep shadows, bright highlights, natural contrast defining volume. Authentic textures (skin, marble, stone, metal, fabric, feathers, fur, hair, leather, smoke, water) that never become noisy. ` +
-    `Exceptional detail in eyes, facial features, hands, muscles, hair, clothing folds and key objects, reducing detail away from the focal point. Depth via foreground/midground/background and atmospheric perspective. Prioritize tattoo longevity over photographic perfection. ` +
-    `Look like a world-class black and grey realism tattoo by an elite artist — authentic, emotionally powerful, technically flawless, timeless, never AI-generated or a manipulated photograph.`,
+  realisme: {
+    label: 'Realism',
+    defaultFormat: 'portrait',
+    colorByDefault: false,
+    keyMarkers: 'hyper-realistic black & grey realism, smooth photoreal shading, deep contrast, ultra-fine detail, lifelike textures, dramatic lighting',
+    recipe:
+      `Create the tattoo in a Realism style — lifelike imagery with exceptional accuracy, natural proportions and realistic depth; authentic, dimensional, emotionally expressive, fully tattooable. Premium black & grey realism unless color is explicitly requested. ` +
+      `One dominant realistic subject, supporting elements only when they strengthen the story, natural layering, balanced negative space, smooth visual flow, strong depth and perspective; avoid unnecessary decorative elements. ` +
+      `Preserve realistic anatomy, authentic proportions, natural perspective, facial accuracy, believable expressions, realistic textures, correct lighting and physical depth; never stylized or cartoon-like. ` +
+      `Realistic directional lighting, smooth value transitions, deep shadows, bright highlights, natural contrast defining volume. Authentic textures (skin, marble, stone, metal, fabric, feathers, fur, hair, leather, smoke, water) that never become noisy. ` +
+      `Exceptional detail in eyes, facial features, hands, muscles, hair, clothing folds and key objects, reducing detail away from the focal point. Depth via foreground/midground/background and atmospheric perspective. Prioritize tattoo longevity over photographic perfection. ` +
+      `Look like a world-class black and grey realism tattoo by an elite artist — authentic, emotionally powerful, technically flawless, timeless, never AI-generated or a manipulated photograph.`,
+  },
 };
+
+function getStyle(key) { return STYLES[key] || STYLES.concept; }
+
+// Compat : certains endroits lisent encore une recette par clé
+const STYLE_RECIPES = Object.fromEntries(Object.entries(STYLES).map(([k, v]) => [k, v.recipe]));
 
 // ─────────────────────────────────────────────────
 // Modificateurs d'ambiance
@@ -548,11 +588,34 @@ if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 // ─────────────────────────────────────────────────
 // OpenAI image generation — gpt-image-1 (best quality)
 // ─────────────────────────────────────────────────
+// Taille gpt-image-1 par format
+function sizeForFormat(format) {
+  return format === 'portrait' ? '1024x1536'
+       : format === 'landscape' ? '1536x1024'
+       : '1024x1024';
+}
 // Choisit le format gpt-image-1 selon la zone du corps
 function openAISizeForZone(zone) {
   const tall = ['avant-bras', 'bras-complet', 'cuisse', 'mollet', 'dos'];
   if (tall.includes(zone)) return '1024x1536';   // portrait
   return '1024x1024';                              // carré (poitrine, épaule, main, défaut)
+}
+
+// Wrapper de rendu "flash de tatouage premium" (réutilisable)
+function buildRenderWrapper(designPrompt, { bw = true } = {}) {
+  const colorRule = bw
+    ? `STRICTLY pure neutral GRAYSCALE — only true blacks, neutral cool greys and pure white. ABSOLUTELY NO color, NO sepia, NO brown/cream tint, NO warm tone, NO beige, NO yellowish or aged-paper look, NO color cast whatsoever. Pure black & white ink like a real black-and-grey tattoo.`
+    : `Rich tattoo colors as described, clean and saturated, no muddy tones.`;
+  return (
+    `Museum-quality professional tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
+    `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
+    `${colorRule} ` +
+    `Rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
+    `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
+    `${designPrompt} ` +
+    `STRICT: pure white background #FFFFFF (not cream, not off-white) around the whole design, with no dark fill, no scenery, no shading behind the subject. ` +
+    `Centered, full design visible, clean crisp linework, ready to be tattooed.`
+  );
 }
 
 // Détecte si l'utilisateur demande explicitement de la couleur
@@ -584,31 +647,43 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
 // ─────────────────────────────────────────────────
 // Enrichit l'idée de l'utilisateur en un prompt détaillé DANS le style choisi
 // (modèle texte gpt-4o-mini). Renvoie null si indisponible → fallback sur le prompt brut.
+// Exemple few-shot : montre le NIVEAU de prompt attendu (gpt-4o calque la qualité)
+const ENHANCE_FEWSHOT_USER = 'un loup';
+const ENHANCE_FEWSHOT_ASSISTANT =
+  `A majestic wolf head as the central focal point, rendered in hyper-realistic black and grey with deep velvety blacks and smooth silvery shading, every strand of fur finely detailed and flowing. The piercing eyes are the sharpest point of focus. Behind the wolf, faint sacred-geometry construction circles and thin drafting lines frame the composition, fading softly into clean white negative space. A subtle crescent moon sits above, suggested with delicate stippling. Dramatic directional lighting carves strong contrast and volume across the muzzle and mane. Fine single-needle linework on the edges, dense realistic shading at the core. Balanced, premium, timeless — a world-class black and grey tattoo flash on a pure white background, no color, no scenery.`;
+
 async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey || !userIdea) return null;
-  const recipe = STYLE_RECIPES[styleKey] || STYLE_RECIPES.concept;
+  const style  = getStyle(styleKey);
   const mood   = AMBIANCE_MODIFIERS[extras.ambiance] || '';
   const zone   = ZONE_COMPOSITION[extras.zone] || '';
   const sys =
-    `You are a world-class tattoo design prompt engineer for the gpt-image-1 image model. ` +
-    `Turn the user's idea into ONE single vivid, detailed prompt for a flat tattoo DESIGN on a pure white background. ` +
+    `You are a world-class tattoo design prompt engineer for the gpt-image-1 image model, working for a luxury black & grey tattoo studio. ` +
+    `Turn the user's idea into ONE single vivid, detailed image prompt for a flat tattoo DESIGN on a pure white background. ` +
     `Use STRICTLY pure neutral black and grey (true blacks, neutral greys, pure white) unless the user clearly asks for color — never sepia, never warm/brown/cream tones. ` +
-    `You MUST stay strictly inside this style and these rules:\n\n` +
-    `=== STYLE ===\n${recipe}\n\n` +
+    `Lead with these exact visual anchors and keep them dominant: ${style.keyMarkers}. ` +
+    `Then stay strictly inside this style and these rules:\n\n` +
+    `=== STYLE ===\n${style.recipe}\n\n` +
     `=== RULES ===\n${DESIGN_SYSTEM_PROMPT}\n\n` +
     (mood ? `=== MOOD ===\n${mood}\n\n` : '') +
     (zone ? `=== FORMAT ===\n${zone}\n\n` : '') +
-    `Describe the subject richly within the style: composition, key elements, linework, shading, details. ` +
+    `Describe the subject richly within the style: composition, focal point, supporting elements, linework, shading, contrast, negative space. ` +
+    `Match the quality, density and structure of the example answer. ` +
     `Output ONLY the final image prompt in English (90-160 words), no preamble, no quotes, no lists.`;
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [ { role: 'system', content: sys }, { role: 'user', content: userIdea } ],
-        temperature: 0.7, max_tokens: 400,
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: ENHANCE_FEWSHOT_USER },
+          { role: 'assistant', content: ENHANCE_FEWSHOT_ASSISTANT },
+          { role: 'user', content: userIdea },
+        ],
+        temperature: 0.7, max_tokens: 450,
       }),
     });
     const data = await resp.json();
@@ -859,7 +934,9 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     if (process.env.OPENAI_API_KEY) {
       // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
       console.log('   Moteur  : OpenAI gpt-image-1');
-      const size = openAISizeForZone(zone);
+      // Format : zone si fournie, sinon format par défaut du style
+      const size = zone ? openAISizeForZone(zone) : sizeForFormat(getStyle(style).defaultFormat);
+      const bw   = !wantsColor(sujet) && !getStyle(style).colorByDefault;
 
       // Enrichissement automatique du prompt DANS le style choisi (sauf free prompt brut)
       let designPrompt = prompt;
@@ -868,16 +945,8 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
         if (enhanced) { designPrompt = enhanced; console.log('   ✨ Prompt enrichi (style', style + ')'); }
       }
 
-      // Wrapper spécifique OpenAI : force le rendu "flash de tatouage premium" sur fond blanc
-      const openaiPrompt =
-        `Museum-quality professional black and grey tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
-        `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic black-and-grey shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
-        `STRICTLY pure neutral GRAYSCALE — only true blacks, neutral cool greys and pure white. ABSOLUTELY NO color, NO sepia, NO brown or cream tint, NO warm tone, NO beige, NO yellowish or aged-paper look, NO color cast whatsoever. Pure black & white ink like a real black-and-grey tattoo. ` +
-        `Rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
-        `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
-        `${designPrompt} ` +
-        `STRICT: pure white background #FFFFFF (not cream, not off-white) around the whole design, with no dark fill, no scenery, no shading behind the subject. ` +
-        `Centered, full design visible, clean crisp linework, ready to be tattooed.`;
+      // Wrapper de rendu premium (réutilisable)
+      const openaiPrompt = buildRenderWrapper(designPrompt, { bw });
       imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
     } else {
       // ── Fallback : Higgsfield ──
@@ -893,9 +962,9 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 
     // Finition studio (contraste + netteté), noir & blanc par défaut sauf si couleur demandée
     if (imageUrl && imageUrl.startsWith('data:')) {
-      const bw = !wantsColor(sujet);
-      imageUrl = await finishImage(imageUrl, { grayscale: bw });
-      console.log(bw ? '   ⚫ Finition N&B' : '   🎨 Finition couleur');
+      const bwFinish = !wantsColor(sujet) && !getStyle(style).colorByDefault;
+      imageUrl = await finishImage(imageUrl, { grayscale: bwFinish });
+      console.log(bwFinish ? '   ⚫ Finition N&B' : '   🎨 Finition couleur');
     }
 
     res.json({ imageUrl, jobId, prompt, zone });
