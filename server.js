@@ -88,12 +88,12 @@ const DESIGN_SYSTEM_PROMPT =
 // Prompt Stencil (photo → stencil pro Spirit) pour gpt-image-1
 // ─────────────────────────────────────────────────
 const STENCIL_PROMPT =
-  `Convert this photograph into a professional tattoo stencil with maximum fidelity. The goal is to create a production-ready stencil identical to the original reference, without artistic reinterpretation. ` +
-  `Preserve with absolute accuracy: proportions, anatomy, perspective, rotation, scale, composition, placement of every element, facial expression, structural details. ` +
-  `Output requirements: thin, crisp, uniform stencil lines; authentic Spirit stencil purple (#7A4DFF approximately); pure white background; vector-like precision; print-ready quality; no anti-aliasing; no sketch effect; no painterly effect; no artistic interpretation; no textures; no grayscale; no black fills; no color variations; no photographic remnants. ` +
-  `Include: complete outer silhouette; facial structure; eyes, nose, lips, eyebrows; ears; hair flow; muscles and anatomy; hands and fingers; clothing outlines; essential folds; jewelry and accessories; wings, feathers, weapons, ornaments, decorative elements; important internal construction lines; all tattoo-relevant details. Simplify only visual noise while preserving tattoo readability. ` +
-  `Shadow Mapping Layer: Using the exact same Spirit Purple color, indicate shadow guides only with dashed contour lines. Outline four value groups: deepest shadows, dark shadows, mid-tone shadows, light shadow transitions. Do not add labels, arrows, numbers, symbols or text. The dashed contours must only define the boundaries of each shadow mass. ` +
-  `The final result must look exactly like a professional stencil prepared by an experienced tattoo artist using Spirit transfer paper — clean, highly readable, technically accurate, and immediately ready for printing and tattoo transfer.`;
+  `Convert this photograph into a maximum fidelity technical tattoo tracing. I want an exact linear outline, with the figure perfectly adapted to the original reference, respecting the scale, tilt, perspective, and placement of every element. ` +
+  `Result style: fine, uniform red line; clean white background; no shading; no solid black masses; no halftones; no grays; no skin texture or photographic texture; no artistic reinterpretation. ` +
+  `Must include: overall contour of the silhouette; exact facial features and expression; important wrinkles and folds of the face and neck; ears, earrings, accessories; hands with clear anatomical structure; clothing with essential folds; main objects complete and clearly defined; useful internal details for tattooing, simplified only if they create visual noise. ` +
+  `Must exclude or minimize: full background; blur; atmosphere; stains; noise; microtextures; excessive irrelevant detail. ` +
+  `Shadow elements: work on the shadows in the face. Mark four shadow values — areas of solid black, dark tones, light tones, and highlight zones — all using the same red line but with a dashed line. Do not add any labels or indication of which shadow value is which; only outline the area that belongs to each shadow zone. ` +
+  `The final image should look like a clean, precise, readable stencil/tracing, ready to use as a tattoo base.`;
 
 // ─────────────────────────────────────────────────
 // Recettes de style — prompts officiels (gpt-image-1)
