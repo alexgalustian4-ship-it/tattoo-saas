@@ -566,7 +566,8 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const zone   = ZONE_COMPOSITION[extras.zone] || '';
   const sys =
     `You are a world-class tattoo design prompt engineer for the gpt-image-1 image model. ` +
-    `Turn the user's idea into ONE single vivid, detailed prompt for a flat tattoo DESIGN on a pure white background (black & grey unless the user clearly asks for color). ` +
+    `Turn the user's idea into ONE single vivid, detailed prompt for a flat tattoo DESIGN on a pure white background. ` +
+    `Use STRICTLY pure neutral black and grey (true blacks, neutral greys, pure white) unless the user clearly asks for color — never sepia, never warm/brown/cream tones. ` +
     `You MUST stay strictly inside this style and these rules:\n\n` +
     `=== STYLE ===\n${recipe}\n\n` +
     `=== RULES ===\n${DESIGN_SYSTEM_PROMPT}\n\n` +
@@ -845,10 +846,11 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       const openaiPrompt =
         `Museum-quality professional black and grey tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
         `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic black-and-grey shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
-        `Black, grey and white ink only (no color), rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
+        `STRICTLY pure neutral GRAYSCALE — only true blacks, neutral cool greys and pure white. ABSOLUTELY NO color, NO sepia, NO brown or cream tint, NO warm tone, NO beige, NO yellowish or aged-paper look, NO color cast whatsoever. Pure black & white ink like a real black-and-grey tattoo. ` +
+        `Rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
         `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
         `${designPrompt} ` +
-        `STRICT: pure white background, the entire area around the design must be plain white #FFFFFF with absolutely no dark fill, no scenery, no shading behind the subject. ` +
+        `STRICT: pure white background #FFFFFF (not cream, not off-white) around the whole design, with no dark fill, no scenery, no shading behind the subject. ` +
         `Centered, full design visible, clean crisp linework, ready to be tattooed.`;
       imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
     } else {
