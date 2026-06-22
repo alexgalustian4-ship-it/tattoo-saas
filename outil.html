@@ -1058,6 +1058,23 @@
       .ai-tools-row { gap: 8px; }
       .ai-tool-pill { padding: 9px 13px; font-size: 0.74rem; }
     }
+    /* Tool switcher pills (commun à tous les outils) */
+    .tool-switcher {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      max-width: 760px; margin: 0 auto 26px; padding: 0 8px;
+    }
+    .ts-pill {
+      padding: 8px 16px; border-radius: 30px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-muted); font-size: 0.78rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .ts-pill:hover { border-color: var(--silver-dim); color: var(--text); }
+    .ts-pill.active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.06); }
+    @media (max-width: 600px) {
+      .tool-switcher { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
+      .ts-pill { flex-shrink: 0; }
+    }
   </style>
 </head>
 <body>
@@ -1258,6 +1275,15 @@
     </div>
 
     <button data-hidden id="mode-back">← Change mode</button>
+
+    <!-- Barre de switch d'outils (visible quand un outil est ouvert) -->
+    <div class="tool-switcher" id="tool-switcher" data-hidden>
+      <button class="ts-pill" data-go="hub">✦ Generate</button>
+      <button class="ts-pill" data-go="2">Place on skin</button>
+      <button class="ts-pill" data-go="3">Photo → Tattoo</button>
+      <button class="ts-pill" data-go="4">Merge</button>
+      <button class="ts-pill" data-go="5">Stencil</button>
+    </div>
 
     <div data-hidden class="steps">
       <div class="step active" id="ind-step1">
@@ -2753,25 +2779,30 @@
 
     const toolHeader = document.querySelector('.tool-header');
     const aiHub = document.getElementById('ai-hub');
+    const toolSwitcher = document.getElementById('tool-switcher');
+    function showSwitcher(active) {
+      show(toolSwitcher);
+      toolSwitcher.querySelectorAll('.ts-pill').forEach(p => p.classList.toggle('active', p.dataset.go === active));
+    }
 
     function activateMode1() {
       hide(modeSelector); hide(modeBack); hide(toolHeader); hide(aiHub);
-      show(stepsEl); show(mode1Card); show(modeBack);
+      show(stepsEl); show(mode1Card); show(modeBack); showSwitcher('hub');
     }
     function activateMode2() {
       hide(modeSelector); hide(modeBack); hide(toolHeader); hide(aiHub);
-      show(mode2Card); show(modeBack);
+      show(mode2Card); show(modeBack); showSwitcher('2');
     }
     const mode3Card = document.getElementById('mode3-card');
     function activateMode3() {
       hide(modeSelector); hide(toolHeader); hide(aiHub);
-      show(mode3Card); show(modeBack);
+      show(mode3Card); show(modeBack); showSwitcher('3');
     }
 
     const mode4Card = document.getElementById('mode4-card');
     function activateMode4() {
       hide(modeSelector); hide(toolHeader); hide(aiHub);
-      show(mode4Card); show(modeBack);
+      show(mode4Card); show(modeBack); showSwitcher('4');
     }
 
     document.getElementById('btn-mode1').addEventListener('click', activateMode1);
@@ -2784,9 +2815,25 @@
       hide(modeSelector); hide(toolHeader); hide(aiHub);
       show(stencilStudio);
       stencilStudio.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      show(modeBack);
+      show(modeBack); showSwitcher('5');
     }
     document.getElementById('btn-mode5').addEventListener('click', activateMode5);
+
+    // Switcher pills : changer d'outil sans repasser par le menu
+    toolSwitcher.querySelectorAll('.ts-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const go = pill.dataset.go;
+        // on remet tout à zéro comme "Change mode" puis on ouvre le bon
+        hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card);
+        hide(stencilStudio);
+        if (go === 'hub') { hide(toolSwitcher); hide(modeBack); show(toolHeader); show(aiHub); window.scrollTo({top:0,behavior:'smooth'}); return; }
+        if (go === '2') activateMode2();
+        if (go === '3') activateMode3();
+        if (go === '4') activateMode4();
+        if (go === '5') activateMode5();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
 
     // ── AI HUB (chat central) ───────────────────────────
     (function(){
@@ -3029,7 +3076,7 @@
 
     modeBack.addEventListener('click', () => {
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
-      hide(stencilStudio);
+      hide(stencilStudio); hide(toolSwitcher);
       resetMode2();
       show(toolHeader); show(aiHub);
       window.scrollTo({ top: 0, behavior: 'smooth' });
