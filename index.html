@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.classList.add('js');</script>
   <title>INK.STUDIO — Design your tattoo with AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,29 +65,20 @@
     body.cursor-hidden #cursor-ring { opacity: 0; }
 
     /* ══ ANIMATIONS ENTRÉE ══════════════════════ */
-    .fade-up {
-      opacity: 0;
-      transform: translateY(32px);
+    /* Le contenu est visible par défaut ; l'état caché ne s'applique que si JS tourne (html.js).
+       => si le JS plante, rien n'est invisible. */
+    .fade-up, .fade-left, .fade-right {
       transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
                   transform 0.8s cubic-bezier(0.22,1,0.36,1);
+      will-change: opacity, transform;
     }
-    .fade-up.visible { opacity: 1; transform: translateY(0); }
-
-    .fade-left {
-      opacity: 0;
-      transform: translateX(-28px);
-      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
-                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    html.js .fade-up    { opacity: 0; transform: translateY(32px); }
+    html.js .fade-left  { opacity: 0; transform: translateX(-28px); }
+    html.js .fade-right { opacity: 0; transform: translateX(28px); }
+    .fade-up.visible, .fade-left.visible, .fade-right.visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html.js .fade-up, html.js .fade-left, html.js .fade-right { opacity: 1; transform: none; }
     }
-    .fade-left.visible { opacity: 1; transform: translateX(0); }
-
-    .fade-right {
-      opacity: 0;
-      transform: translateX(28px);
-      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
-                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
-    }
-    .fade-right.visible { opacity: 1; transform: translateX(0); }
 
     .d1 { transition-delay: 0.08s; }
     .d2 { transition-delay: 0.16s; }
@@ -1105,9 +1097,9 @@
       <!-- Left: static before/after slider -->
       <div class="ss-slider-wrap fade-up">
         <div class="ss-slider" id="ss-slider">
-          <img src="images/stencil-after.png?v=3" alt="Stencil" style="object-fit:contain;background:#fff" />
+          <img loading="lazy" src="images/stencil-after.png?v=3" alt="Stencil" style="object-fit:contain;background:#fff" />
           <div class="ss-after-layer" id="ss-after-layer">
-            <img src="images/stencil-before.png?v=3" alt="Design original" style="object-fit:contain;background:#fff" />
+            <img loading="lazy" src="images/stencil-before.png?v=3" alt="Design original" style="object-fit:contain;background:#fff" />
           </div>
           <div class="ss-line" id="ss-line"></div>
           <div class="ss-knob" id="ss-knob">
@@ -1153,9 +1145,9 @@
       <!-- Left: before/after slider -->
       <div class="ss-slider-wrap fade-up">
         <div class="ss-slider" id="ps-slider">
-          <img src="images/skin-after.png" alt="Tattoo on skin" style="object-fit:cover" />
+          <img loading="lazy" src="images/skin-after.png" alt="Tattoo on skin" style="object-fit:cover" />
           <div class="ss-after-layer" id="ps-after-layer">
-            <img src="images/skin-before.png" alt="Tattoo design" style="object-fit:contain;background:#fff" />
+            <img loading="lazy" src="images/skin-before.png" alt="Tattoo design" style="object-fit:contain;background:#fff" />
           </div>
           <div class="ss-line" id="ps-line"></div>
           <div class="ss-knob" id="ps-knob">
