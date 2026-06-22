@@ -121,9 +121,12 @@
 
     /* ── CARTE ───────────────────────────────── */
     .card {
-      width: 100%; max-width: 640px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 32px;
+      width: 100%; max-width: 680px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(22,22,28,0.9) 0%, rgba(14,14,18,0.9) 100%);
+      border: 1px solid var(--border-hover);
+      border-radius: 24px; padding: 34px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px);
       display: flex; flex-direction: column; gap: 20px;
     }
 
@@ -1957,10 +1960,10 @@
   </div>
 
   <!-- ══════════ STENCIL STUDIO ══════════ -->
-  <section id="stencil-studio" data-hidden style="width:100%;padding:64px 24px 80px;border-top:1px solid #1c1c22">
-    <div style="max-width:640px;margin:0 auto">
+  <section id="stencil-studio" data-hidden style="width:100%;padding:0 24px 80px">
+    <div class="card" style="max-width:680px;display:block">
       <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">PRO Tool</p>
-      <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:8px">Instant stencil from your design</h2>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:8px">Instant stencil from your design</h2>
       <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;margin-bottom:28px">Upload any tattoo or design — get a print-ready stencil in one second.</p>
 
       <!-- Upload zone -->
