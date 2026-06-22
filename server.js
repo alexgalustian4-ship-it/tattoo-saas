@@ -555,6 +555,26 @@ function openAISizeForZone(zone) {
   return '1024x1024';                              // carré (poitrine, épaule, main, défaut)
 }
 
+// Détecte si l'utilisateur demande explicitement de la couleur
+function wantsColor(text) {
+  return /\b(couleur|en couleur|color|colour|colored|coloured|colorful|colourful|vibrant colou?rs?|full colou?r)\b/i.test(text || '');
+}
+
+// Convertit une image (data URL) en noir & blanc neutre garanti
+async function toGrayscaleDataUrl(dataUrl) {
+  try {
+    const sharp = require('sharp');
+    const b64 = (dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
+    if (!b64) return dataUrl;
+    const buf = Buffer.from(b64, 'base64');
+    const out = await sharp(buf).grayscale().png().toBuffer();
+    return 'data:image/png;base64,' + out.toString('base64');
+  } catch (e) {
+    console.warn('⚠ grayscale failed:', e.message);
+    return dataUrl; // fallback : on garde l'image telle quelle
+  }
+}
+
 // ─────────────────────────────────────────────────
 // Enrichit l'idée de l'utilisateur en un prompt détaillé DANS le style choisi
 // (modèle texte gpt-4o-mini). Renvoie null si indisponible → fallback sur le prompt brut.
@@ -863,6 +883,12 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
         'La génération a été bloquée par le filtre du modèle.\n' +
         'Essaie de reformuler ta description.');
       imageUrl = r.imageUrl; jobId = r.jobId;
+    }
+
+    // Noir & blanc par défaut : on désature sauf si l'utilisateur demande explicitement la couleur
+    if (!wantsColor(sujet) && imageUrl && imageUrl.startsWith('data:')) {
+      imageUrl = await toGrayscaleDataUrl(imageUrl);
+      console.log('   ⚫ Désaturé en noir & blanc');
     }
 
     res.json({ imageUrl, jobId, prompt, zone });
