@@ -1061,6 +1061,30 @@
       .ai-tools-row { gap: 8px; }
       .ai-tool-pill { padding: 9px 13px; font-size: 0.74rem; }
     }
+    /* ═══ Animations d'entrée façon Apple (JS-driven, sûr) ═══ */
+    /* Le contenu est visible par défaut ; le JS ajoute l'état initial puis révèle.
+       Si le JS ne tourne pas, rien n'est caché. */
+    .reveal-init { opacity: 0 !important; transform: translateY(24px) scale(0.99); filter: blur(4px); }
+    .reveal-anim { transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.85s cubic-bezier(0.22,1,0.36,1), filter 0.8s ease; }
+    .reveal-anim.reveal-init { opacity: 0 !important; }
+
+    @keyframes breathe {
+      0%,100% { opacity: 0.45; transform: translate(-50%,0) scale(1); }
+      50%     { opacity: 0.85; transform: translate(-50%,0) scale(1.18); }
+    }
+    .ai-hub { position: relative; }
+    .ai-hub::before {
+      content: ''; position: absolute; top: 80px; left: 50%; transform: translate(-50%,0);
+      width: 440px; height: 240px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(176,180,194,0.10) 0%, transparent 70%);
+      filter: blur(44px); z-index: -1; pointer-events: none;
+      animation: breathe 7s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-init { opacity: 1 !important; transform: none; filter: none; }
+      .ai-hub::before { animation: none; }
+    }
+
     /* Tool switcher pills (commun à tous les outils) */
     .tool-switcher {
       display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
@@ -2935,6 +2959,19 @@
         const tg = document.getElementById('toggle-guided'); if (tg) tg.click();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
+    })();
+
+    // ── Reveal animation façon Apple (sûr : si JS échoue, rien n'est caché) ──
+    (function(){
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const els = document.querySelectorAll('.tool-header, .ai-chat, .ai-styles, .ai-examples, .ai-tools-label, .ai-tools-row');
+        els.forEach(el => el.classList.add('reveal-anim', 'reveal-init'));
+        const reveal = () => els.forEach((el, i) => { el.style.transitionDelay = (0.07 * i) + 's'; el.classList.remove('reveal-init'); });
+        setTimeout(reveal, 60);
+        // Filet de sécurité : quoi qu'il arrive, on force la visibilité
+        setTimeout(() => els.forEach(el => { el.classList.remove('reveal-init'); el.style.opacity = '1'; el.style.transform = 'none'; el.style.filter = 'none'; }), 2000);
+      } catch(e) {}
     })();
 
     // ── STENCIL STUDIO LOGIC ─────────────────────────────
