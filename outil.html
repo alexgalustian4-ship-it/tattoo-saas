@@ -3670,7 +3670,7 @@
       document.getElementById('rework-fusion-input').value = '';
       document.getElementById('rework-fusion-name').textContent = 'Ajouter une image à fusionner…';
       document.getElementById('rework-fusion-preview').style.display = 'none';
-      document.getElementById('rework-prompt').value = '';
+      document.getElementById('rework-prompt').value = (params && params.sujet) ? params.sujet : '';
       document.getElementById('rework-result').style.display = 'none';
       document.getElementById('rework-status').style.display = 'none';
 
