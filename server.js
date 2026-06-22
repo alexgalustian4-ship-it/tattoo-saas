@@ -555,6 +555,44 @@ function openAISizeForZone(zone) {
   return '1024x1024';                              // carré (poitrine, épaule, main, défaut)
 }
 
+// ─────────────────────────────────────────────────
+// Enrichit l'idée de l'utilisateur en un prompt détaillé DANS le style choisi
+// (modèle texte gpt-4o-mini). Renvoie null si indisponible → fallback sur le prompt brut.
+async function enhancePrompt(userIdea, styleKey, extras = {}) {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey || !userIdea) return null;
+  const recipe = STYLE_RECIPES[styleKey] || STYLE_RECIPES.concept;
+  const mood   = AMBIANCE_MODIFIERS[extras.ambiance] || '';
+  const zone   = ZONE_COMPOSITION[extras.zone] || '';
+  const sys =
+    `You are a world-class tattoo design prompt engineer for the gpt-image-1 image model. ` +
+    `Turn the user's idea into ONE single vivid, detailed prompt for a flat tattoo DESIGN on a pure white background (black & grey unless the user clearly asks for color). ` +
+    `You MUST stay strictly inside this style and these rules:\n\n` +
+    `=== STYLE ===\n${recipe}\n\n` +
+    `=== RULES ===\n${DESIGN_SYSTEM_PROMPT}\n\n` +
+    (mood ? `=== MOOD ===\n${mood}\n\n` : '') +
+    (zone ? `=== FORMAT ===\n${zone}\n\n` : '') +
+    `Describe the subject richly within the style: composition, key elements, linework, shading, details. ` +
+    `Output ONLY the final image prompt in English (90-160 words), no preamble, no quotes, no lists.`;
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [ { role: 'system', content: sys }, { role: 'user', content: userIdea } ],
+        temperature: 0.7, max_tokens: 400,
+      }),
+    });
+    const data = await resp.json();
+    const out = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    return out ? out.trim() : null;
+  } catch (e) {
+    console.warn('⚠ enhancePrompt failed:', e.message);
+    return null;
+  }
+}
+
 async function generateWithOpenAI(prompt, referenceImagePath = null, size = '1024x1024') {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
@@ -795,13 +833,21 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
       console.log('   Moteur  : OpenAI gpt-image-1');
       const size = openAISizeForZone(zone);
+
+      // Enrichissement automatique du prompt DANS le style choisi (sauf free prompt brut)
+      let designPrompt = prompt;
+      if (!freePrompt) {
+        const enhanced = await enhancePrompt(sujet, style, { ambiance, zone });
+        if (enhanced) { designPrompt = enhanced; console.log('   ✨ Prompt enrichi (style', style + ')'); }
+      }
+
       // Wrapper spécifique OpenAI : force le rendu "flash de tatouage premium" sur fond blanc
       const openaiPrompt =
         `Museum-quality professional black and grey tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
         `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic black-and-grey shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
         `Black, grey and white ink only (no color), rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
         `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
-        `${prompt} ` +
+        `${designPrompt} ` +
         `STRICT: pure white background, the entire area around the design must be plain white #FFFFFF with absolutely no dark fill, no scenery, no shading behind the subject. ` +
         `Centered, full design visible, clean crisp linework, ready to be tattooed.`;
       imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
