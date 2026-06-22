@@ -1558,6 +1558,7 @@
       const layer  = document.getElementById('ss-after-layer');
       const line   = document.getElementById('ss-line');
       const knob   = document.getElementById('ss-knob');
+      if (!slider) return;
       function setPos(x) {
         const rect = slider.getBoundingClientRect();
         const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
@@ -1565,6 +1566,8 @@
         layer.style.clipPath = `inset(0 ${(100-pct*100).toFixed(1)}% 0 0)`;
         line.style.left = knob.style.left = p + '%';
       }
+      // Position initiale au milieu
+      setPos(slider.getBoundingClientRect().left + slider.offsetWidth / 2);
       slider.onmousedown = e => { ssDragging = true; setPos(e.clientX); e.preventDefault(); };
       slider.ontouchstart = e => { ssDragging = true; setPos(e.touches[0].clientX); };
       window.addEventListener('mousemove', e => { if (ssDragging) setPos(e.clientX); });
@@ -1572,6 +1575,8 @@
       window.addEventListener('touchmove', e => { if (ssDragging) setPos(e.touches[0].clientX); }, { passive: true });
       window.addEventListener('touchend', () => { ssDragging = false; });
     }
+    // Initialise le slider de la vitrine Stencil au chargement
+    ssInitSlider();
 
     // Place on skin slider (static before/after)
     (function() {
