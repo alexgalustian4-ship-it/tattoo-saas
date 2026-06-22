@@ -560,18 +560,24 @@ function wantsColor(text) {
   return /\b(couleur|en couleur|color|colour|colored|coloured|colorful|colourful|vibrant colou?rs?|full colou?r)\b/i.test(text || '');
 }
 
-// Convertit une image (data URL) en noir & blanc neutre garanti
-async function toGrayscaleDataUrl(dataUrl) {
+// Finition "studio" : contraste renforcé + netteté (+ noir & blanc si demandé)
+async function finishImage(dataUrl, { grayscale = true } = {}) {
   try {
     const sharp = require('sharp');
     const b64 = (dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
     if (!b64) return dataUrl;
     const buf = Buffer.from(b64, 'base64');
-    const out = await sharp(buf).grayscale().png().toBuffer();
+    let img = sharp(buf);
+    if (grayscale) img = img.grayscale();
+    img = img
+      .normalise()                 // étire l'histogramme : noirs plus profonds, blancs plus purs
+      .linear(1.08, -8)            // léger boost de contraste
+      .sharpen({ sigma: 0.8 });    // netteté douce sur les lignes
+    const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
-    console.warn('⚠ grayscale failed:', e.message);
-    return dataUrl; // fallback : on garde l'image telle quelle
+    console.warn('⚠ finishImage failed:', e.message);
+    return dataUrl; // fallback : image telle quelle
   }
 }
 
@@ -885,10 +891,11 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       imageUrl = r.imageUrl; jobId = r.jobId;
     }
 
-    // Noir & blanc par défaut : on désature sauf si l'utilisateur demande explicitement la couleur
-    if (!wantsColor(sujet) && imageUrl && imageUrl.startsWith('data:')) {
-      imageUrl = await toGrayscaleDataUrl(imageUrl);
-      console.log('   ⚫ Désaturé en noir & blanc');
+    // Finition studio (contraste + netteté), noir & blanc par défaut sauf si couleur demandée
+    if (imageUrl && imageUrl.startsWith('data:')) {
+      const bw = !wantsColor(sujet);
+      imageUrl = await finishImage(imageUrl, { grayscale: bw });
+      console.log(bw ? '   ⚫ Finition N&B' : '   🎨 Finition couleur');
     }
 
     res.json({ imageUrl, jobId, prompt, zone });
