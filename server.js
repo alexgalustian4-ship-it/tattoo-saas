@@ -658,17 +658,21 @@ function openAISizeForZone(zone) {
 // Wrapper de rendu "flash de tatouage premium" (réutilisable)
 function buildRenderWrapper(designPrompt, { bw = true } = {}) {
   const colorRule = bw
-    ? `STRICTLY pure neutral GRAYSCALE — only true blacks, neutral cool greys and pure white. ABSOLUTELY NO color, NO sepia, NO brown/cream tint, NO warm tone, NO beige, NO yellowish or aged-paper look, NO color cast whatsoever. Pure black & white ink like a real black-and-grey tattoo.`
-    : `Rich tattoo colors as described, clean and saturated, no muddy tones.`;
+    ? `Pure neutral black & grey only — true blacks, neutral cool greys, pure white. No color, no sepia, no brown/cream/beige tint, no warm tone, no aged-paper look.`
+    : `Clean saturated tattoo colors as described, no muddy tones.`;
   return (
-    `Museum-quality professional tattoo design, flat 2D tattoo flash sheet isolated on a pure solid white background (#FFFFFF). ` +
-    `Elite tattoo artist quality, hyper-detailed fine linework combined with smooth realistic shading, delicate stippling and dotwork, dramatic chiaroscuro, crisp clean single-needle lines, subtle fine geometric construction lines and sacred-geometry accents where fitting. ` +
-    `${colorRule} ` +
-    `Rich contrast, sharp focus, intricate premium detail like a high-end custom tattoo. ` +
-    `The artwork is the tattoo design ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
+    `Professional tattoo design presented as flat 2D tattoo flash on a pure solid white background (#FFFFFF). ` +
     `${designPrompt} ` +
-    `STRICT: pure white background #FFFFFF (not cream, not off-white) around the whole design, with no dark fill, no scenery, no shading behind the subject. ` +
-    `Centered, full design visible, clean crisp linework, ready to be tattooed.`
+    // ── Hiérarchie & retenue : injectées DANS le prompt image (la cause des rendus chargés) ──
+    `COMPOSITION — THIS IS THE PRIORITY: one single clear dominant focal point with strong visual hierarchy. ` +
+    `The focal subject carries the detail; any secondary element stays lighter, smaller and clearly subordinate. ` +
+    `Generous clean negative space around and within the design — do NOT fill the canvas. ` +
+    `Restraint over decoration: do NOT add ornaments, patterns, dotwork, geometry, banners, smoke, or background elements that were not explicitly requested. ` +
+    `The design must read clearly from a distance with a strong, simple silhouette. ` +
+    `RENDER: elite black-and-grey tattoo artist quality, crisp clean linework, smooth realistic shading, controlled contrast; detail concentrated only where it matters, edges breathing into white space. ${colorRule} ` +
+    `This is the tattoo artwork ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
+    `Pure white background #FFFFFF (not cream, not off-white) around the whole design, no dark fill, no scenery, no shading behind the subject. ` +
+    `Centered, full design visible, ready to be tattooed.`
   );
 }
 
@@ -704,7 +708,7 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
 // Exemple few-shot : montre le NIVEAU de prompt attendu (gpt-4o calque la qualité)
 const ENHANCE_FEWSHOT_USER = 'un loup';
 const ENHANCE_FEWSHOT_ASSISTANT =
-  `A majestic wolf head as the central focal point, rendered in hyper-realistic black and grey with deep velvety blacks and smooth silvery shading, every strand of fur finely detailed and flowing. The piercing eyes are the sharpest point of focus. Behind the wolf, faint sacred-geometry construction circles and thin drafting lines frame the composition, fading softly into clean white negative space. A subtle crescent moon sits above, suggested with delicate stippling. Dramatic directional lighting carves strong contrast and volume across the muzzle and mane. Fine single-needle linework on the edges, dense realistic shading at the core. Balanced, premium, timeless — a world-class black and grey tattoo flash on a pure white background, no color, no scenery.`;
+  `A single majestic wolf head as the clear, dominant central focal point, rendered in hyper-realistic black and grey with deep velvety blacks and smooth silvery shading. The fur is finely detailed only around the face and dissolves softly into clean white negative space toward the neck. The piercing eyes are the sharpest point of focus and anchor the whole composition. Strong directional lighting carves contrast and volume across the muzzle. Crisp single-needle linework on the silhouette, dense realistic shading concentrated at the core, the lower edges breathing into open white. No background, no ornaments, no added symbols or geometry — restrained, balanced and premium. A world-class black and grey tattoo flash on a pure white background, no color, no scenery.`;
 
 async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const apiKey = process.env.OPENAI_API_KEY || '';
@@ -722,10 +726,12 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
     `=== RULES ===\n${DESIGN_SYSTEM_PROMPT}\n\n` +
     (mood ? `=== MOOD ===\n${mood}\n\n` : '') +
     (zone ? `=== FORMAT ===\n${zone}\n\n` : '') +
-    `Describe the subject richly within the style: composition, focal point, supporting elements, linework, shading, contrast, negative space. ` +
+    `Build the description around ONE single dominant focal point with a strong, clear visual hierarchy: the focal subject carries the detail, any secondary element stays lighter and clearly subordinate, and there is generous clean negative space. ` +
+    `Show restraint — do NOT invent ornaments, patterns, geometry, symbols, banners, smoke or background elements that the user did not ask for; only describe what genuinely serves the idea. ` +
+    `Concentrate detail where it matters and let the edges breathe into white space; the design must read clearly from a distance with a simple strong silhouette. ` +
     `SAFE FOR WORK: any human/figure must be fully clothed, draped or in armor — no nudity, no bare chest, no exposed skin emphasis; no graphic gore, blood or explicit violence; weapons only as stylized ornamental elements. ` +
-    `Match the quality, density and structure of the example answer. ` +
-    `Output ONLY the final image prompt in English (90-160 words), no preamble, no quotes, no lists.`;
+    `Match the restraint, clear hierarchy and structure of the example answer. ` +
+    `Output ONLY the final image prompt in English (80-140 words), no preamble, no quotes, no lists.`;
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -1194,7 +1200,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       }
     }
 
-    let imageUrl, jobId = null;
+    let imageUrl, jobId = null, finalPrompt = prompt;
 
     if (process.env.OPENAI_API_KEY) {
       // ── Génération via OpenAI gpt-image-1 (rapide & stable) ──
@@ -1212,6 +1218,13 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 
       // Wrapper de rendu premium (réutilisable)
       const openaiPrompt = buildRenderWrapper(designPrompt, { bw });
+
+      // ── Log du PROMPT FINAL EXACT envoyé à gpt-image-1 (audit / debug) ──
+      finalPrompt = openaiPrompt;
+      console.log('   📐 Taille :', size, '| N&B :', bw);
+      console.log('   ──────── PROMPT FINAL → gpt-image-1 ────────');
+      console.log(openaiPrompt);
+      console.log('   ─────────────────────────────────────────────');
 
       // Génération unique (pas de régénération auto : on ne risque jamais de remplacer
       // une bonne image par une moins bonne). Le Quality Checker reste dispo si besoin.
@@ -1234,10 +1247,10 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     let creditsLeft = null;
     if (db && sessionUser) {
       creditsLeft = await chargeCredits(sessionUser.id, creditCost);
-      await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone });
+      await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
     }
 
-    res.json({ imageUrl, jobId, prompt, zone, credits: creditsLeft });
+    res.json({ imageUrl, jobId, prompt, zone, credits: creditsLeft, finalPrompt });
 
   } catch (err) {
     console.error('❌ /generate :', err.message);
