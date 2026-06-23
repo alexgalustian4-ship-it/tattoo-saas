@@ -958,6 +958,84 @@ app.get('/rework-result/:filename', (req, res) => {
 // ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
+app.use(express.json({ limit: '2mb' }));
+
+// ═══════════════════════════════════════════════════
+// AUTH — Google vérifié serveur + session cookie + comptes DB
+// ═══════════════════════════════════════════════════
+const jwt = require('jsonwebtoken');
+const GOOGLE_CLIENT_ID = '1055204918844-a5kshvsbciibcak84plhf007trpc0k59.apps.googleusercontent.com';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'ink-studio-dev-secret-change-me';
+const SESSION_COOKIE = 'ink_sid';
+
+function setSession(res, userId) {
+  const token = jwt.sign({ uid: userId }, SESSION_SECRET, { expiresIn: '30d' });
+  res.setHeader('Set-Cookie',
+    `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 3600}`);
+}
+function clearSession(res) {
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+}
+function getCookie(req, name) {
+  const raw = req.headers.cookie || '';
+  const m = raw.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+async function getSessionUser(req) {
+  if (!db) return null;
+  const tok = getCookie(req, SESSION_COOKIE);
+  if (!tok) return null;
+  try {
+    const { uid } = jwt.verify(tok, SESSION_SECRET);
+    const r = await db.query('SELECT * FROM users WHERE id=$1', [uid]);
+    return r.rows[0] || null;
+  } catch { return null; }
+}
+function publicUser(u) {
+  return u && {
+    email: u.email, name: u.name, avatar: u.avatar_url,
+    plan: u.plan, credits: u.credits_remaining,
+  };
+}
+
+// Connexion via Google (le front envoie le credential GSI)
+app.post('/auth/google', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'DB indisponible' });
+  const credential = req.body && req.body.credential;
+  if (!credential) return res.status(400).json({ error: 'credential manquant' });
+  try {
+    // Vérifie le token Google
+    const v = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential));
+    const p = await v.json();
+    if (!v.ok || !p.email || (p.aud !== GOOGLE_CLIENT_ID)) {
+      return res.status(401).json({ error: 'Token Google invalide' });
+    }
+    // Upsert user
+    const r = await db.query(
+      `INSERT INTO users (email, google_id, name, avatar_url, credits_remaining)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (email) DO UPDATE SET google_id=EXCLUDED.google_id, name=EXCLUDED.name, avatar_url=EXCLUDED.avatar_url
+       RETURNING *`,
+      [p.email, p.sub, p.name || p.email.split('@')[0], p.picture || null, PLAN_CREDITS.free]
+    );
+    const user = r.rows[0];
+    setSession(res, user.id);
+    res.json({ user: publicUser(user) });
+  } catch (e) {
+    console.error('❌ /auth/google:', e.message);
+    res.status(500).json({ error: 'Auth échouée' });
+  }
+});
+
+// Profil de l'utilisateur connecté
+app.get('/me', async (req, res) => {
+  const u = await getSessionUser(req);
+  if (!u) return res.status(401).json({ error: 'non connecté' });
+  res.json({ user: publicUser(u) });
+});
+
+// Déconnexion
+app.post('/auth/logout', (req, res) => { clearSession(res); res.json({ ok: true }); });
 
 // Diagnostic base de données (temporaire)
 app.get('/db-health', async (req, res) => {

@@ -3509,6 +3509,17 @@
     function loadUser() {
       const u = localStorage.getItem('ink_user');
       if (u) { currentUser = JSON.parse(u); updateUserBadge(); }
+      // Restaure la vraie session serveur (cookie) si présente
+      fetch('/me', { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d && d.user) {
+            currentUser = { name: d.user.name, email: d.user.email, picture: d.user.avatar, provider: 'google', plan: d.user.plan, credits: d.user.credits };
+            localStorage.setItem('ink_user', JSON.stringify(currentUser));
+            updateUserBadge();
+          }
+        })
+        .catch(() => {});
     }
     function saveUser(user) {
       currentUser = user;
@@ -3595,9 +3606,21 @@
     document.getElementById('btn-google-signin').addEventListener('click', () => {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: (response) => {
-          const payload = JSON.parse(atob(response.credential.split('.')[1]));
-          onAuthSuccess({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
+        callback: async (response) => {
+          try {
+            const r = await fetch('/auth/google', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ credential: response.credential }),
+            });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || 'Auth échouée');
+            onAuthSuccess({ name: data.user.name, email: data.user.email, picture: data.user.avatar, provider: 'google', plan: data.user.plan, credits: data.user.credits });
+          } catch (e) {
+            // Fallback : décodage local si le serveur ne répond pas
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            onAuthSuccess({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
+          }
         }
       });
       google.accounts.id.prompt();
