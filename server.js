@@ -1022,6 +1022,29 @@ async function chargeCredits(userId, cost) {
   return r.rows[0] ? r.rows[0].credits_remaining : null;
 }
 
+// Dossier persistant des images générées (volume Railway)
+const GENS_DIR = path.join(PERSIST_DIR, 'gens');
+try { fs.mkdirSync(GENS_DIR, { recursive: true }); } catch {}
+
+// Sauvegarde une génération : écrit l'image sur le volume + ligne en DB. Renvoie l'URL fichier.
+async function saveGeneration(userId, type, dataUrl, params) {
+  if (!db || !userId || !dataUrl || !dataUrl.startsWith('data:')) return null;
+  try {
+    const b64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const name = Date.now() + '-' + Math.random().toString(16).slice(2, 8) + '.png';
+    fs.writeFileSync(path.join(GENS_DIR, name), Buffer.from(b64, 'base64'));
+    const url = '/gens/' + name;
+    await db.query(
+      `INSERT INTO generations (user_id, type, image_url, params) VALUES ($1,$2,$3,$4)`,
+      [userId, type, url, params ? JSON.stringify(params) : null]
+    );
+    return url;
+  } catch (e) {
+    console.warn('⚠ saveGeneration failed:', e.message);
+    return null;
+  }
+}
+
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
@@ -1061,6 +1084,32 @@ app.get('/me', async (req, res) => {
 
 // Déconnexion
 app.post('/auth/logout', (req, res) => { clearSession(res); res.json({ ok: true }); });
+
+// Images générées (volume persistant)
+app.use('/gens', express.static(GENS_DIR));
+
+// Historique de l'utilisateur connecté
+app.get('/projects', async (req, res) => {
+  const u = await getSessionUser(req);
+  if (!u) return res.status(401).json({ error: 'non connecté' });
+  try {
+    const r = await db.query(
+      `SELECT id, type, image_url, params, created_at FROM generations WHERE user_id=$1 ORDER BY created_at DESC LIMIT 60`,
+      [u.id]
+    );
+    res.json({ projects: r.rows });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Suppression d'un projet
+app.delete('/projects/:id', async (req, res) => {
+  const u = await getSessionUser(req);
+  if (!u) return res.status(401).json({ error: 'non connecté' });
+  try {
+    await db.query('DELETE FROM generations WHERE id=$1 AND user_id=$2', [req.params.id, u.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // Diagnostic base de données (temporaire)
 app.get('/db-health', async (req, res) => {
@@ -1179,9 +1228,12 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       imageUrl = r.imageUrl; jobId = r.jobId;
     }
 
-    // Débit des crédits après succès
+    // Débit des crédits + sauvegarde en historique après succès
     let creditsLeft = null;
-    if (db && sessionUser) creditsLeft = await chargeCredits(sessionUser.id, creditCost);
+    if (db && sessionUser) {
+      creditsLeft = await chargeCredits(sessionUser.id, creditCost);
+      await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone });
+    }
 
     res.json({ imageUrl, jobId, prompt, zone, credits: creditsLeft });
 

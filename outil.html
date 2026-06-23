@@ -3747,7 +3747,9 @@
       catch { return []; }
     }
 
-    function deleteProject(id) {
+    async function deleteProject(id) {
+      // Supprime en base (si connecté) + dans le localStorage (fallback)
+      try { await fetch('/projects/' + id, { method: 'DELETE', credentials: 'include' }); } catch {}
       const projects = loadProjects().filter(p => p.id !== id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
       renderHistory();
@@ -4449,11 +4451,25 @@
       input.focus();
     }
 
-    function renderHistory() {
-      const projects = loadProjects();
+    async function renderHistory() {
       const section  = document.getElementById('history-section');
       const grid     = document.getElementById('history-grid');
       const empty    = document.getElementById('history-empty');
+
+      // Charge depuis la base si connecté, sinon localStorage (fallback)
+      let projects = [];
+      try {
+        const r = await fetch('/projects', { credentials: 'include' });
+        if (r.ok) {
+          const d = await r.json();
+          projects = (d.projects || []).map(p => ({
+            id: p.id, type: p.type, imageUrl: p.image_url,
+            params: p.params || {}, date: p.created_at,
+          }));
+        } else {
+          projects = loadProjects(); // non connecté → ancien localStorage
+        }
+      } catch { projects = loadProjects(); }
 
       if (projects.length === 0) {
         section.style.display = 'block';
