@@ -984,19 +984,10 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       // Wrapper de rendu premium (réutilisable)
       const openaiPrompt = buildRenderWrapper(designPrompt, { bw });
 
-      // Boucle : génération → finition studio → quality checker → régénération (max 1 fois)
-      const MAX_ATTEMPTS = 2;
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        let img = await generateWithOpenAI(openaiPrompt, inspPath, size);
-        img = await finishImage(img, { grayscale: bw });
-        imageUrl = img;
-        if (attempt < MAX_ATTEMPTS) {
-          const qc = await qualityCheck(img, { bw });
-          if (!qc.pass) { console.log('   ⚠ Quality check échoué (' + qc.reason + ') → régénération'); continue; }
-          console.log('   ✅ Quality check OK');
-        }
-        break;
-      }
+      // Génération unique (pas de régénération auto : on ne risque jamais de remplacer
+      // une bonne image par une moins bonne). Le Quality Checker reste dispo si besoin.
+      let img = await generateWithOpenAI(openaiPrompt, inspPath, size);
+      imageUrl = await finishImage(img, { grayscale: bw });
       console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
       // ── Fallback : Higgsfield ──
