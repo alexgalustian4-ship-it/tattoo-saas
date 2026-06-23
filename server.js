@@ -998,6 +998,8 @@ function publicUser(u) {
   return u && {
     email: u.email, name: u.name, avatar: u.avatar_url,
     plan: u.plan, credits: u.credits_remaining,
+    creditsMax: PLAN_CREDITS[u.plan] || PLAN_CREDITS.free,
+    creditsResetAt: u.credits_reset_at,
   };
 }
 

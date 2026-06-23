@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.classList.add('js');</script>
+  <title>INK.STUDIO — Mon compte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#080808; --bg-card:#0f0f0f; --silver:#b0b4c2; --dim:#5a5a6a;
+      --text:#e8e8ec; --muted:#666672; --border:#191919; --border-m:#242424;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; overflow-x:hidden; cursor:none; min-height:100vh; }
+    body::after { content:''; position:fixed; inset:0; z-index:9999; pointer-events:none; opacity:0.032; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); background-size:180px 180px; }
+    #cursor-dot { position:fixed; z-index:10000; pointer-events:none; width:6px; height:6px; border-radius:50%; background:var(--silver); transform:translate(-50%,-50%); transition:opacity .3s,transform .15s; mix-blend-mode:difference; }
+    #cursor-ring { position:fixed; z-index:9999; pointer-events:none; width:32px; height:32px; border-radius:50%; border:1px solid rgba(176,180,194,0.35); transform:translate(-50%,-50%); transition:width .25s,height .25s,border-color .25s,opacity .3s; }
+    body.cursor-hover #cursor-ring { width:48px; height:48px; border-color:rgba(176,180,194,0.6); }
+    body.cursor-hidden #cursor-dot, body.cursor-hidden #cursor-ring { opacity:0; }
+    @media (hover:none){ body{cursor:auto;} #cursor-dot,#cursor-ring{display:none;} }
+
+    .fade-up { transition:opacity .8s cubic-bezier(0.22,1,0.36,1),transform .8s cubic-bezier(0.22,1,0.36,1); }
+    html.js .fade-up { opacity:0; transform:translateY(24px); }
+    html.js .fade-up.visible { opacity:1; transform:none; }
+    .d1{transition-delay:.06s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}
+
+    #nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 40px; height:58px; background:rgba(8,8,8,0.97); border-bottom:1px solid var(--border); backdrop-filter:blur(14px); }
+    .nav-logo { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; letter-spacing:0.08em; color:var(--text); text-decoration:none; }
+    .nav-logo span { color:var(--muted); font-weight:600; }
+    .nav-links { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:32px; }
+    .nav-links a { font-size:0.68rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--silver); }
+    .nav-cta { font-size:0.68rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); text-decoration:none; border:1px solid var(--border-m); padding:7px 18px; border-radius:20px; transition:all .25s; }
+    .nav-cta:hover { border-color:var(--silver); color:var(--silver); }
+
+    main { max-width:760px; margin:0 auto; padding:130px 24px 90px; position:relative; z-index:1; }
+    .page-head { margin-bottom:40px; }
+    .eyebrow { font-size:0.68rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+    h1 { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,4vw,2.6rem); font-weight:800; letter-spacing:-0.02em; }
+
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:28px; margin-bottom:18px; }
+    .card-title { font-size:0.66rem; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:20px; }
+
+    /* identité */
+    .identity { display:flex; align-items:center; gap:18px; }
+    .avatar { width:62px; height:62px; border-radius:50%; object-fit:cover; border:1px solid var(--border-m); background:#16161a; }
+    .avatar-fallback { width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:700; font-size:1.4rem; color:var(--silver); background:#16161a; border:1px solid var(--border-m); }
+    .identity .name { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; }
+    .identity .email { font-size:0.8rem; color:var(--muted); margin-top:3px; }
+
+    /* abonnement */
+    .sub-row { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .plan-pill { display:inline-flex; align-items:center; gap:8px; font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+    .plan-pill .tag { font-size:0.58rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#0a0a0e; background:var(--silver); padding:4px 9px; border-radius:14px; }
+    .renew { font-size:0.76rem; color:var(--muted); margin-top:6px; }
+
+    /* crédits */
+    .credits-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+    .credits-num { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; }
+    .credits-num span { font-size:0.9rem; color:var(--muted); font-weight:600; }
+    .credits-label { font-size:0.74rem; color:var(--muted); }
+    .bar { height:8px; border-radius:8px; background:#16161a; overflow:hidden; border:1px solid var(--border); }
+    .bar-fill { height:100%; background:linear-gradient(90deg,#7a7e8c,#e8e8ec); border-radius:8px; transition:width .6s cubic-bezier(0.22,1,0.36,1); }
+
+    .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+    .btn { display:inline-block; padding:12px 22px; border-radius:12px; font-size:0.76rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; border:1px solid var(--border-m); background:transparent; color:var(--text); transition:all .25s; text-decoration:none; font-family:inherit; }
+    .btn:hover { border-color:var(--silver); color:var(--silver); }
+    .btn.primary { background:var(--text); color:#0a0a0e; border-color:var(--text); }
+    .btn.primary:hover { background:#fff; box-shadow:0 0 24px rgba(176,180,194,0.15); }
+    .btn.danger:hover { border-color:#7a2b2b; color:#c98989; }
+
+    .links-row { display:flex; gap:20px; flex-wrap:wrap; }
+    .links-row a { font-size:0.8rem; color:var(--silver); text-decoration:none; transition:opacity .2s; }
+    .links-row a:hover { opacity:0.7; }
+
+    /* non connecté */
+    #guest { text-align:center; padding:60px 24px; }
+    #guest p { color:var(--muted); margin:14px 0 28px; }
+
+    footer { padding:36px 40px; border-top:1px solid var(--border); margin-top:40px; }
+    .footer-inner { max-width:760px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; }
+    .footer-logo { font-family:'Syne',sans-serif; font-weight:800; letter-spacing:0.08em; font-size:0.85rem; }
+    .footer-copy { font-size:0.65rem; color:#383840; margin-top:6px; }
+    .footer-links { display:flex; gap:22px; }
+    .footer-links a { font-size:0.68rem; color:#4a4a52; text-decoration:none; }
+    .footer-links a:hover { color:var(--muted); }
+
+    #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:#141418; border:1px solid var(--border-m); color:var(--text); padding:12px 22px; border-radius:12px; font-size:0.8rem; opacity:0; pointer-events:none; transition:all .3s; z-index:200; }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    [hidden] { display:none !important; }
+    @media (max-width:600px){ .nav-links{display:none;} #nav{padding:0 20px;} main{padding-top:110px;} }
+  </style>
+</head>
+<body>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <nav id="nav">
+    <a href="/" class="nav-logo">INK<span>.</span>STUDIO</a>
+    <div class="nav-links">
+      <a href="/#bento">All tools</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="compte.html" class="active">My account</a>
+      <a href="outil.html#history-section">My projects</a>
+    </div>
+    <a href="outil.html" class="nav-cta">Open studio</a>
+  </nav>
+
+  <main>
+    <!-- INVITÉ -->
+    <div id="guest" hidden>
+      <div class="eyebrow">Mon compte</div>
+      <h1>Connecte-toi</h1>
+      <p>Accède à ton profil, tes crédits et ton abonnement.</p>
+      <a href="outil.html" class="btn primary">Se connecter</a>
+    </div>
+
+    <!-- CONNECTÉ -->
+    <div id="account" hidden>
+      <div class="page-head fade-up">
+        <div class="eyebrow">Mon compte</div>
+        <h1 id="hello">Bonjour</h1>
+      </div>
+
+      <div class="card fade-up d1">
+        <div class="card-title">Profil</div>
+        <div class="identity">
+          <img id="avatar" class="avatar" hidden alt="" />
+          <div id="avatar-fallback" class="avatar-fallback" hidden></div>
+          <div>
+            <div class="name" id="u-name">—</div>
+            <div class="email" id="u-email">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card fade-up d2">
+        <div class="card-title">Abonnement</div>
+        <div class="sub-row">
+          <div>
+            <div class="plan-pill"><span id="plan-name">Free</span><span class="tag" id="plan-tag">Actif</span></div>
+            <div class="renew" id="renew"></div>
+          </div>
+          <div class="actions">
+            <a href="pricing.html" class="btn primary" id="upgrade-btn">Améliorer mon plan</a>
+            <button class="btn" id="manage-btn" hidden>Gérer l'abonnement</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card fade-up d2">
+        <div class="card-title">Crédits</div>
+        <div class="credits-head">
+          <div class="credits-num"><span id="c-used">0</span> / <span id="c-max">30</span></div>
+          <div class="credits-label">crédits restants ce mois</div>
+        </div>
+        <div class="bar"><div class="bar-fill" id="bar-fill" style="width:100%"></div></div>
+      </div>
+
+      <div class="card fade-up d3">
+        <div class="card-title">Raccourcis</div>
+        <div class="links-row">
+          <a href="outil.html">Ouvrir le studio</a>
+          <a href="outil.html#history-section">Mes projets</a>
+          <a href="#" id="logout-btn" class="">Se déconnecter</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <p class="footer-logo">INK.STUDIO</p>
+        <p class="footer-copy">© 2026 INK.STUDIO — All rights reserved</p>
+      </div>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="pricing.html">Pricing</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast"></div>
+
+  <script>
+    const dot=document.getElementById('cursor-dot'), ring=document.getElementById('cursor-ring');
+    let rx=0,ry=0,dx=0,dy=0;
+    document.addEventListener('mousemove',e=>{dx=e.clientX;dy=e.clientY;dot.style.left=dx+'px';dot.style.top=dy+'px';});
+    (function loop(){ rx+=(dx-rx)*0.12; ry+=(dy-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loop); })();
+    document.addEventListener('mouseleave',()=>document.body.classList.add('cursor-hidden'));
+    document.addEventListener('mouseenter',()=>document.body.classList.remove('cursor-hidden'));
+    function bindCursor(){ document.querySelectorAll('a,button,.card').forEach(el=>{ el.addEventListener('mouseenter',()=>document.body.classList.add('cursor-hover')); el.addEventListener('mouseleave',()=>document.body.classList.remove('cursor-hover')); }); }
+    bindCursor();
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}}),{threshold:0.08});
+    function observeFades(){ document.querySelectorAll('.fade-up:not(.visible)').forEach(el=>io.observe(el)); }
+
+    function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
+
+    const PLAN_LABEL={ free:'Free', pro:'Pro', studio:'Studio' };
+
+    fetch('/me',{credentials:'include'}).then(r=>r.ok?r.json():null).then(d=>{
+      const me=d&&d.user;
+      if(!me){ document.getElementById('guest').hidden=false; document.querySelectorAll('#guest .fade-up').forEach(e=>e.classList.add('visible')); return; }
+      render(me);
+    }).catch(()=>{ document.getElementById('guest').hidden=false; });
+
+    function render(me){
+      document.getElementById('account').hidden=false;
+      observeFades();
+      const first=(me.name||me.email||'').trim().split(' ')[0]||'';
+      document.getElementById('hello').textContent = 'Bonjour, '+first;
+      document.getElementById('u-name').textContent = me.name||'—';
+      document.getElementById('u-email').textContent = me.email||'—';
+
+      // avatar
+      if(me.avatar){ const a=document.getElementById('avatar'); a.src=me.avatar; a.hidden=false; }
+      else { const f=document.getElementById('avatar-fallback'); f.textContent=(first[0]||'?').toUpperCase(); f.hidden=false; }
+
+      // plan
+      document.getElementById('plan-name').textContent = PLAN_LABEL[me.plan]||'Free';
+      const tag=document.getElementById('plan-tag');
+      if(me.plan==='free'){ tag.textContent='Gratuit'; tag.style.background='#2a2a30'; tag.style.color='#b0b4c2'; }
+      else { tag.textContent='Actif'; }
+
+      // bouton gérer (uniquement abonnés payants)
+      if(me.plan!=='free'){
+        document.getElementById('upgrade-btn').textContent='Changer de plan';
+        const mb=document.getElementById('manage-btn'); mb.hidden=false;
+        mb.addEventListener('click', manageSub);
+      }
+
+      // crédits
+      const max=me.creditsMax||30, used=Math.max(0,Math.min(me.credits,max));
+      document.getElementById('c-used').textContent=used;
+      document.getElementById('c-max').textContent=max;
+      document.getElementById('bar-fill').style.width=Math.round((used/max)*100)+'%';
+
+      // renouvellement
+      if(me.creditsResetAt){
+        const dt=new Date(me.creditsResetAt);
+        if(!isNaN(dt)) document.getElementById('renew').textContent='Crédits renouvelés le '+dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+      }
+    }
+
+    async function manageSub(){
+      try{
+        const r=await fetch('/create-portal-session',{method:'POST',credentials:'include'});
+        if(r.status===404){ toast('Gestion d\'abonnement bientôt disponible 🔜'); return; }
+        const d=await r.json();
+        if(d.url){ location.href=d.url; return; }
+        toast(d.error||'Erreur.');
+      }catch(e){ toast('Connexion impossible.'); }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async e=>{
+      e.preventDefault();
+      try{ await fetch('/auth/logout',{method:'POST',credentials:'include'}); }catch(_){}
+      location.href='/';
+    });
+  </script>
+</body>
+</html>
