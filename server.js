@@ -11,6 +11,57 @@ const { execFile } = require('child_process');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ═══════════════════════════════════════════════════
+// BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
+// ═══════════════════════════════════════════════════
+const PLAN_CREDITS = { free: 5, pro: 100, studio: 500 };
+let db = null;
+try {
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require('pg');
+    db = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
+    });
+    db.on('error', e => console.warn('⚠ DB pool error:', e.message));
+  }
+} catch (e) { console.warn('⚠ pg init failed:', e.message); }
+
+async function initDb() {
+  if (!db) { console.warn('⚠ DATABASE_URL non défini — base de données désactivée'); return; }
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id               BIGSERIAL PRIMARY KEY,
+        email            TEXT UNIQUE NOT NULL,
+        google_id        TEXT UNIQUE,
+        name             TEXT,
+        avatar_url       TEXT,
+        plan             TEXT NOT NULL DEFAULT 'free',
+        credits_remaining INTEGER NOT NULL DEFAULT 5,
+        credits_reset_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '30 days'),
+        stripe_customer_id TEXT,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS generations (
+        id          BIGSERIAL PRIMARY KEY,
+        user_id     BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        type        TEXT NOT NULL DEFAULT 'design',
+        image_url   TEXT NOT NULL,
+        params      JSONB,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_generations_user ON generations(user_id, created_at DESC);`);
+    console.log('✓ Base de données prête (tables users, generations)');
+  } catch (e) {
+    console.error('❌ initDb failed:', e.message);
+  }
+}
+initDb();
+
 // ── Higgsfield token refresh state ──
 let _refreshInProgress = null;
 
