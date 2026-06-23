@@ -959,6 +959,18 @@ app.get('/rework-result/:filename', (req, res) => {
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
 
+// Diagnostic base de données (temporaire)
+app.get('/db-health', async (req, res) => {
+  if (!db) return res.json({ connected: false, reason: 'DATABASE_URL non défini' });
+  try {
+    const t = await db.query(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('users','generations') ORDER BY table_name`);
+    const u = await db.query('SELECT count(*)::int AS n FROM users');
+    res.json({ connected: true, tables: t.rows.map(r => r.table_name), users: u.rows[0].n });
+  } catch (e) {
+    res.json({ connected: false, reason: e.message });
+  }
+});
+
 // ── Download proxy (cross-origin image download) ──
 app.get('/download', async (req, res) => {
   const { url, filename = 'ink-studio.jpg' } = req.query;
