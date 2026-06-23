@@ -681,6 +681,27 @@
       padding: 7px 16px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .history-clear:hover { color: #fca5a5; border-color: rgba(239,68,68,0.4); }
+
+    .hist-tabs {
+      display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 26px;
+    }
+    .hist-tab {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.66rem; font-weight: 600; letter-spacing: 0.06em;
+      color: var(--text-muted); background: rgba(20,20,26,0.6);
+      border: 1px solid var(--border); border-radius: 22px;
+      padding: 8px 15px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .hist-tab:hover { color: var(--text); border-color: var(--border-hover); }
+    .hist-tab.active {
+      color: #0a0a0a; background: var(--text); border-color: var(--text); font-weight: 700;
+    }
+    .hist-tab .hist-tab-count {
+      font-size: 0.6rem; font-weight: 700; opacity: 0.65;
+      background: rgba(255,255,255,0.07); border-radius: 10px; padding: 1px 7px;
+    }
+    .hist-tab.active .hist-tab-count { background: rgba(0,0,0,0.12); opacity: 0.8; }
+
     @media (max-width: 600px) {
       .history-panel { padding: 24px 18px 28px; border-radius: 16px; }
       .history-title { font-size: 1.25rem; }
@@ -2067,6 +2088,8 @@
           Clear all
         </button>
       </div>
+
+      <div id="history-tabs" class="hist-tabs" style="display:none;"></div>
 
       <div id="history-empty" style="display:none; text-align:center; padding:56px 0; color:var(--text-muted); font-size:0.82rem; line-height:1.8;">
         Your generations will appear here.<br>Launch your first design above.
@@ -4379,11 +4402,28 @@
       input.focus();
     }
 
-    async function renderHistory() {
-      const section  = document.getElementById('history-section');
-      const grid     = document.getElementById('history-grid');
-      const empty    = document.getElementById('history-empty');
+    // Dossiers (un par outil) — l'ordre définit l'affichage des onglets
+    const HIST_FOLDERS = [
+      { key: 'all',      label: 'All',          types: null },
+      { key: 'design',   label: 'Designs',      types: ['design'] },
+      { key: 'stencil',  label: 'Stencils',     types: ['stencil'] },
+      { key: 'merge',    label: 'Fusions',      types: ['merge'] },
+      { key: 'pet',      label: 'Photo → Tattoo', types: ['pet'] },
+      { key: 'on-body',  label: 'On body',      types: ['on-body'] },
+    ];
+    const TYPE_LABELS = {
+      design: 'Design', stencil: 'Stencil', merge: 'Fusion',
+      pet: 'Photo → Tattoo', 'on-body': 'On body',
+    };
+    let _histProjects = [];
+    let _histFolder = 'all';
 
+    function selectHistFolder(key) {
+      _histFolder = key;
+      paintHistory();
+    }
+
+    async function renderHistory() {
       // Charge depuis la base si connecté, sinon localStorage (fallback)
       let projects = [];
       try {
@@ -4399,20 +4439,56 @@
         }
       } catch { projects = loadProjects(); }
 
+      _histProjects = projects;
+      paintHistory();
+    }
+
+    function paintHistory() {
+      const section  = document.getElementById('history-section');
+      const grid     = document.getElementById('history-grid');
+      const empty    = document.getElementById('history-empty');
+      const tabsEl   = document.getElementById('history-tabs');
+      const projects = _histProjects;
+
+      section.style.display = 'block';
+
       if (projects.length === 0) {
-        section.style.display = 'block';
-        grid.style.display    = 'none';
-        empty.style.display   = 'block';
+        tabsEl.style.display = 'none';
+        grid.style.display   = 'none';
+        empty.style.display  = 'block';
+        empty.innerHTML = 'Your generations will appear here.<br>Launch your first design above.';
         return;
       }
 
-      section.style.display = 'block';
-      grid.style.display    = 'grid';
-      empty.style.display   = 'none';
+      // Onglets avec compteur par outil
+      const counts = {};
+      projects.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1; });
+      tabsEl.style.display = 'flex';
+      tabsEl.innerHTML = HIST_FOLDERS
+        .filter(f => f.key === 'all' || (counts[f.key] || 0) > 0)
+        .map(f => {
+          const n = f.key === 'all' ? projects.length : (counts[f.key] || 0);
+          const active = _histFolder === f.key ? ' active' : '';
+          return `<button class="hist-tab${active}" onclick="selectHistFolder('${f.key}')">${f.label}<span class="hist-tab-count">${n}</span></button>`;
+        }).join('');
 
-      grid.innerHTML = projects.map(p => {
+      // Filtrage par dossier sélectionné
+      const folder = HIST_FOLDERS.find(f => f.key === _histFolder) || HIST_FOLDERS[0];
+      const shown = folder.types ? projects.filter(p => folder.types.includes(p.type)) : projects;
+
+      if (shown.length === 0) {
+        grid.style.display  = 'none';
+        empty.style.display = 'block';
+        empty.innerHTML = 'No projects in this folder yet.';
+        return;
+      }
+
+      grid.style.display  = 'grid';
+      empty.style.display = 'none';
+
+      grid.innerHTML = shown.map(p => {
         const isOnBody = p.type === 'on-body';
-        const label = isOnBody ? 'On body' : 'Design';
+        const label = TYPE_LABELS[p.type] || 'Design';
         const style = STYLE_LABELS[p.params?.style] || '';
         const zone  = ZONE_LABELS[p.params?.zone]  || '';
         const sujet = p.params?.sujet || '';

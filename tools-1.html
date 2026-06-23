@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate & Place — Ink Studio AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #080808;
+      --bg-card:  #0f0f0f;
+      --silver:   #b0b4c2;
+      --dim:      #5a5a6a;
+      --text:     #e8e8ec;
+      --muted:    #666672;
+      --border:   #191919;
+      --border-m: #242424;
+      --accent:   #8b5cf6;
+      --accent-d: #6d28d9;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    #cursor-dot {
+      position: fixed; z-index: 10000; pointer-events: none;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--silver);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s, transform 0.15s;
+      mix-blend-mode: difference;
+    }
+    #cursor-ring {
+      position: fixed; z-index: 9999; pointer-events: none;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(176,180,194,0.35);
+      transform: translate(-50%, -50%);
+      transition: width 0.25s, height 0.25s, border-color 0.25s, opacity 0.3s;
+    }
+    body.cursor-hover #cursor-ring { width: 48px; height: 48px; border-color: rgba(176,180,194,0.6); }
+    body.cursor-hidden #cursor-dot,
+    body.cursor-hidden #cursor-ring { opacity: 0; }
+
+    /* ══ FADE ANIMATIONS ═══════════════════════ */
+    .fade-up {
+      opacity: 0; transform: translateY(32px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: 0.08s; }
+    .d2 { transition-delay: 0.16s; }
+    .d3 { transition-delay: 0.24s; }
+    .d4 { transition-delay: 0.32s; }
+
+    /* ══ NAV ════════════════════════════════════ */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 64px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,8,8,0.92);
+      backdrop-filter: blur(16px);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1rem;
+      letter-spacing: 0.08em; color: #fff;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 8px 20px; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--accent-d) !important; color: #fff !important; }
+
+    /* ══ BREADCRUMB ═════════════════════════════ */
+    .breadcrumb {
+      padding: 120px 5vw 0;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .breadcrumb a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--silver); }
+    .breadcrumb span { color: var(--border-m); }
+    .breadcrumb .current { color: var(--silver); }
+
+    /* ══ PAGE HEADER ════════════════════════════ */
+    .page-header {
+      padding: 48px 5vw 80px;
+      max-width: 800px;
+    }
+    .page-label {
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.05; color: #fff;
+      margin-bottom: 20px;
+    }
+    .page-desc {
+      font-size: 1rem; color: var(--muted);
+      line-height: 1.7; max-width: 520px;
+    }
+
+    /* ══ TOOL SECTION ═══════════════════════════ */
+    .tool-section {
+      padding: 80px 5vw;
+      border-top: 1px solid var(--border);
+    }
+    .tool-section:last-of-type { border-bottom: 1px solid var(--border); }
+
+    .tool-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+    }
+    .tool-inner.reverse { direction: rtl; }
+    .tool-inner.reverse > * { direction: ltr; }
+
+    .tool-meta { }
+    .tool-number {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 5rem;
+      color: var(--border-m); line-height: 1;
+      margin-bottom: 24px;
+    }
+    .tool-tag {
+      display: inline-block;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.25);
+      padding: 4px 12px; border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .tool-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: #fff; line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .tool-desc {
+      font-size: 0.95rem; color: var(--muted);
+      line-height: 1.75; margin-bottom: 32px;
+    }
+    .tool-features {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 10px;
+      margin-bottom: 40px;
+    }
+    .tool-features li {
+      font-size: 0.875rem; color: var(--silver);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .tool-features li::before {
+      content: '';
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+    .tool-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--accent); color: #fff;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 14px 28px; border-radius: 8px;
+      text-decoration: none; letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .tool-cta:hover { background: var(--accent-d); transform: translateY(-1px); }
+    .tool-cta svg { transition: transform 0.2s; }
+    .tool-cta:hover svg { transform: translateX(3px); }
+
+    /* ══ ANIMATION WINDOW ═══════════════════════ */
+    .anim-window {
+      background: var(--bg-card);
+      border: 1px solid var(--border-m);
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      position: relative;
+    }
+    .anim-chrome {
+      background: #111;
+      border-bottom: 1px solid var(--border-m);
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .anim-chrome-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .d-red { background: #ff5f57; }
+    .d-yellow { background: #febc2e; }
+    .d-green { background: #28c840; }
+    .anim-body {
+      width: 100%; height: calc(100% - 33px);
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+
+    /* ══ ANIMATION 1: GENERATE DESIGN ══════════ */
+    .gen-anim {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+    }
+
+    .gen-prompt-area {
+      width: 100%; max-width: 320px;
+      background: #161616;
+      border: 1px solid var(--border-m);
+      border-radius: 10px;
+      padding: 12px 14px;
+      position: relative;
+    }
+    .gen-prompt-label {
+      font-size: 0.62rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .gen-prompt-text {
+      font-size: 0.75rem; color: var(--silver);
+      line-height: 1.5; min-height: 40px;
+    }
+    .gen-cursor {
+      display: inline-block;
+      width: 2px; height: 14px;
+      background: var(--accent);
+      vertical-align: middle;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .gen-arrow {
+      font-size: 1.2rem; color: var(--border-m);
+      animation: bounce-down 1.5s ease-in-out infinite;
+    }
+    @keyframes bounce-down {
+      0%,100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(4px); opacity: 1; }
+    }
+
+    .gen-result {
+      width: 100%; max-width: 320px;
+      aspect-ratio: 1;
+      max-height: 150px;
+      background: #111;
+      border: 1px solid var(--border-m);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .gen-shimmer {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(139,92,246,0.12) 50%,
+        transparent 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .gen-tattoo-svg {
+      opacity: 0;
+      animation: appear 0.6s ease forwards;
+      animation-delay: 2.5s;
+    }
+    @keyframes appear { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+
+    .gen-shimmer-reveal {
+      animation: shimmer 2s linear 2, fade-out 0.4s ease forwards;
+      animation-delay: 0s, 2.2s;
+    }
+    @keyframes fade-out { to { opacity: 0; } }
+
+    .gen-style-chips {
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+    }
+    .gen-chip {
+      font-size: 0.6rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px;
+      background: #161616; border: 1px solid var(--border-m);
+      color: var(--muted);
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .gen-chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ══ ANIMATION 2: PLACE ON SKIN ════════════ */
+    .skin-anim {
+      width: 100%; height: 100%;
+      display: flex; align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .skin-body-svg {
+      height: 80%; opacity: 0.85;
+    }
+
+    .skin-tattoo-preview {
+      position: absolute;
+      width: 72px; height: 72px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 20px rgba(139,92,246,0.4);
+      animation: float-tattoo 3s ease-in-out infinite;
+      cursor: pointer;
+    }
+    @keyframes float-tattoo {
+      0%,100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-6px) rotate(1deg); }
+    }
+
+    .skin-tattoo-preview svg {
+      width: 100%; height: 100%;
+      padding: 8px;
+      background: rgba(139,92,246,0.08);
+    }
+
+    .skin-target-dot {
+      position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: rgba(139,92,246,0.2);
+      box-shadow: 0 0 12px rgba(139,92,246,0.5);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    .skin-placed {
+      position: absolute;
+      animation: place-snap 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      animation-delay: 3s;
+      opacity: 0;
+    }
+    @keyframes place-snap {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .skin-label {
+      position: absolute;
+      bottom: 12px; left: 50%; transform: translateX(-50%);
+      font-size: 0.62rem; color: var(--muted);
+      white-space: nowrap;
+      background: rgba(8,8,8,0.8);
+      padding: 4px 10px; border-radius: 20px;
+      border: 1px solid var(--border-m);
+    }
+
+    /* ══ DIVIDER ════════════════════════════════ */
+    .section-divider {
+      max-width: 1200px; margin: 0 auto;
+      height: 1px; background: var(--border);
+    }
+
+    /* ══ NEXT TOOLS TEASER ══════════════════════ */
+    .next-section {
+      padding: 80px 5vw;
+      text-align: center;
+    }
+    .next-label {
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+    }
+    .next-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: clamp(1.4rem, 2.5vw, 2rem);
+      color: #fff; margin-bottom: 32px;
+    }
+    .next-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .next-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .next-card:hover { border-color: var(--border-m); transform: translateY(-2px); }
+    .next-card-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.8rem;
+      color: var(--border-m); margin-bottom: 12px;
+    }
+    .next-card-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.95rem;
+      color: var(--silver); margin-bottom: 6px;
+    }
+    .next-card-desc {
+      font-size: 0.75rem; color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ══ FOOTER ═════════════════════════════════ */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 5vw;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 0.9rem;
+      letter-spacing: 0.08em; color: var(--muted);
+      text-decoration: none;
+    }
+    .footer-links {
+      display: flex; gap: 24px;
+    }
+    .footer-links a {
+      font-size: 0.75rem; color: var(--muted);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--silver); }
+
+    /* ══ RESPONSIVE ═════════════════════════════ */
+    @media (max-width: 768px) {
+      .tool-inner, .tool-inner.reverse {
+        grid-template-columns: 1fr;
+        direction: ltr; gap: 40px;
+      }
+      .tool-inner.reverse { direction: ltr; }
+      .anim-window { aspect-ratio: 4/3; }
+      .next-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="index.html">INK STUDIO AI</a>
+  <div class="nav-links">
+    <a href="index.html#bento">All tools</a>
+    <a href="index.html#how">How it works</a>
+    <a class="nav-cta" href="outil.html">Open studio</a>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb fade-up">
+  <a href="index.html">Home</a>
+  <span>/</span>
+  <a href="index.html#bento">Tools</a>
+  <span>/</span>
+  <span class="current">Generate & Place</span>
+</div>
+
+<!-- PAGE HEADER -->
+<header class="page-header fade-up d1">
+  <p class="page-label">Page 01 of 04</p>
+  <h1 class="page-title">Design. Place.<br>Visualize.</h1>
+  <p class="page-desc">Two tools that take you from zero to a tattoo rendered on real skin — in seconds. Type a concept, choose a style, see it appear.</p>
+</header>
+
+<!-- ══ TOOL 1: GENERATE A DESIGN ══════════════════ -->
+<section class="tool-section">
+  <div class="tool-inner">
+
+    <!-- ANIMATION -->
+    <div class="anim-window fade-up d1">
+      <div class="anim-chrome">
+        <div class="anim-chrome-dot d-red"></div>
+        <div class="anim-chrome-dot d-yellow"></div>
+        <div class="anim-chrome-dot d-green"></div>
+      </div>
+      <div class="anim-body">
+        <div class="gen-anim">
+
+          <!-- Style chips -->
+          <div class="gen-style-chips">
+            <div class="gen-chip active" id="chip-fine">Fine line</div>
+            <div class="gen-chip" id="chip-geo">Geometric</div>
+            <div class="gen-chip" id="chip-trad">Traditional</div>
+            <div class="gen-chip" id="chip-jap">Japanese</div>
+          </div>
+
+          <!-- Prompt input -->
+          <div class="gen-prompt-area">
+            <div class="gen-prompt-label">Describe your tattoo</div>
+            <div class="gen-prompt-text" id="gen-prompt-text"><span class="gen-cursor"></span></div>
+          </div>
+
+          <!-- Arrow -->
+          <div class="gen-arrow">↓</div>
+
+          <!-- Result -->
+          <div class="gen-result">
+            <div class="gen-shimmer" id="gen-shimmer"></div>
+            <div class="gen-tattoo-svg" id="gen-tattoo">
+              <!-- Minimalist lotus tattoo SVG -->
+              <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 80 C50 80 30 65 28 48 C26 32 50 20 50 20 C50 20 74 32 72 48 C70 65 50 80 50 80Z" stroke="#c8c8d8" stroke-width="1.2" fill="none"/>
+                <path d="M50 80 C50 80 20 60 22 45 C24 30 50 22 50 22" stroke="#888" stroke-width="0.8" fill="none"/>
+                <path d="M50 80 C50 80 80 60 78 45 C76 30 50 22 50 22" stroke="#888" stroke-width="0.8" fill="none"/>
+                <path d="M50 20 L50 80" stroke="#c8c8d8" stroke-width="0.8"/>
+                <line x1="35" y1="55" x2="65" y2="55" stroke="#666" stroke-width="0.6"/>
+                <line x1="32" y1="47" x2="68" y2="47" stroke="#666" stroke-width="0.6"/>
+                <circle cx="50" cy="38" r="4" stroke="#c8c8d8" stroke-width="1" fill="none"/>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="tool-meta fade-up d2">
+      <div class="tool-number">01</div>
+      <div class="tool-tag">AI Generation</div>
+      <h2 class="tool-name">Generate a design</h2>
+      <p class="tool-desc">Describe what you want in plain language. Choose from 12 tattoo styles — fine line, geometric, Japanese, traditional, and more. The AI generates a clean, tattoo-ready design in under 30 seconds.</p>
+      <ul class="tool-features">
+        <li>Type any concept, theme, or idea</li>
+        <li>12 distinct tattoo style presets</li>
+        <li>Add a reference image for inspiration</li>
+        <li>Regenerate until it's exactly right</li>
+        <li>Download in high resolution</li>
+      </ul>
+      <a class="tool-cta" href="outil.html?mode=create">
+        Try it now
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ TOOL 2: PLACE ON SKIN ═══════════════════════ -->
+<section class="tool-section">
+  <div class="tool-inner reverse">
+
+    <!-- ANIMATION -->
+    <div class="anim-window fade-up d1">
+      <div class="anim-chrome">
+        <div class="anim-chrome-dot d-red"></div>
+        <div class="anim-chrome-dot d-yellow"></div>
+        <div class="anim-chrome-dot d-green"></div>
+      </div>
+      <div class="anim-body" style="padding: 0; background: #0c0c0c;">
+        <div class="skin-anim">
+
+          <!-- Body silhouette -->
+          <svg class="skin-body-svg" viewBox="0 0 120 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- head -->
+            <ellipse cx="60" cy="28" rx="20" ry="24" stroke="#2a2a3a" stroke-width="1.5"/>
+            <!-- neck -->
+            <rect x="52" y="50" width="16" height="14" rx="4" fill="#141414" stroke="#2a2a3a" stroke-width="1.5"/>
+            <!-- body -->
+            <path d="M30 64 Q20 80 18 110 L18 170 Q18 180 30 182 L90 182 Q102 180 102 170 L102 110 Q100 80 90 64 L30 64Z" fill="#111" stroke="#2a2a3a" stroke-width="1.5"/>
+            <!-- left arm -->
+            <path d="M30 68 Q14 80 10 120 Q9 135 12 148" stroke="#2a2a3a" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <!-- right arm -->
+            <path d="M90 68 Q106 80 110 120 Q111 135 108 148" stroke="#2a2a3a" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <!-- left leg -->
+            <path d="M40 182 Q36 210 34 240" stroke="#2a2a3a" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <!-- right leg -->
+            <path d="M80 182 Q84 210 86 240" stroke="#2a2a3a" stroke-width="14" stroke-linecap="round" fill="none"/>
+          </svg>
+
+          <!-- Floating tattoo to place -->
+          <div class="skin-tattoo-preview" style="top: 30%; left: 10%;">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M40 65 C40 65 22 52 20 40 C18 28 40 18 40 18 C40 18 62 28 60 40 C58 52 40 65 40 65Z" stroke="#c8c8d8" stroke-width="1.2" fill="none"/>
+              <path d="M40 18 L40 65" stroke="#c8c8d8" stroke-width="0.8"/>
+              <circle cx="40" cy="32" r="4" stroke="#c8c8d8" stroke-width="1" fill="none"/>
+            </svg>
+          </div>
+
+          <!-- Target dot on forearm -->
+          <div class="skin-target-dot" style="top: 52%; left: 12%;"></div>
+
+          <!-- Label -->
+          <div class="skin-label">Click to place on body</div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="tool-meta fade-up d2">
+      <div class="tool-number">02</div>
+      <div class="tool-tag">AR Placement</div>
+      <h2 class="tool-name">Place on skin</h2>
+      <p class="tool-desc">Upload a photo of any body part and see the tattoo rendered directly on your skin. Resize, rotate, and reposition until it looks exactly how you'd want it inked.</p>
+      <ul class="tool-features">
+        <li>Upload your own photo or use a reference</li>
+        <li>AI adapts the design to skin tone and lighting</li>
+        <li>Resize, rotate, and fine-tune placement</li>
+        <li>Works on arm, shoulder, back, chest, and more</li>
+        <li>Share the result with your tattoo artist</li>
+      </ul>
+      <a class="tool-cta" href="outil.html?mode=body">
+        Try it now
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- NEXT TOOLS -->
+<section class="next-section fade-up">
+  <p class="next-label">Continue exploring</p>
+  <h2 class="next-title">More tools in Ink Studio AI</h2>
+  <div class="next-grid">
+    <a class="next-card" href="tools-2.html">
+      <div class="next-card-num">02</div>
+      <div class="next-card-name">Photo → Tattoo</div>
+      <div class="next-card-desc">Transform any photo into a tattoo design. Plus merge two designs into one.</div>
+    </a>
+    <a class="next-card" href="tools-3.html">
+      <div class="next-card-num">03</div>
+      <div class="next-card-name">Stencil + Rework</div>
+      <div class="next-card-desc">Generate a printable stencil. Rework and improve an existing tattoo photo.</div>
+    </a>
+    <a class="next-card" href="tools-4.html">
+      <div class="next-card-num">04</div>
+      <div class="next-card-name">PNG Export + Projects</div>
+      <div class="next-card-desc">Remove background for clean PNGs. Save and organize all your designs.</div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="index.html">INK STUDIO AI</a>
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="outil.html">Studio</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+</footer>
+
+<script>
+  /* ── CURSOR ── */
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function loop() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    dot.style.left  = mx + 'px'; dot.style.top  = my + 'px';
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,button,.gen-chip').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  });
+  document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
+  document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-hidden'));
+
+  /* ── SCROLL REVEAL ── */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  /* ── TYPING ANIMATION ── */
+  const phrases = [
+    'Lotus flower, fine line style',
+    'Wolf howling at the moon',
+    'Geometric compass rose',
+    'Minimalist mountain range',
+  ];
+  let phraseIdx = 0, charIdx = 0, deleting = false;
+  const promptEl = document.getElementById('gen-prompt-text');
+
+  function type() {
+    const phrase = phrases[phraseIdx];
+    if (!deleting) {
+      charIdx++;
+      promptEl.innerHTML = phrase.slice(0, charIdx) + '<span class="gen-cursor"></span>';
+      if (charIdx === phrase.length) {
+        deleting = true;
+        setTimeout(type, 2200);
+        return;
+      }
+      setTimeout(type, 65);
+    } else {
+      charIdx--;
+      promptEl.innerHTML = phrase.slice(0, charIdx) + '<span class="gen-cursor"></span>';
+      if (charIdx === 0) {
+        deleting = false;
+        phraseIdx = (phraseIdx + 1) % phrases.length;
+        setTimeout(type, 400);
+        return;
+      }
+      setTimeout(type, 30);
+    }
+  }
+  setTimeout(type, 800);
+
+  /* ── STYLE CHIP ROTATION ── */
+  const chips = document.querySelectorAll('.gen-chip');
+  let activeChip = 0;
+  setInterval(() => {
+    chips[activeChip].classList.remove('active');
+    activeChip = (activeChip + 1) % chips.length;
+    chips[activeChip].classList.add('active');
+  }, 3000);
+
+  chips.forEach((chip, i) => {
+    chip.addEventListener('click', () => {
+      chips[activeChip].classList.remove('active');
+      activeChip = i;
+      chip.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

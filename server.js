@@ -1324,6 +1324,11 @@ app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
       if (designPath && fs.existsSync(designPath)) fs.unlinkSync(designPath);
     }
 
+    try {
+      const su = await getSessionUser(req);
+      if (su) await saveGeneration(su.id, 'on-body', imageUrl, { zone, model: 'gpt-image-1' });
+    } catch {}
+
     res.json({ imageUrl, jobId: null, model: 'gpt-image-1' });
 
   } catch (err) {
@@ -1436,6 +1441,11 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
       `no photographic scene, no dark background. Centered, full design visible, clean crisp linework.`;
     const imageUrl = await openAIEditMulti(petPrompt, [photoPath], '1024x1024');
 
+    try {
+      const su = await getSessionUser(req);
+      if (su) await saveGeneration(su.id, 'pet', imageUrl, { style, details, zone });
+    } catch {}
+
     res.json({ imageUrl, zone });
 
   } catch (err) {
@@ -1461,6 +1471,10 @@ app.post('/stencil', upload.single('image'), async (req, res) => {
   try {
     console.log('\n🖊 Stencil via OpenAI gpt-image-1');
     const imageUrl = await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto');
+    try {
+      const su = await getSessionUser(req);
+      if (su) await saveGeneration(su.id, 'stencil', imageUrl, {});
+    } catch {}
     res.json({ imageUrl });
   } catch (err) {
     console.error('❌ /stencil :', err.message);
@@ -1527,6 +1541,11 @@ app.post('/merge-tattoos', upload.fields([
       `${prompt} Flat 2D tattoo flash design on a pure solid white background (#FFFFFF), ` +
       `no photographic scene, no dark background, centered, clean crisp linework.`;
     const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024');
+
+    try {
+      const su = await getSessionUser(req);
+      if (su) await saveGeneration(su.id, 'merge', imageUrl, { style, details, count: base64Images.length });
+    } catch {}
 
     res.json({ imageUrl });
   } catch (err) {
