@@ -663,10 +663,10 @@ function buildRenderWrapper(designPrompt, { bw = true } = {}) {
   return (
     `Premium tattoo flash design on pure white background #FFFFFF. ` +
     `${designPrompt} ` +
-    `Rendering: hyperrealistic marble-finish shading, fine single-needle linework, smooth photorealistic grey gradients, deep blacks and bright whites. ` +
-    `Background layer: faint sacred-geometry construction circles and cross-axis lines in very light grey, thin architectural blueprint annotations at low opacity. ` +
-    `Composition: strong single focal point, generous white negative space, editorial layout. ` +
-    `${colorRule} No skin, no body, no frame. Centered, full design visible, ready to tattoo.`
+    `Rendering: photorealistic polished marble sculpture — ultra-smooth chrome-like grey shading, deep rich blacks, bright specular highlights, fine single-needle linework, museum-quality realism with dimensional depth and volume. ` +
+    `Background layer: precise sacred-geometry blueprint diagram — concentric construction circles, vertical and horizontal axis lines, golden ratio spiral annotation, small architectural fragments (Corinthian column, arch) at very low opacity, thin connector lines ending in dots. ` +
+    `Composition: dominant central focal point, generous white negative space, structured editorial layout. ` +
+    `${colorRule} No skin texture, no frame. Centered, full design visible, ready to tattoo.`
   );
 }
 
@@ -700,7 +700,7 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
 // Exemple few-shot : montre le NIVEAU de prompt attendu (gpt-4o calque la qualité)
 const ENHANCE_FEWSHOT_USER = 'un loup';
 const ENHANCE_FEWSHOT_ASSISTANT =
-  `A majestic wolf head, dominant central focal point, rendered in hyperrealistic marble-finish black and grey — deep velvety blacks, smooth silvery shading, fine single-needle linework on the silhouette. The piercing eyes are the sharpest focal point; fur detail concentrates at the face and dissolves into white space toward the neck. Background: faint sacred-geometry concentric circles and a thin cross-axis in very light grey. Generous white negative space on all sides. Editorial composition, no frame, no scenery, pure white #FFFFFF background, ready to tattoo.`;
+  `A majestic wolf head as the dominant focal point, rendered as a photorealistic polished marble sculpture — ultra-smooth chrome-like grey shading, deep rich blacks, bright specular highlights on the brow and snout, fine single-needle linework defining the silhouette. Museum-quality dimensional depth; fur texture concentrates at the face and dissolves into open white space. Background: precise blueprint sacred-geometry diagram — concentric construction circles, vertical axis line, golden ratio annotation in very light grey. Small Corinthian column fragment at low opacity. Generous white negative space, editorial layout. Pure white #FFFFFF background, ready to tattoo.`;
 
 async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const apiKey = process.env.OPENAI_API_KEY || '';
