@@ -14,7 +14,10 @@ const PORT = process.env.PORT || 3000;
 // ═══════════════════════════════════════════════════
 // BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
 // ═══════════════════════════════════════════════════
-const PLAN_CREDITS = { free: 5, pro: 100, studio: 500 };
+// Crédits par plan (1 génération = 10 crédits → gros chiffres, même rentabilité)
+const PLAN_CREDITS = { free: 30, pro: 400, studio: 1500 };
+// Coût en crédits par action
+const CREDIT_COST = { design: 10, body: 15, stencil: 10, merge: 15, pet: 10 };
 let db = null;
 try {
   if (process.env.DATABASE_URL) {
@@ -998,6 +1001,27 @@ function publicUser(u) {
   };
 }
 
+// Recharge mensuelle automatique des crédits selon le plan
+async function applyMonthlyReset(user) {
+  if (!db || !user) return user;
+  if (new Date(user.credits_reset_at) > new Date()) return user;
+  const amount = PLAN_CREDITS[user.plan] || PLAN_CREDITS.free;
+  const r = await db.query(
+    `UPDATE users SET credits_remaining=$1, credits_reset_at = now() + interval '30 days' WHERE id=$2 RETURNING *`,
+    [amount, user.id]
+  );
+  return r.rows[0];
+}
+
+// Débite des crédits ; renvoie le solde restant
+async function chargeCredits(userId, cost) {
+  const r = await db.query(
+    `UPDATE users SET credits_remaining = GREATEST(credits_remaining - $1, 0) WHERE id=$2 RETURNING credits_remaining`,
+    [cost, userId]
+  );
+  return r.rows[0] ? r.rows[0].credits_remaining : null;
+}
+
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
@@ -1029,8 +1053,9 @@ app.post('/auth/google', async (req, res) => {
 
 // Profil de l'utilisateur connecté
 app.get('/me', async (req, res) => {
-  const u = await getSessionUser(req);
+  let u = await getSessionUser(req);
   if (!u) return res.status(401).json({ error: 'non connecté' });
+  u = await applyMonthlyReset(u);
   res.json({ user: publicUser(u) });
 });
 
@@ -1106,6 +1131,18 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       fs.renameSync(inspFile.path, inspPath);
     }
 
+    // ── Crédits : connexion requise + solde suffisant (si DB active) ──
+    let sessionUser = null;
+    const creditCost = CREDIT_COST.design;
+    if (db) {
+      sessionUser = await getSessionUser(req);
+      if (!sessionUser) return res.status(401).json({ error: 'login_required' });
+      sessionUser = await applyMonthlyReset(sessionUser);
+      if (sessionUser.credits_remaining < creditCost) {
+        return res.status(402).json({ error: 'no_credits', credits: sessionUser.credits_remaining });
+      }
+    }
+
     let imageUrl, jobId = null;
 
     if (process.env.OPENAI_API_KEY) {
@@ -1142,7 +1179,11 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       imageUrl = r.imageUrl; jobId = r.jobId;
     }
 
-    res.json({ imageUrl, jobId, prompt, zone });
+    // Débit des crédits après succès
+    let creditsLeft = null;
+    if (db && sessionUser) creditsLeft = await chargeCredits(sessionUser.id, creditCost);
+
+    res.json({ imageUrl, jobId, prompt, zone, credits: creditsLeft });
 
   } catch (err) {
     console.error('❌ /generate :', err.message);

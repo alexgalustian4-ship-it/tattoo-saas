@@ -2947,9 +2947,12 @@
           fd.append('zone', '');
           fd.append('freePrompt', '0');
           if (fileInp.files[0]) fd.append('inspiration', await resizeImage(fileInp.files[0]));
-          const resp = await fetch('/generate', { method: 'POST', body: fd });
+          const resp = await fetch('/generate', { method: 'POST', body: fd, credentials: 'include' });
+          if (resp.status === 401) { hideStatus(status); showAuthModal('login'); return; }
           const data = await resp.json();
+          if (resp.status === 402) { setError(status, 'Crédits épuisés — passe à un plan supérieur pour continuer.'); return; }
           if (!resp.ok) throw new Error(data.error || 'Server error.');
+          if (data.credits != null) updateCredits(data.credits);
           designImgUrl = data.imageUrl; designJobId = data.jobId;
           resImg.src = data.imageUrl;
           hideStatus(status); resWrap.classList.add('show');
@@ -3562,6 +3565,15 @@
         name.textContent = 'Sign in';
         avatar.textContent = '?';
       }
+    }
+
+    // Met à jour le solde de crédits (après une génération)
+    function updateCredits(n) {
+      if (!currentUser) return;
+      currentUser.credits = n;
+      localStorage.setItem('ink_user', JSON.stringify(currentUser));
+      const c = document.getElementById('acc-credits');
+      if (c) c.textContent = n;
     }
 
     // Clic sur le badge : connecté → menu compte, sinon → connexion
