@@ -571,9 +571,9 @@ function sleep(ms) {
 // Retourne un message d'erreur safe pour le client (jamais de détails techniques)
 function clientError(err) {
   const msg = err.message || '';
-  if (msg === 'NSFW_BLOCKED' || /nsfw/i.test(msg)) {
+  if (msg === 'NSFW_BLOCKED' || /nsfw|safety system|content[_ ]?policy|moderation/i.test(msg)) {
     return 'Ta description a été bloquée par le filtre de contenu de l\'IA. ' +
-           'Reformule en évitant : nudité, corps dénudés, anges/figures torse nu, violence, armes, sang ou symboles trop sensibles. ' +
+           'Reformule en évitant : nudité, corps dénudés, figures torse nu, violence, armes réalistes, sang ou symboles trop sensibles. ' +
            'Décris plutôt une figure habillée, en armure ou en drapé couvrant.';
   }
   if (/timeout/i.test(msg)) {
@@ -669,6 +669,7 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
     (mood ? `=== MOOD ===\n${mood}\n\n` : '') +
     (zone ? `=== FORMAT ===\n${zone}\n\n` : '') +
     `Describe the subject richly within the style: composition, focal point, supporting elements, linework, shading, contrast, negative space. ` +
+    `SAFE FOR WORK: any human/figure must be fully clothed, draped or in armor — no nudity, no bare chest, no exposed skin emphasis; no graphic gore, blood or explicit violence; weapons only as stylized ornamental elements. ` +
     `Match the quality, density and structure of the example answer. ` +
     `Output ONLY the final image prompt in English (90-160 words), no preamble, no quotes, no lists.`;
   try {
