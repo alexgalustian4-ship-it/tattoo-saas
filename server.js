@@ -1175,13 +1175,15 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     }
 
     // ── Crédits : connexion requise + solde suffisant (si DB active) ──
+    const OWNER_EMAIL = 'alexgalustian4@gmail.com';
     let sessionUser = null;
     const creditCost = CREDIT_COST.design;
     if (db) {
       sessionUser = await getSessionUser(req);
       if (!sessionUser) return res.status(401).json({ error: 'login_required' });
       sessionUser = await applyMonthlyReset(sessionUser);
-      if (sessionUser.credits_remaining < creditCost) {
+      const isOwner = sessionUser.email === OWNER_EMAIL;
+      if (!isOwner && sessionUser.credits_remaining < creditCost) {
         return res.status(402).json({ error: 'no_credits', credits: sessionUser.credits_remaining });
       }
     }
@@ -1232,7 +1234,8 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
     // Débit des crédits + sauvegarde en historique après succès
     let creditsLeft = null;
     if (db && sessionUser) {
-      creditsLeft = await chargeCredits(sessionUser.id, creditCost);
+      const isOwner = sessionUser.email === OWNER_EMAIL;
+      if (!isOwner) creditsLeft = await chargeCredits(sessionUser.id, creditCost);
       await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
     }
 
