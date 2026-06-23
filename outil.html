@@ -2294,6 +2294,26 @@
       return out.toDataURL('image/png');
     }
 
+    // ── Stencil via gpt-image-1 (endpoint /stencil + STENCIL_PROMPT serveur) ──
+    // Remplace l'ancien algorithme local sobelStencil() : on envoie l'image au
+    // serveur qui la transforme avec gpt-image-1 et le prompt officiel.
+    async function apiStencil(src) {
+      let blob;
+      if (src instanceof File || src instanceof Blob) {
+        blob = src;
+      } else {
+        const blobUrl = await fetchImageBlob(src);
+        blob = await (await fetch(blobUrl)).blob();
+        URL.revokeObjectURL(blobUrl);
+      }
+      const fd = new FormData();
+      fd.append('image', new File([blob], 'design.png', { type: blob.type || 'image/png' }));
+      const r = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Stencil failed');
+      return data.imageUrl;
+    }
+
     function initBA(wrapId, layerId, lineId, knobId) {
       const wrap = document.getElementById(wrapId);
       const layer = document.getElementById(layerId);
@@ -2543,9 +2563,7 @@
       const btn = document.getElementById('btn-stencil');
       btn.disabled = true; btn.textContent = '🖊 Generating…';
       try {
-        const blobUrl = await fetchImageBlob(designImgUrl);
-        const img = await loadImg(blobUrl);
-        const stencilUrl = sobelStencil(img);
+        const stencilUrl = await apiStencil(designImgUrl);
         document.getElementById('stencil-img').src = stencilUrl;
         document.getElementById('stencil-before-img').src = designImgUrl;
         initBA('stencil-ba-wrap', 'stencil-after-layer', 'stencil-ba-line', 'stencil-ba-knob');
@@ -2554,7 +2572,6 @@
           a.download = 'tattoo-stencil.png'; a.click();
         };
         show(document.getElementById('stencil-result'));
-        URL.revokeObjectURL(blobUrl);
       } catch(e) { alert('Stencil error: ' + e.message); }
       finally { btn.disabled = false; btn.textContent = '🖊 Stencil'; }
     });
@@ -3815,19 +3832,21 @@
         resultWrap.style.display = 'none';
 
         const reader = new FileReader();
-        reader.onload = e => {
-          const img = new Image();
-          img.onload = () => {
-            beforeImg.src = img.src;
-            const stencilUrl = sobelStencil(img);
+        reader.onload = async e => {
+          beforeImg.src = e.target.result;
+          try {
+            const stencilUrl = await apiStencil(file);
             afterImg.src = stencilUrl;
             dlBtn.href = stencilUrl;
             dlBtn.download = 'stencil.png';
             processing.style.display = 'none';
             resultWrap.style.display = 'block';
             initBA('studio-ba-wrap', 'studio-after-layer', 'studio-ba-line', 'studio-ba-knob');
-          };
-          img.src = e.target.result;
+          } catch (err) {
+            processing.style.display = 'none';
+            uploadLabel.style.display = 'flex';
+            alert('Stencil error: ' + err.message);
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -4421,18 +4440,16 @@
       }
     }
 
-    function histStencil(imageUrl) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const dataUrl = sobelStencil(img);
+    async function histStencil(imageUrl) {
+      try {
+        const dataUrl = await apiStencil(imageUrl);
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = 'stencil.png';
         a.click();
-      };
-      img.onerror = () => alert('Impossible de charger l\'image pour le stencil.');
-      img.src = imageUrl;
+      } catch (e) {
+        alert('Stencil error : ' + e.message);
+      }
     }
 
     // Réutiliser un ancien prompt : revient au chat central, le pré-remplit et applique le style
