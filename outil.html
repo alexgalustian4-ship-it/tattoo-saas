@@ -1237,7 +1237,6 @@
         <img id="hub-result-img" src="" alt="Your tattoo design">
         <div class="ai-result-actions">
           <button class="btn btn-primary" id="hub-dl" style="width:auto;padding:11px 22px">↓ Download</button>
-          <button class="btn btn-secondary" id="hub-place" style="width:auto;padding:11px 22px">Place on skin →</button>
           <button class="btn btn-secondary" id="hub-regen" style="width:auto;padding:11px 22px">↻ Regenerate</button>
         </div>
       </div>
@@ -2988,7 +2987,14 @@
           designImgUrl = data.imageUrl; designJobId = data.jobId;
           resImg.src = data.imageUrl;
           hideStatus(status); resWrap.classList.add('show');
-          document.getElementById('hub-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
+          document.getElementById('hub-dl').onclick = () => {
+            const imgUrl = data.imageUrl;
+            if (imgUrl && imgUrl.startsWith('data:')) {
+              const a = document.createElement('a'); a.href = imgUrl; a.download = 'tattoo-design.png'; a.click();
+            } else {
+              gatedDownload(`/download?url=${encodeURIComponent(imgUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
+            }
+          };
           saveProject({ type:'design', imageUrl: data.imageUrl, params:{ sujet: prompt } });
           resWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (err) { setError(status, err.message); }
@@ -2997,13 +3003,6 @@
       gen.addEventListener('click', generate);
       document.getElementById('hub-regen').addEventListener('click', generate);
 
-      document.getElementById('hub-place').addEventListener('click', () => {
-        if (!designImgUrl) return;
-        activateMode1();
-        const goto = document.getElementById('free-btn-goto-step2');
-        if (goto) goto.click();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
 
       document.getElementById('hub-guided').addEventListener('click', () => {
         activateMode1();
