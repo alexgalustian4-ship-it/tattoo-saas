@@ -1233,13 +1233,16 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 
     // Débit des crédits + sauvegarde en historique après succès
     let creditsLeft = null;
+    let savedUrl = null;
     if (db && sessionUser) {
       const isOwner = sessionUser.email === OWNER_EMAIL;
       if (!isOwner) creditsLeft = await chargeCredits(sessionUser.id, creditCost);
-      await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
+      savedUrl = await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
     }
+    // Retourner l'URL /gens/ sauvegardée si dispo (évite d'envoyer une data URL géante au front)
+    const responseUrl = savedUrl || imageUrl;
 
-    res.json({ imageUrl, jobId, prompt, zone, credits: creditsLeft, finalPrompt });
+    res.json({ imageUrl: responseUrl, jobId, prompt, zone, credits: creditsLeft, finalPrompt });
 
   } catch (err) {
     console.error('❌ /generate :', err.message);

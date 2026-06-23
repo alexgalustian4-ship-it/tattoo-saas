@@ -2987,14 +2987,9 @@
           designImgUrl = data.imageUrl; designJobId = data.jobId;
           resImg.src = data.imageUrl;
           hideStatus(status); resWrap.classList.add('show');
-          document.getElementById('hub-dl').onclick = () => {
-            const imgUrl = data.imageUrl;
-            if (imgUrl && imgUrl.startsWith('data:')) {
-              const a = document.createElement('a'); a.href = imgUrl; a.download = 'tattoo-design.png'; a.click();
-            } else {
-              gatedDownload(`/download?url=${encodeURIComponent(imgUrl)}&filename=tattoo-design.jpg`, 'tattoo-design.jpg');
-            }
-          };
+          document.getElementById('hub-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.png`, 'tattoo-design.png');
+          resImg.style.cursor = 'zoom-in';
+          resImg.onclick = () => window.open(data.imageUrl, '_blank');
           saveProject({ type:'design', imageUrl: data.imageUrl, params:{ sujet: prompt } });
           resWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (err) { setError(status, err.message); }
