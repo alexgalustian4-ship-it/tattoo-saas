@@ -658,21 +658,15 @@ function openAISizeForZone(zone) {
 // Wrapper de rendu "flash de tatouage premium" (réutilisable)
 function buildRenderWrapper(designPrompt, { bw = true } = {}) {
   const colorRule = bw
-    ? `Pure neutral black & grey only — true blacks, neutral cool greys, pure white. No color, no sepia, no brown/cream/beige tint, no warm tone, no aged-paper look.`
-    : `Clean saturated tattoo colors as described, no muddy tones.`;
+    ? `Pure black and grey only, no color, no warm tones.`
+    : `Clean saturated colors as described.`;
   return (
-    `Professional tattoo design presented as flat 2D tattoo flash on a pure solid white background (#FFFFFF). ` +
+    `Premium tattoo flash design on pure white background #FFFFFF. ` +
     `${designPrompt} ` +
-    // ── Hiérarchie & retenue : injectées DANS le prompt image (la cause des rendus chargés) ──
-    `COMPOSITION — THIS IS THE PRIORITY: one single clear dominant focal point with strong visual hierarchy. ` +
-    `The focal subject carries the detail; any secondary element stays lighter, smaller and clearly subordinate. ` +
-    `Generous clean negative space around and within the design — do NOT fill the canvas. ` +
-    `Restraint over decoration: do NOT add ornaments, patterns, dotwork, geometry, banners, smoke, or background elements that were not explicitly requested. ` +
-    `The design must read clearly from a distance with a strong, simple silhouette. ` +
-    `RENDER: elite black-and-grey tattoo artist quality, crisp clean linework, smooth realistic shading, controlled contrast; detail concentrated only where it matters, edges breathing into white space. ${colorRule} ` +
-    `This is the tattoo artwork ONLY — no photographic scene, no skin, no body, no frame, no mockup. ` +
-    `Pure white background #FFFFFF (not cream, not off-white) around the whole design, no dark fill, no scenery, no shading behind the subject. ` +
-    `Centered, full design visible, ready to be tattooed.`
+    `Rendering: hyperrealistic marble-finish shading, fine single-needle linework, smooth photorealistic grey gradients, deep blacks and bright whites. ` +
+    `Background layer: faint sacred-geometry construction circles and cross-axis lines in very light grey, thin architectural blueprint annotations at low opacity. ` +
+    `Composition: strong single focal point, generous white negative space, editorial layout. ` +
+    `${colorRule} No skin, no body, no frame. Centered, full design visible, ready to tattoo.`
   );
 }
 
@@ -690,10 +684,8 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
     const buf = Buffer.from(b64, 'base64');
     let img = sharp(buf);
     if (grayscale) img = img.grayscale();
-    img = img
-      .normalise()                 // étire l'histogramme : noirs plus profonds, blancs plus purs
-      .linear(1.08, -8)            // léger boost de contraste
-      .sharpen({ sigma: 0.8 });    // netteté douce sur les lignes
+    // Minimal post-processing — let gpt-image-1 output speak for itself
+    img = img.sharpen({ sigma: 0.5 });
     const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
@@ -708,7 +700,7 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
 // Exemple few-shot : montre le NIVEAU de prompt attendu (gpt-4o calque la qualité)
 const ENHANCE_FEWSHOT_USER = 'un loup';
 const ENHANCE_FEWSHOT_ASSISTANT =
-  `A single majestic wolf head as the clear, dominant central focal point, rendered in hyper-realistic black and grey with deep velvety blacks and smooth silvery shading. The fur is finely detailed only around the face and dissolves softly into clean white negative space toward the neck. The piercing eyes are the sharpest point of focus and anchor the whole composition. Strong directional lighting carves contrast and volume across the muzzle. Crisp single-needle linework on the silhouette, dense realistic shading concentrated at the core, the lower edges breathing into open white. No background, no ornaments, no added symbols or geometry — restrained, balanced and premium. A world-class black and grey tattoo flash on a pure white background, no color, no scenery.`;
+  `A majestic wolf head, dominant central focal point, rendered in hyperrealistic marble-finish black and grey — deep velvety blacks, smooth silvery shading, fine single-needle linework on the silhouette. The piercing eyes are the sharpest focal point; fur detail concentrates at the face and dissolves into white space toward the neck. Background: faint sacred-geometry concentric circles and a thin cross-axis in very light grey. Generous white negative space on all sides. Editorial composition, no frame, no scenery, pure white #FFFFFF background, ready to tattoo.`;
 
 async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const apiKey = process.env.OPENAI_API_KEY || '';
@@ -717,21 +709,15 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const mood   = AMBIANCE_MODIFIERS[extras.ambiance] || '';
   const zone   = ZONE_COMPOSITION[extras.zone] || '';
   const sys =
-    `You are a world-class tattoo design prompt engineer for the gpt-image-1 image model, working for a luxury black & grey tattoo studio. ` +
-    `Turn the user's idea into ONE single vivid, detailed image prompt for a flat tattoo DESIGN on a pure white background. ` +
-    `Use STRICTLY pure neutral black and grey (true blacks, neutral greys, pure white) unless the user clearly asks for color — never sepia, never warm/brown/cream tones. ` +
-    `Lead with these exact visual anchors and keep them dominant: ${style.keyMarkers}. ` +
-    `Then stay strictly inside this style and these rules:\n\n` +
-    `=== STYLE ===\n${style.recipe}\n\n` +
-    `=== RULES ===\n${DESIGN_SYSTEM_PROMPT}\n\n` +
-    (mood ? `=== MOOD ===\n${mood}\n\n` : '') +
-    (zone ? `=== FORMAT ===\n${zone}\n\n` : '') +
-    `Build the description around ONE single dominant focal point with a strong, clear visual hierarchy: the focal subject carries the detail, any secondary element stays lighter and clearly subordinate, and there is generous clean negative space. ` +
-    `Show restraint — do NOT invent ornaments, patterns, geometry, symbols, banners, smoke or background elements that the user did not ask for; only describe what genuinely serves the idea. ` +
-    `Concentrate detail where it matters and let the edges breathe into white space; the design must read clearly from a distance with a simple strong silhouette. ` +
-    `SAFE FOR WORK: any human/figure must be fully clothed, draped or in armor — no nudity, no bare chest, no exposed skin emphasis; no graphic gore, blood or explicit violence; weapons only as stylized ornamental elements. ` +
-    `Match the restraint, clear hierarchy and structure of the example answer. ` +
-    `Output ONLY the final image prompt in English (80-140 words), no preamble, no quotes, no lists.`;
+    `You are a prompt engineer for a premium tattoo studio. This studio has one signature aesthetic: ` +
+    `hyperrealistic marble-finish black and grey rendering, fine single-needle linework, faint sacred-geometry construction lines and concentric circles in the background, classical architectural accents (columns, arches) at low opacity, generous white negative space, pure white #FFFFFF background. Editorial, premium, Greco-Roman inspired. ` +
+    `Your job: turn the user's idea into ONE focused image prompt that places THEIR SUBJECT inside this studio aesthetic. ` +
+    `Lead with the subject and its rendering. Then briefly describe the background layer (sacred geometry, blueprint lines). ` +
+    `Style context for this generation: ${style.keyMarkers}. ` +
+    (mood ? `Mood: ${mood} ` : '') +
+    (zone ? `Format: ${zone} ` : '') +
+    `Rules: pure black and grey unless user asks for color. Fully clothed figures. No gore. ` +
+    `Output ONLY the image prompt in English, 60-100 words, no preamble, no lists.`;
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
