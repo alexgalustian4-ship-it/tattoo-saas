@@ -695,6 +695,41 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
   }
 }
 
+// ─────────────────────────────────────────────────
+// QUALITY CHECKER — vérifie le rendu (vision gpt-4o). Fail-open : en cas d'erreur, on valide.
+async function qualityCheck(dataUrl, { bw = true } = {}) {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey || !dataUrl || !dataUrl.startsWith('data:')) return { pass: true, reason: '' };
+  try {
+    const checklist =
+      `You are a strict QA reviewer for a premium tattoo design generator. Judge if this image is a VALID, clean, high-quality tattoo flash design. ` +
+      `It MUST: be a flat tattoo design only (NOT a photo of skin/body, NOT a mockup, NOT a framed picture), sit on a pure WHITE background, ` +
+      (bw ? `be pure black & grey with NO color and NO sepia/warm/cream tint, ` : `have clean, well-controlled colors, `) +
+      `show a clear readable subject, and look tattooable and professional. ` +
+      `Reply with STRICT JSON only: {"pass": true|false, "reason": "<short>"}. Set pass=false ONLY if it clearly violates one of the must-haves.`;
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [ { role: 'user', content: [
+          { type: 'text', text: checklist },
+          { type: 'image_url', image_url: { url: dataUrl } },
+        ] } ],
+        temperature: 0, max_tokens: 80,
+        response_format: { type: 'json_object' },
+      }),
+    });
+    const data = await resp.json();
+    const txt = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '{}';
+    const parsed = JSON.parse(txt);
+    return { pass: parsed.pass !== false, reason: parsed.reason || '' };
+  } catch (e) {
+    console.warn('⚠ qualityCheck failed:', e.message);
+    return { pass: true, reason: '' }; // fail-open : ne jamais bloquer une image valide
+  }
+}
+
 async function generateWithOpenAI(prompt, referenceImagePath = null, size = '1024x1024') {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
@@ -947,7 +982,21 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 
       // Wrapper de rendu premium (réutilisable)
       const openaiPrompt = buildRenderWrapper(designPrompt, { bw });
-      imageUrl = await generateWithOpenAI(openaiPrompt, inspPath, size);
+
+      // Boucle : génération → finition studio → quality checker → régénération (max 1 fois)
+      const MAX_ATTEMPTS = 2;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        let img = await generateWithOpenAI(openaiPrompt, inspPath, size);
+        img = await finishImage(img, { grayscale: bw });
+        imageUrl = img;
+        if (attempt < MAX_ATTEMPTS) {
+          const qc = await qualityCheck(img, { bw });
+          if (!qc.pass) { console.log('   ⚠ Quality check échoué (' + qc.reason + ') → régénération'); continue; }
+          console.log('   ✅ Quality check OK');
+        }
+        break;
+      }
+      console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
       // ── Fallback : Higgsfield ──
       console.log('   Moteur  : Higgsfield (fallback)');
@@ -958,13 +1007,6 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
         'La génération a été bloquée par le filtre du modèle.\n' +
         'Essaie de reformuler ta description.');
       imageUrl = r.imageUrl; jobId = r.jobId;
-    }
-
-    // Finition studio (contraste + netteté), noir & blanc par défaut sauf si couleur demandée
-    if (imageUrl && imageUrl.startsWith('data:')) {
-      const bwFinish = !wantsColor(sujet) && !getStyle(style).colorByDefault;
-      imageUrl = await finishImage(imageUrl, { grayscale: bwFinish });
-      console.log(bwFinish ? '   ⚫ Finition N&B' : '   🎨 Finition couleur');
     }
 
     res.json({ imageUrl, jobId, prompt, zone });
