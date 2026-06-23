@@ -1120,9 +1120,28 @@
       <a href="index.html#how">How it works</a>
       <a href="index.html">Home</a>
     </div>
-    <div id="user-badge" class="visible" onclick="showAuthModal('login')">
+    <div id="user-badge" class="visible" onclick="handleBadgeClick()">
       <div id="user-avatar">?</div>
       <span id="user-name">Sign in</span>
+    </div>
+    <!-- Menu compte (connecté) -->
+    <div id="account-menu" style="display:none;position:absolute;top:58px;right:18px;z-index:200;width:260px;background:linear-gradient(180deg,rgba(22,22,28,0.98),rgba(14,14,18,0.98));border:1px solid var(--border-hover);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);backdrop-filter:blur(12px);overflow:hidden">
+      <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border)">
+        <p id="acc-name" style="font-weight:600;color:#fff;font-size:0.9rem;margin:0 0 2px"></p>
+        <p id="acc-email" style="font-size:0.74rem;color:var(--text-muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></p>
+      </div>
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 3px">Plan</p>
+          <p id="acc-plan" style="font-weight:600;color:#fff;font-size:0.85rem;margin:0;text-transform:capitalize"></p>
+        </div>
+        <div style="text-align:right">
+          <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 3px">Crédits</p>
+          <p id="acc-credits" style="font-weight:600;color:#fff;font-size:0.85rem;margin:0"></p>
+        </div>
+      </div>
+      <button onclick="upgradeFromMenu()" style="width:100%;padding:12px;background:#fff;color:#0a0a0e;border:none;font-weight:600;font-size:0.8rem;cursor:pointer">Upgrade plan</button>
+      <button onclick="logoutUser()" style="width:100%;padding:11px;background:transparent;color:var(--text-muted);border:none;border-top:1px solid var(--border);font-size:0.8rem;cursor:pointer">Log out</button>
     </div>
   </nav>
 
@@ -3544,6 +3563,40 @@
         avatar.textContent = '?';
       }
     }
+
+    // Clic sur le badge : connecté → menu compte, sinon → connexion
+    function handleBadgeClick() {
+      if (currentUser) toggleAccountMenu();
+      else showAuthModal('login');
+    }
+    function toggleAccountMenu() {
+      const m = document.getElementById('account-menu');
+      if (!m) return;
+      const open = m.style.display === 'block';
+      if (open) { m.style.display = 'none'; return; }
+      document.getElementById('acc-name').textContent    = currentUser.name || (currentUser.email || '').split('@')[0];
+      document.getElementById('acc-email').textContent   = currentUser.email || '';
+      document.getElementById('acc-plan').textContent    = currentUser.plan || 'free';
+      document.getElementById('acc-credits').textContent = (currentUser.credits != null ? currentUser.credits : '—');
+      m.style.display = 'block';
+    }
+    function upgradeFromMenu() {
+      document.getElementById('account-menu').style.display = 'none';
+      window.location.href = '/#pricing';
+    }
+    async function logoutUser() {
+      try { await fetch('/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+      localStorage.removeItem('ink_user');
+      currentUser = null;
+      document.getElementById('account-menu').style.display = 'none';
+      updateUserBadge();
+    }
+    // Ferme le menu si on clique ailleurs
+    document.addEventListener('click', (e) => {
+      const m = document.getElementById('account-menu');
+      const b = document.getElementById('user-badge');
+      if (m && m.style.display === 'block' && !m.contains(e.target) && b && !b.contains(e.target)) m.style.display = 'none';
+    });
 
     // Intercepte le téléchargement
     function gatedDownload(url, filename, callback) {
