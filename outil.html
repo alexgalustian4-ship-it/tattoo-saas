@@ -2039,18 +2039,9 @@
 
       <!-- Preview + result -->
       <div id="studio-result-wrap" style="display:none">
-        <div class="ba-wrap" id="studio-ba-wrap">
-          <img id="studio-before-img" src="" alt="Design original" />
-          <div class="ba-after-layer" id="studio-after-layer">
-            <img id="studio-after-img" src="" alt="Stencil" />
-          </div>
-          <div class="ba-line" id="studio-ba-line"></div>
-          <div class="ba-knob" id="studio-ba-knob">
-            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
-          </div>
-          <div class="ba-tags"><span class="ba-tag">Avant</span><span class="ba-tag after">Après</span></div>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid var(--border-hover);background:#fff">
+          <img id="studio-after-img" src="" alt="Stencil" style="display:block;width:100%;height:auto" />
         </div>
-        <p style="text-align:center;font-size:0.74rem;color:var(--text-muted);margin-top:10px">Glisse le curseur pour comparer</p>
         <div style="display:flex;gap:10px;margin-top:14px">
           <a id="studio-dl-btn" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:0.82rem">↓ Télécharger le stencil</a>
           <button id="studio-reset-btn" class="btn btn-secondary" style="font-size:0.82rem;padding:10px 16px">Nouveau</button>
@@ -3021,14 +3012,9 @@
       const uploadLabel  = document.getElementById('studio-upload-label');
       const resultWrap   = document.getElementById('studio-result-wrap');
       const processing   = document.getElementById('studio-processing');
-      const beforeImg    = document.getElementById('studio-before-img');
       const afterImg     = document.getElementById('studio-after-img');
       const dlBtn        = document.getElementById('studio-dl-btn');
       const resetBtn     = document.getElementById('studio-reset-btn');
-      const baWrap       = document.getElementById('studio-ba-wrap');
-      const baAfterLayer = document.getElementById('studio-after-layer');
-      const baLine       = document.getElementById('studio-ba-line');
-      const baKnob       = document.getElementById('studio-ba-knob');
 
       function gaussBlur(src, w, h, r) {
         const sigma = r/2, ks = r*2+1, k = new Float32Array(ks); let s=0;
@@ -3122,17 +3108,14 @@
         if (!file || !file.type.startsWith('image/')) return;
         uploadLabel.style.display = 'none';
         processing.style.display = 'block';
-
-        // Affiche tout de suite l'image d'origine dans le "avant"
-        const originalUrl = URL.createObjectURL(file);
-        beforeImg.src = originalUrl;
+        resultWrap.style.display = 'none';
 
         try {
           // Redimensionne avant l'envoi pour accélérer
           const resized = await resizeImage(file, 1536);
           const fd = new FormData();
           fd.append('image', resized);
-          const res = await fetch('/stencil', { method: 'POST', body: fd });
+          const res = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Erreur stencil');
 
@@ -3141,30 +3124,11 @@
           dlBtn.download = 'stencil.png';
           processing.style.display = 'none';
           resultWrap.style.display = 'block';
-          initSlider(baWrap, baAfterLayer, baLine, baKnob);
         } catch (err) {
           processing.style.display = 'none';
           uploadLabel.style.display = 'flex';
           alert('❌ ' + (err.message || 'Erreur lors de la génération du stencil'));
         }
-      }
-
-      function initSlider(wrap, layer, line, knob) {
-        let dragging = false;
-        function setPos(x) {
-          const r = wrap.getBoundingClientRect();
-          const pct = Math.max(0, Math.min(1, (x - r.left) / r.width));
-          const p = (pct * 100).toFixed(1) + '%';
-          layer.style.clipPath = `inset(0 ${(100 - pct*100).toFixed(1)}% 0 0)`;
-          line.style.left = p; knob.style.left = p;
-        }
-        knob.addEventListener('mousedown', () => dragging = true);
-        knob.addEventListener('touchstart', () => dragging = true, { passive: true });
-        document.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
-        document.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
-        document.addEventListener('mouseup', () => dragging = false);
-        document.addEventListener('touchend', () => dragging = false);
-        setPos(wrap.getBoundingClientRect().left + wrap.offsetWidth * 0.5);
       }
 
       fileInput.addEventListener('change', () => processFile(fileInput.files[0]));
@@ -3814,60 +3778,6 @@
       document.body.style.overflow = '';
     });
 
-    // ── Stencil Studio ────────────────────────────────────────────────
-    (function() {
-      const fileInput   = document.getElementById('studio-file-input');
-      const uploadLabel = document.getElementById('studio-upload-label');
-      const resultWrap  = document.getElementById('studio-result-wrap');
-      const processing  = document.getElementById('studio-processing');
-      const beforeImg   = document.getElementById('studio-before-img');
-      const afterImg    = document.getElementById('studio-after-img');
-      const dlBtn       = document.getElementById('studio-dl-btn');
-      const resetBtn    = document.getElementById('studio-reset-btn');
-
-      function processFile(file) {
-        if (!file || !file.type.startsWith('image/')) return;
-        uploadLabel.style.display = 'none';
-        processing.style.display = 'block';
-        resultWrap.style.display = 'none';
-
-        const reader = new FileReader();
-        reader.onload = async e => {
-          beforeImg.src = e.target.result;
-          try {
-            const stencilUrl = await apiStencil(file);
-            afterImg.src = stencilUrl;
-            dlBtn.href = stencilUrl;
-            dlBtn.download = 'stencil.png';
-            processing.style.display = 'none';
-            resultWrap.style.display = 'block';
-            initBA('studio-ba-wrap', 'studio-after-layer', 'studio-ba-line', 'studio-ba-knob');
-          } catch (err) {
-            processing.style.display = 'none';
-            uploadLabel.style.display = 'flex';
-            alert('Stencil error: ' + err.message);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-
-      fileInput.addEventListener('change', e => processFile(e.target.files[0]));
-
-      // Drag & drop
-      uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = '#b0b4c2'; });
-      uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = '#2a2a3a'; });
-      uploadLabel.addEventListener('drop', e => {
-        e.preventDefault();
-        uploadLabel.style.borderColor = '#2a2a3a';
-        processFile(e.dataTransfer.files[0]);
-      });
-
-      resetBtn.addEventListener('click', () => {
-        fileInput.value = '';
-        resultWrap.style.display = 'none';
-        uploadLabel.style.display = 'flex';
-      });
-    })();
 
     // Fusion image upload
     document.getElementById('rework-fusion-input').addEventListener('change', (e) => {
