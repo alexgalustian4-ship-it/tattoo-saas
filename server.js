@@ -169,7 +169,7 @@ const STYLES = {
     // Template figé (prompt validé par le client sur ChatGPT). ${SUBJECT} = idée du client,
     // injectée telle quelle → le prompt qui atteint gpt-image-1 reste identique au prompt qui marche.
     template:
-      `A heroic classical white marble sculpture of ${'${SUBJECT}'}, Greco-Roman, carved with the polished realism of a Michelangelo statue, in a dynamic powerful pose with strong dimensional anatomy. ` +
+      `A heroic classical white marble sculpture of ${'${SUBJECT}'}, Greco-Roman, carved with the polished realism of a Michelangelo museum statue, in a dynamic powerful pose with strong dimensional anatomy. Fine-art classical sculpture. ` +
       `Rendered as ultra-smooth polished marble: seamless soft gradients, glossy highlights, razor-sharp carved detail, strong three-dimensional volume, bright clean whites and deep grey shadows, smooth continuous tone with no grain, no stippling and no sketchy pencil strokes. ` +
       `Behind the subject, a radiant halo of fine thin sun rays and faint concentric sacred-geometry construction circles with golden-ratio arcs; a bold white starburst sunburst as a focal accent; soft pale grey smoke clouds drifting at the base; small technical dot-grid annotations in the corners, kept light and elegant. ` +
       `Pure solid white background, perfectly centered, symmetrical editorial composition, generous negative space. Premium black and grey tattoo concept design, high contrast, no color, flat 2D, no skin, no mockup, no frame, ready to tattoo.`,
@@ -842,6 +842,7 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
     fd.append('n', '1');
     fd.append('size', size);
     fd.append('quality', 'high');
+    fd.append('moderation', 'low');   // filtre artistique allégé (sculptures classiques)
     const refIsPng = referenceImagePath.toLowerCase().endsWith('.png');
     fd.append('image[]', new File([fs.readFileSync(referenceImagePath)], `reference.${refIsPng ? 'png' : 'jpg'}`, { type: refIsPng ? 'image/png' : 'image/jpeg' }));
 
@@ -861,7 +862,7 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
     const resp = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size, quality: 'high' }),
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size, quality: 'high', moderation: 'low' }),
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error('OpenAI generations error: ' + JSON.stringify(data).slice(0, 300));
@@ -884,6 +885,7 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
   fd.append('n', '1');
   fd.append('size', size);
   fd.append('quality', 'high');
+  fd.append('moderation', 'low');
   imagePaths.forEach((p, i) => {
     const isPng = p.toLowerCase().endsWith('.png');
     fd.append('image[]', new File([fs.readFileSync(p)], `img${i}.${isPng ? 'png' : 'jpg'}`, { type: isPng ? 'image/png' : 'image/jpeg' }));
@@ -929,6 +931,7 @@ app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 
     fd.append('prompt', fullPrompt);
     fd.append('size', '1024x1024');
     fd.append('quality', 'high');
+    fd.append('moderation', 'low');
     fd.append('n', '1');
 
     const imgBuffer = fs.readFileSync(imageFile.path);
@@ -1099,7 +1102,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'concept-template-v2', finish: 'linear1.04 (no sharpen)', stripe: !!stripe });
+  res.json({ build: 'concept-template-v4-modlow', finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
 });
 
 // Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
