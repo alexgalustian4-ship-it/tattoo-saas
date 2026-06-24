@@ -519,6 +519,31 @@
     .testimonial-role {
       font-size: 0.65rem; color: var(--dim); margin-top: 1px;
     }
+    /* ── Avis : deux rangées auto-défilantes (marquee) ── */
+    .tm-marquee {
+      position: relative; max-width: 1100px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 16px;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+              mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    }
+    .tm-row { overflow: hidden; }
+    .tm-track { display: flex; gap: 16px; width: max-content; will-change: transform; }
+    .tm-track > .testimonial-card { flex: 0 0 330px; margin: 0; }
+    .tm-track.anim-left  { animation: tmLeft  52s linear infinite; }
+    .tm-track.anim-right { animation: tmRight 60s linear infinite; }
+    .tm-marquee:hover .tm-track { animation-play-state: paused; }
+    @keyframes tmLeft  { from { transform: translate3d(0,0,0); }       to { transform: translate3d(-50%,0,0); } }
+    @keyframes tmRight { from { transform: translate3d(-50%,0,0); }    to { transform: translate3d(0,0,0); } }
+    @media (max-width: 600px) {
+      .tm-track > .testimonial-card { flex-basis: 268px; }
+      .tm-track.anim-left  { animation-duration: 38s; }
+      .tm-track.anim-right { animation-duration: 44s; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tm-marquee { -webkit-mask-image: none; mask-image: none; }
+      .tm-row { overflow: visible; }
+      .tm-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; }
+    }
     .stars {
       font-size: 0.6rem; color: #666; letter-spacing: 2px; margin-bottom: 14px;
     }
@@ -1608,106 +1633,110 @@
   <section id="social-proof">
     <div class="section-inner">
       <span class="section-label fade-up" style="text-align:center;display:block;margin-bottom:40px;">What people say</span>
-      <div class="testimonials-grid">
-        <div class="testimonial-card fade-left d1">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"I showed the result to my tattoo artist and he was genuinely impressed. It saved me two consultations."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">ML</div>
-            <div>
-              <p class="testimonial-name">Marc L.</p>
-              <p class="testimonial-role">First tattoo, geometric style</p>
+      <div class="tm-marquee">
+        <div class="tm-row"><div class="tm-track anim-left">
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"I showed the result to my tattoo artist and he was genuinely impressed. It saved me two consultations."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">ML</div>
+              <div>
+                <p class="testimonial-name">Marc L.</p>
+                <p class="testimonial-role">First tattoo, geometric style</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d2">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"The placement feature is insane. Seeing the design on my forearm before committing changed everything for me."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">SR</div>
-            <div>
-              <p class="testimonial-name">Sofia R.</p>
-              <p class="testimonial-role">Japanese sleeve concept</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"The placement feature is insane. Seeing the design on my forearm before committing changed everything for me."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">SR</div>
+              <div>
+                <p class="testimonial-name">Sofia R.</p>
+                <p class="testimonial-role">Japanese sleeve concept</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-right d3">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"As a tattoo artist myself, I recommend this to all my clients before the first session. The quality is there."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">TK</div>
-            <div>
-              <p class="testimonial-name">Thomas K.</p>
-              <p class="testimonial-role">Professional tattoo artist</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"As a tattoo artist myself, I recommend this to all my clients before the first session. The quality is there."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">TK</div>
+              <div>
+                <p class="testimonial-name">Thomas K.</p>
+                <p class="testimonial-role">Professional tattoo artist</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d1">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"Honestly didn't expect much from an AI tool, but the fine-line rose I generated was cleaner than the three references I'd saved. My artist only tweaked about 10%."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">JP</div>
-            <div>
-              <p class="testimonial-name">Jordan P.</p>
-              <p class="testimonial-role">Fine-line, inner forearm</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"Honestly didn't expect much from an AI tool, but the fine-line rose I generated was cleaner than the three references I'd saved. My artist only tweaked about 10%."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">JP</div>
+              <div>
+                <p class="testimonial-name">Jordan P.</p>
+                <p class="testimonial-role">Fine-line, inner forearm</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d2">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"I'd been putting off my first tattoo for years because I just couldn't picture it. Seeing it sit on my own arm is what finally pushed me to book."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">EC</div>
-            <div>
-              <p class="testimonial-name">Emily C.</p>
-              <p class="testimonial-role">First tattoo, floral piece</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"I'd been putting off my first tattoo for years because I just couldn't picture it. Seeing it sit on my own arm is what finally pushed me to book."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">EC</div>
+              <div>
+                <p class="testimonial-name">Emily C.</p>
+                <p class="testimonial-role">First tattoo, floral piece</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d3">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"Used it to plan a cover-up over an old name tattoo. Being able to test the placement first genuinely saved me from a bad decision."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">DW</div>
-            <div>
-              <p class="testimonial-name">Dre W.</p>
-              <p class="testimonial-role">Cover-up, upper arm</p>
+        </div></div>
+        <div class="tm-row"><div class="tm-track anim-right">
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"Used it to plan a cover-up over an old name tattoo. Being able to test the placement first genuinely saved me from a bad decision."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">DW</div>
+              <div>
+                <p class="testimonial-name">Dre W.</p>
+                <p class="testimonial-role">Cover-up, upper arm</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d1">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"The detail on the dotwork mandala blew me away. I printed the stencil and it lined up almost perfectly on the first try."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">HB</div>
-            <div>
-              <p class="testimonial-name">Hannah B.</p>
-              <p class="testimonial-role">Dotwork mandala, spine</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"The detail on the dotwork mandala blew me away. I printed the stencil and it lined up almost perfectly on the first try."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">HB</div>
+              <div>
+                <p class="testimonial-name">Hannah B.</p>
+                <p class="testimonial-role">Dotwork mandala, spine</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d2">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"Designs come back in under a minute and they actually read like real tattoo work — not clipart. Easily worth the credits."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">MT</div>
-            <div>
-              <p class="testimonial-name">Marcus T.</p>
-              <p class="testimonial-role">Blackwork, calf</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"Designs come back in under a minute and they actually read like real tattoo work — not clipart. Easily worth the credits."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">MT</div>
+              <div>
+                <p class="testimonial-name">Marcus T.</p>
+                <p class="testimonial-role">Blackwork, calf</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="testimonial-card fade-up d3">
-          <p class="stars">★★★★★</p>
-          <p class="testimonial-text">"I run a small studio and now send clients here before their consult. It's cut our back-and-forth on concepts roughly in half."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar">PN</div>
-            <div>
-              <p class="testimonial-name">Priya N.</p>
-              <p class="testimonial-role">Studio owner</p>
+          <div class="testimonial-card">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-text">"I run a small studio and now send clients here before their consult. It's cut our back-and-forth on concepts roughly in half."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">PN</div>
+              <div>
+                <p class="testimonial-name">Priya N.</p>
+                <p class="testimonial-role">Studio owner</p>
+              </div>
             </div>
           </div>
-        </div>
+        </div></div>
       </div>
     </div>
   </section>
@@ -1810,6 +1839,14 @@
     document.querySelectorAll('#hero .fade-up, #hero .fade-left, #hero .fade-right').forEach(el => {
       el.classList.add('visible');
     });
+
+    // ══ AVIS : duplication des pistes pour un défilement infini sans couture ══
+    (function tmMarquee(){
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      document.querySelectorAll('.tm-track').forEach(track => {
+        track.innerHTML += track.innerHTML;   // double le set → translateX(-50%) boucle proprement
+      });
+    })();
 
     // ══ HERO BG — SÉQUENCE D'IMAGES PILOTÉE PAR LE SCROLL (fluide partout, mobile inclus) ══
     (function frameScrub(){
