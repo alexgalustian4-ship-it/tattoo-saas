@@ -676,6 +676,8 @@ function buildRenderWrapper(designPrompt, { bw = true } = {}) {
     `Premium professional tattoo design, flat 2D artwork on a pure solid white background #FFFFFF. ` +
     `${designPrompt} ` +
     `${colorRule} ` +
+    `Rendering finish: clean professional tattoo rendering with smooth shading and crisp intentional linework. ` +
+    `Do NOT make it look like a pencil sketch, charcoal drawing, engraving, etching, woodcut or cross-hatched illustration — no grainy, scratchy or sketchy strokes; shading reads as smooth continuous tone. ` +
     `One dominant focal point, generous negative space, clean tattooable linework and shading. ` +
     `Centered, full design visible, no mockup, no skin, no paper texture, no drop shadow, no frame. Ready to tattoo.`
   );
