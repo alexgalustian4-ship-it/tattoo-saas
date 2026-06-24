@@ -1120,7 +1120,32 @@ app.get('/db-health', async (req, res) => {
 // ── Download proxy (cross-origin image download) ──
 app.get('/download', async (req, res) => {
   const { url, filename = 'ink-studio.jpg' } = req.query;
-  if (!url || !url.startsWith('https://')) return res.status(400).send('Invalid URL');
+  if (!url) return res.status(400).send('Invalid URL');
+
+  // Same-origin saved images (/gens/xxx.png) → stream directly from disk.
+  if (url.startsWith('/gens/')) {
+    const safe = path.basename(url.split('?')[0]);            // évite la traversée de répertoire
+    const filePath = path.join(GENS_DIR, safe);
+    if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
+    const buf = fs.readFileSync(filePath);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Length', buf.length);
+    return res.send(buf);
+  }
+
+  // data: URLs (génération non sauvegardée) → décodage base64.
+  if (url.startsWith('data:')) {
+    const m = url.match(/^data:(.+?);base64,(.*)$/);
+    if (!m) return res.status(400).send('Invalid data URL');
+    const buf = Buffer.from(m[2], 'base64');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', m[1] || 'image/png');
+    res.setHeader('Content-Length', buf.length);
+    return res.send(buf);
+  }
+
+  if (!url.startsWith('https://')) return res.status(400).send('Invalid URL');
   try {
     const r = await fetch(url);
     if (!r.ok) return res.status(502).send('Failed to fetch image');

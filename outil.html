@@ -1168,6 +1168,11 @@
   </nav>
 
   <!-- ══ AUTH MODAL ══ -->
+  <div id="lightbox-overlay" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out;padding:24px;">
+    <img id="lightbox-img" src="" alt="" style="max-width:96vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.6);" />
+    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;width:44px;height:44px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.4);color:#fff;border-radius:50%;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+  </div>
+
   <div id="auth-overlay">
     <div id="auth-modal">
       <button class="modal-close" id="auth-close">✕</button>
@@ -2987,9 +2992,9 @@
           designImgUrl = data.imageUrl; designJobId = data.jobId;
           resImg.src = data.imageUrl;
           hideStatus(status); resWrap.classList.add('show');
-          document.getElementById('hub-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-design.png`, 'tattoo-design.png');
+          document.getElementById('hub-dl').onclick = () => gatedDownload(null, 'tattoo-design.png', () => downloadImage(data.imageUrl, 'tattoo-design.png'));
           resImg.style.cursor = 'zoom-in';
-          resImg.onclick = () => window.open(data.imageUrl, '_blank');
+          resImg.onclick = () => openLightbox(data.imageUrl);
           saveProject({ type:'design', imageUrl: data.imageUrl, params:{ sujet: prompt } });
           resWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (err) { setError(status, err.message); }
@@ -3610,6 +3615,38 @@
     });
 
     // Intercepte le téléchargement
+    function openLightbox(src) {
+      if (!src) return;
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox-overlay').style.display = 'flex';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox-overlay').style.display = 'none';
+      document.getElementById('lightbox-img').src = '';
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    // Téléchargement fiable : /gens/ et data: sont en même origine → blob direct.
+    // Seules les URLs externes (https://) passent par le proxy /download.
+    async function downloadImage(src, filename) {
+      try {
+        const fetchUrl = (/^https?:\/\//i.test(src) && !src.startsWith(location.origin))
+          ? `/download?url=${encodeURIComponent(src)}&filename=${encodeURIComponent(filename)}`
+          : src;
+        const resp = await fetch(fetchUrl);
+        if (!resp.ok) throw new Error('fetch failed');
+        const blob = await resp.blob();
+        const objUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objUrl; a.download = filename || 'ink-studio.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1500);
+      } catch (e) {
+        // Fallback : ouvrir l'image dans un nouvel onglet pour enregistrement manuel.
+        window.open(src, '_blank');
+      }
+    }
+
     function gatedDownload(url, filename, callback) {
       if (currentUser || getDownloadCount() < FREE_DOWNLOADS) {
         incrementDownloadCount();
