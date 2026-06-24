@@ -1108,30 +1108,6 @@ app.get('/version', (req, res) => {
   res.json({ build: 'gpt-image-2-v5', imageModel: IMAGE_MODEL, finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
 });
 
-// Test temporaire : vérifie que le modèle gère l'endpoint /v1/images/edits
-app.get('/edit-test', async (req, res) => {
-  const apiKey = process.env.OPENAI_API_KEY || '';
-  if (!apiKey) return res.json({ error: 'no_api_key' });
-  const model = req.query.model || 'gpt-image-2';
-  try {
-    const sharp = require('sharp');
-    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="1024" height="1024" fill="white"/><circle cx="512" cy="512" r="200" stroke="black" stroke-width="18" fill="none"/></svg>');
-    const png = await sharp(svg).png().toBuffer();
-    const fd = new FormData();
-    fd.append('model', model);
-    fd.append('prompt', 'add a small black square in the top-left corner');
-    fd.append('n', '1');
-    fd.append('size', '1024x1024');
-    fd.append('quality', 'high');
-    fd.append('moderation', 'low');
-    fd.append('image[]', new File([png], 'base.png', { type: 'image/png' }));
-    const resp = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}` }, body: fd });
-    const data = await resp.json();
-    const d0 = data.data && data.data[0];
-    res.json({ model, httpStatus: resp.status, ok: resp.ok, gotImage: !!(d0 && (d0.b64_json || d0.url)), error: data.error ? { message: data.error.message, type: data.error.type, param: data.error.param } : null });
-  } catch (e) { res.json({ error: e.message }); }
-});
-
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
