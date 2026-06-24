@@ -856,7 +856,7 @@
 
   <!-- ══ VIDEO BG ══ -->
   <div id="video-bg">
-    <video autoplay muted loop playsinline preload="auto" src="videos/studio-reel.mp4"></video>
+    <video muted playsinline preload="auto" src="videos/hero-scrub.mp4"></video>
   </div>
 
   <!-- ══ HERO ══ -->
@@ -1590,16 +1590,45 @@
       el.classList.add('visible');
     });
 
-    // ══ VIDEO BG PARALLAX ══
+    // ══ VIDEO BG — SCRUB AU SCROLL (la vidéo suit le scroll) ══
     const videoEl = document.querySelector('#video-bg video');
-    function onVideoScroll() {
-      const maxScroll = document.body.scrollHeight - window.innerHeight;
-      const p = maxScroll > 0 ? window.scrollY / maxScroll : 0;
-      const shift = p * window.innerHeight * 0.2;
-      videoEl.style.transform = `translateY(-${shift}px) scale(1.35)`;
-    }
-    window.addEventListener('scroll', onVideoScroll, { passive: true });
-    onVideoScroll();
+    (function scrubVideo(){
+      if (!videoEl) return;
+      let duration = 0, targetTime = 0, ready = false;
+      // Distance de scroll sur laquelle la vidéo se déroule entièrement (~1.4 écran)
+      const scrubPx = () => window.innerHeight * 1.4;
+
+      function prime(){
+        duration = videoEl.duration || 0;
+        ready = duration > 0;
+        // "réveille" le décodeur (muted → autorisé) puis met en pause pour piloter currentTime
+        videoEl.play().then(() => videoEl.pause()).catch(() => {});
+        computeTarget();
+      }
+      videoEl.addEventListener('loadedmetadata', prime);
+      if (videoEl.readyState >= 1) prime();
+
+      function computeTarget(){
+        const p = Math.max(0, Math.min(1, window.scrollY / scrubPx()));
+        targetTime = p * (duration || videoEl.duration || 0);
+      }
+      window.addEventListener('scroll', computeTarget, { passive: true });
+      window.addEventListener('resize', computeTarget);
+
+      // Lissage : on rapproche doucement currentTime de la cible chaque frame (anti-saccade)
+      function tick(){
+        if (ready || videoEl.duration) {
+          const cur = videoEl.currentTime;
+          const diff = targetTime - cur;
+          if (Math.abs(diff) > 0.01) {
+            const next = cur + diff * 0.18;
+            try { videoEl.currentTime = next; } catch(e){}
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
     // CSS animation for spinner
