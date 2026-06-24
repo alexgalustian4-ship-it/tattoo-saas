@@ -855,9 +855,7 @@
   </nav>
 
   <!-- ══ VIDEO BG ══ -->
-  <div id="video-bg">
-    <video muted playsinline preload="auto" src="videos/hero-scrub.mp4"></video>
-  </div>
+  <div id="video-bg"></div>
 
   <!-- ══ HERO ══ -->
   <section id="hero">
@@ -1590,109 +1588,60 @@
       el.classList.add('visible');
     });
 
-    // ══ VIDEO BG — SCRUB CANVAS (frames pré-décodées = fluidité garantie) ══
-    const videoEl = document.querySelector('#video-bg video');
-    (function canvasScrub(){
+    // ══ HERO BG — SÉQUENCE D'IMAGES PILOTÉE PAR LE SCROLL (fluide partout, mobile inclus) ══
+    (function frameScrub(){
       const bg = document.getElementById('video-bg');
-      if (!videoEl || !bg) return;
-
-      // Mobile / faible mémoire → simple lecture en boucle (pas de scrub, pas de saturation mémoire)
-      const isMobile = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches;
-      if (isMobile) {
-        videoEl.loop = true; videoEl.muted = true;
-        videoEl.play().catch(() => {});
-        return;
-      }
+      if (!bg) return;
+      const TOTAL = 60;   // images/hero-frames/0001.jpg … 0060.jpg
+      const lowPower = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory < 4);
+      const STRIDE = lowPower ? 2 : 1;   // mobile : 1 image sur 2 (mémoire)
+      const indices = [];
+      for (let i = 1; i <= TOTAL; i += STRIDE) indices.push(i);
+      const N = indices.length;
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
       bg.insertBefore(canvas, bg.firstChild);
-      videoEl.style.opacity = '0';                 // vidéo = source de décodage, invisible
       const ctx = canvas.getContext('2d', { alpha: false });
 
-      // Loader minimal pendant le pré-décodage
       const loader = document.createElement('div');
-      loader.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:#080808;color:#cfd2dd;font-size:0.8rem;letter-spacing:0.08em;transition:opacity .5s;';
-      loader.innerHTML = '<div style="text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:0.05em;margin-bottom:14px;color:#fff">INK<span style="color:#3a3a44">.</span>STUDIO</div><div id="scrub-pct" style="color:#8a8a96">Chargement… 0%</div></div>';
+      loader.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:#080808;transition:opacity .5s;';
+      loader.innerHTML = '<div style="text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:0.05em;margin-bottom:14px;color:#fff">INK<span style="color:#3a3a44">.</span>STUDIO</div><div id="scrub-pct" style="color:#8a8a96;font-size:0.8rem;letter-spacing:0.08em">Chargement… 0%</div></div>';
       document.body.appendChild(loader);
       const pctEl = loader.querySelector('#scrub-pct');
 
-      const frames = [];
-      let N = 0, ready = false, target = 0, current = 0;
+      const frames = new Array(N);
+      let loaded = 0, ready = false, target = 0, current = 0;
 
-      // Filet de sécurité : si le pré-décodage échoue ou traîne, on retombe sur la lecture en boucle
-      const safety = setTimeout(() => {
-        if (!ready) { try { loader.remove(); } catch(e){} videoEl.style.opacity = '1'; videoEl.loop = true; videoEl.play().catch(() => {}); }
-      }, 50000);
-      function fallbackLoop(){ try { loader.remove(); } catch(e){} videoEl.style.opacity = '1'; videoEl.loop = true; videoEl.play().catch(() => {}); }
+      function sizeCanvas(){ const dpr = Math.min(window.devicePixelRatio || 1, 2); canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); }
+      function drawCover(img){ if (!img || !img.width) return; const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height, s = Math.max(cw / iw, ch / ih), w = iw * s, h = ih * s; ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h); }
+      function computeTarget(){ const p = Math.max(0, Math.min(1, scrollY / (innerHeight * 1.4))); target = p * (N - 1); }
+      function loop(){ current += (target - current) * 0.18; if (Math.abs(target - current) < 0.01) current = target; drawCover(frames[Math.max(0, Math.min(N - 1, Math.round(current)))]); requestAnimationFrame(loop); }
 
-      function sizeCanvas(){
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(window.innerWidth * dpr);
-        canvas.height = Math.round(window.innerHeight * dpr);
-      }
-      function drawCover(img){
-        if (!img) return;
-        const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height;
-        const s = Math.max(cw / iw, ch / ih);
-        const w = iw * s, h = ih * s;
-        ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
-      }
-      function seekTo(t){
-        return new Promise(res => {
-          let done = false;
-          const h = () => { if (done) return; done = true; videoEl.removeEventListener('seeked', h); res(); };
-          videoEl.addEventListener('seeked', h);
-          try { videoEl.currentTime = t; } catch(e){ res(); }
-          setTimeout(() => { if (!done){ done = true; videoEl.removeEventListener('seeked', h); res(); } }, 1200);
-        });
-      }
-      function computeTarget(){
-        const p = Math.max(0, Math.min(1, window.scrollY / (window.innerHeight * 1.4)));
-        target = p * (N - 1);
-      }
-      function loop(){
-        current += (target - current) * 0.18;
-        if (Math.abs(target - current) < 0.01) current = target;
-        drawCover(frames[Math.max(0, Math.min(N - 1, Math.round(current)))]);
-        requestAnimationFrame(loop);
-      }
-
-      async function init(){
-       try {
-        const dur = videoEl.duration || 0;
-        if (!dur) { clearTimeout(safety); fallbackLoop(); return; }
-        const vw = videoEl.videoWidth || 1280, vh = videoEl.videoHeight || 720;
-        N = Math.min(72, Math.max(40, Math.round(dur * 4.5)));   // ~4.5 frames/s, cap 72
-        sizeCanvas();
-        const maxW = 960, scale = Math.min(1, maxW / vw);
-        const fw = Math.round(vw * scale), fh = Math.round(vh * scale);
-        const tmp = document.createElement('canvas'); tmp.width = fw; tmp.height = fh;
-        const tctx = tmp.getContext('2d');
-        videoEl.pause();
-        for (let i = 0; i < N; i++){
-          await seekTo((i / (N - 1)) * dur);
-          tctx.drawImage(videoEl, 0, 0, fw, fh);
-          const img = new Image();
-          img.src = tmp.toDataURL('image/jpeg', 0.82);
-          await img.decode().catch(() => {});
-          frames.push(img);
-          pctEl.textContent = 'Chargement… ' + Math.round(((i + 1) / N) * 100) + '%';
-          if (i === 0) drawCover(img);
-        }
+      function start(){
+        if (ready) return;
         ready = true;
-        clearTimeout(safety);
-        computeTarget(); current = target;
-        drawCover(frames[Math.round(current)]);
+        computeTarget(); current = target; drawCover(frames[Math.round(current)]);
         loader.style.opacity = '0'; setTimeout(() => loader.remove(), 600);
-        window.addEventListener('scroll', computeTarget, { passive: true });
-        window.addEventListener('resize', () => { sizeCanvas(); drawCover(frames[Math.round(current)]); });
+        addEventListener('scroll', computeTarget, { passive: true });
+        addEventListener('resize', () => { sizeCanvas(); drawCover(frames[Math.round(current)]); });
         loop();
-       } catch(e){ clearTimeout(safety); if(!ready) fallbackLoop(); }
       }
 
-      videoEl.addEventListener('loadedmetadata', init, { once: true });
-      if (videoEl.readyState >= 1) init();
+      sizeCanvas();
+      indices.forEach((num, idx) => {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          loaded++;
+          pctEl.textContent = 'Chargement… ' + Math.round((loaded / N) * 100) + '%';
+          if (idx === 0) drawCover(img);
+          if (loaded >= N) start();
+        };
+        img.src = 'images/hero-frames/' + String(num).padStart(4, '0') + '.jpg';
+        frames[idx] = img;
+      });
+      // Sécurité : démarre même si quelques images manquent
+      setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
     })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
