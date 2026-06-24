@@ -1516,7 +1516,25 @@
     </div>
   </footer>
 
+  <!-- Smooth scroll cinématique (Lenis) -->
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
   <script>
+    // ══ SMOOTH SCROLL (Lenis) ══
+    (function initLenis(){
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!window.Lenis || reduce) return;            // fallback : scroll natif
+      const lenis = new Lenis({
+        duration: 1.15,
+        easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.6,
+      });
+      window.__lenis = lenis;                           // accessible pour le scroll cinématique
+      function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+    })();
+
     // ══ NAV SCROLL ══
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
