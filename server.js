@@ -1240,6 +1240,31 @@ app.post('/create-portal-session', async (req, res) => {
   }
 });
 
+// ── Synchronisation de l'abonnement (fallback fiable, ne dépend pas du webhook) ──
+// Interroge Stripe directement et applique le plan correspondant à l'abonnement actif.
+app.post('/sync-subscription', async (req, res) => {
+  if (!stripe || !db) return res.status(404).json({ error: 'paiement_indisponible' });
+  let user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'non_connecté' });
+  if (!user.stripe_customer_id) return res.json({ plan: user.plan, changed: false, user: publicUser(user) });
+  try {
+    const subs = await stripe.subscriptions.list({ customer: user.stripe_customer_id, status: 'active', limit: 1 });
+    const sub = subs.data[0];
+    let targetPlan = 'free';
+    if (sub) {
+      const priceId = sub.items.data[0] && sub.items.data[0].price.id;
+      targetPlan = PRICE_TO_PLAN[priceId] || user.plan;
+    }
+    const changed = targetPlan !== user.plan;
+    if (changed) await setUserPlan(user.id, targetPlan);
+    user = await getSessionUser(req);
+    res.json({ plan: user.plan, changed, user: publicUser(user) });
+  } catch (e) {
+    console.error('❌ sync-subscription:', e.message);
+    res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
 // ── Webhook Stripe (body brut requis) ──
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!stripe) return res.status(503).send('stripe disabled');

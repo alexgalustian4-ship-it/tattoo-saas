@@ -205,11 +205,24 @@
 
     const PLAN_LABEL={ free:'Free', pro:'Pro', studio:'Studio' };
 
-    fetch('/me',{credentials:'include'}).then(r=>r.ok?r.json():null).then(d=>{
-      const me=d&&d.user;
-      if(!me){ document.getElementById('guest').hidden=false; document.querySelectorAll('#guest .fade-up').forEach(e=>e.classList.add('visible')); return; }
+    (async () => {
+      let me = null;
+      // 1) Synchronise l'abonnement avec Stripe (fiable, ne dépend pas du webhook)
+      try {
+        const sr = await fetch('/sync-subscription', { method:'POST', credentials:'include' });
+        if (sr.ok) { const sd = await sr.json(); me = sd.user || null; }
+      } catch(_) {}
+      // 2) Fallback /me si la sync n'est pas dispo
+      if (!me) {
+        try { const r = await fetch('/me',{credentials:'include'}); if (r.ok) me = (await r.json()).user; } catch(_) {}
+      }
+      if (!me) {
+        document.getElementById('guest').hidden=false;
+        document.querySelectorAll('#guest .fade-up').forEach(e=>e.classList.add('visible'));
+        return;
+      }
       render(me);
-    }).catch(()=>{ document.getElementById('guest').hidden=false; });
+    })();
 
     function render(me){
       document.getElementById('account').hidden=false;
