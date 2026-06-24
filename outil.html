@@ -3718,9 +3718,9 @@
             if (!r.ok) throw new Error(data.error || 'Auth échouée');
             onAuthSuccess({ name: data.user.name, email: data.user.email, picture: data.user.avatar, provider: 'google', plan: data.user.plan, credits: data.user.credits });
           } catch (e) {
-            // Fallback : décodage local si le serveur ne répond pas
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
-            onAuthSuccess({ name: payload.name, email: payload.email, picture: payload.picture, provider: 'google' });
+            // Pas de fallback "fausse session" : on signale l'échec clairement
+            const err = document.getElementById('auth-error');
+            if (err) { err.textContent = 'Connexion Google impossible. Réessaie.'; err.style.display = 'block'; }
           }
         }
       });
@@ -3728,28 +3728,46 @@
     });
 
     // Email signup/login
-    document.getElementById('auth-submit').addEventListener('click', () => {
+    const AUTH_ERRORS = {
+      compte_existant:   'Un compte existe déjà avec cet email. Connecte-toi.',
+      mdp_trop_court:    'Le mot de passe doit faire au moins 6 caractères.',
+      email_invalide:    'Adresse email invalide.',
+      compte_introuvable:'Aucun compte trouvé avec cet email.',
+      mdp_incorrect:     'Mot de passe incorrect.',
+      utilise_google:    'Ce compte utilise la connexion Google. Clique sur « Continuer avec Google ».',
+    };
+    document.getElementById('auth-submit').addEventListener('click', async () => {
       const email    = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
       const name     = document.getElementById('auth-name').value.trim();
       const err      = document.getElementById('auth-error');
+      const btn      = document.getElementById('auth-submit');
 
-      if (!email || !password) { err.textContent = 'Please fill in all fields.'; err.style.display = 'block'; return; }
-      if (!/\S+@\S+\.\S+/.test(email)) { err.textContent = 'Invalid email address.'; err.style.display = 'block'; return; }
-      if (password.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+      if (!email || !password) { err.textContent = 'Remplis tous les champs.'; err.style.display = 'block'; return; }
+      if (!/\S+@\S+\.\S+/.test(email)) { err.textContent = 'Adresse email invalide.'; err.style.display = 'block'; return; }
+      if (password.length < 6) { err.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; err.style.display = 'block'; return; }
 
-      if (authMode === 'signup') {
-        const existing = localStorage.getItem('ink_account_' + email);
-        if (existing) { err.textContent = 'An account already exists with this email. Sign in instead.'; err.style.display = 'block'; return; }
-        const user = { name: name || email.split('@')[0], email, provider: 'email' };
-        localStorage.setItem('ink_account_' + email, JSON.stringify({ password, ...user }));
-        onAuthSuccess(user);
-      } else {
-        const stored = localStorage.getItem('ink_account_' + email);
-        if (!stored) { err.textContent = 'No account found with this email.'; err.style.display = 'block'; return; }
-        const account = JSON.parse(stored);
-        if (account.password !== password) { err.textContent = 'Incorrect password.'; err.style.display = 'block'; return; }
-        onAuthSuccess({ name: account.name, email: account.email, provider: 'email' });
+      const endpoint = authMode === 'signup' ? '/auth/register' : '/auth/login';
+      err.style.display = 'none';
+      btn.disabled = true; const old = btn.textContent; btn.textContent = '…';
+      try {
+        const r = await fetch(endpoint, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password, name }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          err.textContent = AUTH_ERRORS[data.error] || 'Erreur, réessaie.';
+          err.style.display = 'block';
+          btn.disabled = false; btn.textContent = old;
+          return;
+        }
+        onAuthSuccess({ name: data.user.name, email: data.user.email, picture: data.user.avatar, provider: 'email', plan: data.user.plan, credits: data.user.credits });
+      } catch (e) {
+        err.textContent = 'Connexion impossible. Réessaie.';
+        err.style.display = 'block';
+        btn.disabled = false; btn.textContent = old;
       }
     });
 

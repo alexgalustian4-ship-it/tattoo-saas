@@ -58,6 +58,9 @@ async function initDb() {
       );
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_generations_user ON generations(user_id, created_at DESC);`);
+    // Auth email/mot de passe (ajout rétro-compatible)
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;`);
+    await db.query(`ALTER TABLE users ALTER COLUMN google_id DROP NOT NULL;`).catch(() => {});
     console.log('✓ Base de données prête (tables users, generations)');
   } catch (e) {
     console.error('❌ initDb failed:', e.message);
@@ -1070,6 +1073,61 @@ app.post('/auth/google', async (req, res) => {
   } catch (e) {
     console.error('❌ /auth/google:', e.message);
     res.status(500).json({ error: 'Auth échouée' });
+  }
+});
+
+// ── Inscription email + mot de passe ──
+const bcrypt = require('bcryptjs');
+app.post('/auth/register', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'DB indisponible' });
+  const email = (req.body && req.body.email || '').trim().toLowerCase();
+  const password = req.body && req.body.password || '';
+  const name = (req.body && req.body.name || '').trim() || email.split('@')[0];
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'email_invalide' });
+  if (password.length < 6) return res.status(400).json({ error: 'mdp_trop_court' });
+  try {
+    const existing = await db.query('SELECT id, password_hash, google_id FROM users WHERE email=$1', [email]);
+    if (existing.rows[0]) {
+      if (existing.rows[0].password_hash) return res.status(409).json({ error: 'compte_existant' });
+      // Compte créé via Google → on attache un mot de passe
+      const hash = await bcrypt.hash(password, 10);
+      const r = await db.query('UPDATE users SET password_hash=$1, name=COALESCE(name,$2) WHERE id=$3 RETURNING *', [hash, name, existing.rows[0].id]);
+      setSession(res, r.rows[0].id);
+      return res.json({ user: publicUser(r.rows[0]) });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const r = await db.query(
+      `INSERT INTO users (email, name, password_hash, credits_remaining) VALUES ($1,$2,$3,$4) RETURNING *`,
+      [email, name, hash, PLAN_CREDITS.free]
+    );
+    setSession(res, r.rows[0].id);
+    res.json({ user: publicUser(r.rows[0]) });
+  } catch (e) {
+    console.error('❌ /auth/register:', e.message);
+    res.status(500).json({ error: 'Inscription échouée' });
+  }
+});
+
+// ── Connexion email + mot de passe ──
+app.post('/auth/login', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'DB indisponible' });
+  const email = (req.body && req.body.email || '').trim().toLowerCase();
+  const password = req.body && req.body.password || '';
+  if (!email || !password) return res.status(400).json({ error: 'champs_manquants' });
+  try {
+    const r = await db.query('SELECT * FROM users WHERE email=$1', [email]);
+    const user = r.rows[0];
+    if (!user || !user.password_hash) {
+      // Pas de compte email (ou compte Google sans mot de passe)
+      return res.status(401).json({ error: user ? 'utilise_google' : 'compte_introuvable' });
+    }
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) return res.status(401).json({ error: 'mdp_incorrect' });
+    setSession(res, user.id);
+    res.json({ user: publicUser(user) });
+  } catch (e) {
+    console.error('❌ /auth/login:', e.message);
+    res.status(500).json({ error: 'Connexion échouée' });
   }
 });
 
