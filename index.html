@@ -68,11 +68,11 @@
     /* Le contenu est visible par défaut ; l'état caché ne s'applique que si JS tourne (html.js).
        => si le JS plante, rien n'est invisible. */
     .fade-up, .fade-left, .fade-right {
-      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
-                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+      transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.9s cubic-bezier(0.22,1,0.36,1);
       will-change: opacity, transform;
     }
-    html.js .fade-up    { opacity: 0; transform: translateY(32px); }
+    html.js .fade-up    { opacity: 0; transform: translateY(40px) scale(0.984); }
     html.js .fade-left  { opacity: 0; transform: translateX(-28px); }
     html.js .fade-right { opacity: 0; transform: translateX(28px); }
     html.js .fade-up.visible, html.js .fade-left.visible, html.js .fade-right.visible { opacity: 1; transform: none; }
@@ -172,6 +172,20 @@
       background: radial-gradient(ellipse 76% 72% at 50% 48%, rgba(6,6,9,0.66) 0%, rgba(6,6,9,0.34) 48%, transparent 78%);
       pointer-events: none;
     }
+    /* Effet ambiant : particules flottantes */
+    .hero-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+    .hero-particles span {
+      position: absolute; border-radius: 50%; background: #cfd2dd;
+      animation: floatP linear infinite; will-change: transform, opacity;
+    }
+    @keyframes floatP {
+      0%   { transform: translate(0,0); }
+      50%  { transform: translate(14px,-34px); }
+      100% { transform: translate(0,0); }
+    }
+    /* Hover des visuels de vitrine */
+    .ss-figure, .ss-slider { transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s; }
+    .ss-slider-wrap:hover .ss-figure, .ss-slider-wrap:hover .ss-slider { transform: translateY(-5px); box-shadow: 0 34px 74px rgba(0,0,0,0.5); }
     @keyframes heroReveal {
       0%   { opacity: 0; transform: translateY(26px); }
       100% { opacity: 1; transform: none; }
@@ -1691,6 +1705,27 @@
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
     })();
 
+    // ══ EFFET AMBIANT : particules flottantes dans le hero ══
+    (function heroParticles(){
+      const hero = document.getElementById('hero');
+      if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const layer = document.createElement('div');
+      layer.className = 'hero-particles';
+      hero.appendChild(layer);
+      const N = window.innerWidth < 700 ? 11 : 20;
+      for (let i = 0; i < N; i++){
+        const p = document.createElement('span');
+        const size = (1 + Math.random() * 2.4).toFixed(1);
+        p.style.left = (Math.random() * 100).toFixed(2) + '%';
+        p.style.top = (Math.random() * 100).toFixed(2) + '%';
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.opacity = (0.12 + Math.random() * 0.32).toFixed(2);
+        p.style.animationDuration = (9 + Math.random() * 11).toFixed(1) + 's';
+        p.style.animationDelay = (-Math.random() * 14).toFixed(1) + 's';
+        layer.appendChild(p);
+      }
+    })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
     // CSS animation for spinner
