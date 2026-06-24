@@ -822,7 +822,7 @@
   <nav id="nav">
     <a href="/" class="nav-logo">INK<span>.</span>STUDIO</a>
     <div class="nav-links">
-      <a href="#bento">All tools</a>
+      <a href="#tools-bar">All tools</a>
       <a href="#styles">Styles</a>
       <a href="pricing.html">Pricing</a>
       <a href="outil.html#history-section">My projects</a>
@@ -1023,53 +1023,28 @@
   </section>
 
   <!-- ══ BENTO GRID ══ -->
-  <section id="bento" style="width:100%;padding:90px 5vw;border-top:1px solid var(--border);position:relative;z-index:1">
-    <div class="section-inner">
-      <span class="section-label fade-up" style="text-align:center;display:block">All tools</span>
-      <h2 class="section-title fade-up d1" style="text-align:center">Everything you need,<br>in one place</h2>
-      <div class="bento-grid fade-up d2">
-
-        <!-- 1. Generate -->
-        <a href="outil.html?mode=create" class="bento-card bento-large bento-glow">
-          <div class="bento-icon">✦</div>
-          <p class="bento-title">Generate a design</p>
-          <p class="bento-desc">Describe your idea — AI creates a unique pro design in your style in under 60 seconds.</p>
-          <p class="bento-cta">Try →</p>
-        </a>
-
-        <!-- 2. Stencil -->
-        <a href="outil.html?mode=stencil" class="bento-card bento-medium bento-pro">
-          <div class="bento-icon" style="color:#b0b4c2">▦</div>
-          <p class="bento-title">Instant stencil</p>
-          <p class="bento-desc">Convert any design into a print-ready stencil in 1 second. No Photoshop needed.</p>
-          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
-        </a>
-
-        <!-- 3. Merge designs -->
-        <a href="outil.html?mode=merge" class="bento-card bento-medium">
-          <div class="bento-icon">⬡</div>
-          <p class="bento-title">Merge designs</p>
-          <p class="bento-desc">Fuse 2 to 4 designs into one unique masterpiece.</p>
-          <p class="bento-cta">Try →</p>
-        </a>
-
-        <!-- 4. Photo → Tattoo (masqué temporairement) -->
-        <a href="outil.html?mode=pet" class="bento-card bento-wide" style="display:none">
-          <div class="bento-icon">◧</div>
-          <p class="bento-title">Photo → Tattoo</p>
-          <p class="bento-desc">Upload a photo — AI turns it into a tattoo-ready design.</p>
-          <p class="bento-cta">Try →</p>
-        </a>
-
-        <!-- 5. Place on skin -->
-        <a href="outil.html?mode=body" class="bento-card bento-wide">
-          <div class="bento-icon">◈</div>
-          <p class="bento-title">Place on skin</p>
-          <p class="bento-desc">Upload your design and see it rendered realistically on your body, exactly where you want it.</p>
-          <p class="bento-cta">Try →</p>
-        </a>
-
-      </div>
+  <section id="tools-bar" style="width:100%;padding:56px 5vw;border-top:1px solid var(--border);position:relative;z-index:1">
+    <style>
+      .toolbar { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; max-width:920px; margin:20px auto 0; }
+      .tool-pill {
+        display:inline-flex; align-items:center; gap:9px;
+        padding:11px 20px; border-radius:40px;
+        border:1px solid var(--border-m); background:var(--bg-card);
+        color:var(--text); text-decoration:none;
+        font-size:0.82rem; font-weight:500; letter-spacing:0.02em;
+        transition:border-color .25s, transform .2s, background .25s;
+      }
+      .tool-pill:hover { border-color:var(--silver); transform:translateY(-2px); background:#15151a; }
+      .tool-pill .tp-icon { font-size:1rem; color:var(--muted); line-height:1; }
+      @media (max-width:600px){ .tool-pill{ padding:10px 16px; font-size:0.78rem; } }
+    </style>
+    <span class="section-label fade-up" style="text-align:center;display:block">All tools</span>
+    <div class="toolbar fade-up d1">
+      <a href="outil.html?mode=create"  class="tool-pill"><span class="tp-icon">✦</span> Generate a design</a>
+      <a href="outil.html?mode=stencil" class="tool-pill"><span class="tp-icon">▦</span> Instant stencil</a>
+      <a href="outil.html?mode=merge"   class="tool-pill"><span class="tp-icon">⬡</span> Merge designs</a>
+      <a href="outil.html?mode=body"    class="tool-pill"><span class="tp-icon">◈</span> Place on skin</a>
+      <a href="outil.html?mode=pet"     class="tool-pill" style="display:none"><span class="tp-icon">◧</span> Photo → Tattoo</a>
     </div>
   </section>
 
