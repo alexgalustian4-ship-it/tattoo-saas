@@ -860,6 +860,39 @@
   </div>
 
   <!-- ══ HERO ══ -->
+  <!-- ══ HERO CINÉMATIQUE (scrollytelling) ══ -->
+  <style>
+    #cine { position: relative; height: 340vh; z-index: 2; }
+    .cine-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; background: #000; }
+    .cine-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); will-change: transform; }
+    .cine-overlay { position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(120% 85% at 50% 50%, transparent 28%, rgba(0,0,0,0.5) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.10) 38%, rgba(0,0,0,0.55)); }
+    .cine-beats { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 24px; }
+    .cine-beat { position: absolute; text-align: center; opacity: 0; max-width: 920px; pointer-events: none; }
+    .cine-beat .cine-eyebrow { font-size: 0.7rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--silver); margin-bottom: 18px; }
+    .cine-beat h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(2.2rem, 6.5vw, 5rem); line-height: 1.05; color: #fff; letter-spacing: -0.01em; }
+    .cine-beat .cine-cta { display: inline-block; margin-top: 34px; background: #fff; color: #0a0a0e; text-decoration: none; font-size: 0.9rem; font-weight: 600; padding: 15px 32px; border-radius: 34px; pointer-events: auto; transition: transform .2s, box-shadow .2s; }
+    .cine-beat .cine-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(255,255,255,0.2); }
+    .cine-scrollcue { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 0.64rem; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+    .cine-scrollcue::after { content: ''; display: block; width: 1px; height: 26px; margin: 10px auto 0; background: linear-gradient(rgba(255,255,255,0.6), transparent); }
+    html:not(.js) #cine .cine-beat { opacity: 1; position: static; }
+  </style>
+  <section id="cine">
+    <div class="cine-sticky">
+      <video class="cine-video" autoplay muted loop playsinline preload="auto" src="videos/cinematic.mp4"></video>
+      <div class="cine-overlay"></div>
+      <div class="cine-beats">
+        <div class="cine-beat"><p class="cine-eyebrow">AI Tattoo Studio</p><h2>Ton idée.</h2></div>
+        <div class="cine-beat"><h2>Sculptée par l'IA.</h2></div>
+        <div class="cine-beat"><h2>Digne d'un musée.<br>En 60 secondes.</h2></div>
+        <div class="cine-beat"><h2>Prête à tatouer.</h2><a href="outil.html" class="cine-cta">Créer mon design →</a></div>
+      </div>
+      <div class="cine-scrollcue">Scroll</div>
+    </div>
+  </section>
+
   <section id="hero">
 
     <svg id="tattoo-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"
@@ -1527,7 +1560,50 @@
     </div>
   </footer>
 
+  <!-- Smooth scroll + animations cinématiques -->
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
   <script>
+    // ══ SCROLL CINÉMATIQUE (Lenis smooth + GSAP ScrollTrigger) ══
+    (function initCine(){
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!window.gsap || !window.ScrollTrigger || !window.Lenis || reduce) {
+        // Fallback : on rend tous les beats visibles pour ne rien casser
+        document.querySelectorAll('.cine-beat').forEach(b => { b.style.opacity = 1; b.style.position = 'static'; });
+        return;
+      }
+      gsap.registerPlugin(ScrollTrigger);
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+
+      // Lenis piloté par le ticker GSAP (synchro parfaite, pas de saccade)
+      const lenis = new Lenis({
+        duration: 1.15,
+        easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true, touchMultiplier: 1.6,
+      });
+      window.__lenis = lenis;
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(t => lenis.raf(t * 1000));
+      gsap.ticker.lagSmoothing(0);
+
+      // Timeline des "beats" (apparition/disparition au fil du scroll)
+      const beats = gsap.utils.toArray('.cine-beat');
+      if (beats.length) {
+        const tl = gsap.timeline({ scrollTrigger: { trigger: '#cine', start: 'top top', end: 'bottom bottom', scrub: 1 } });
+        beats.forEach((b, i) => {
+          tl.fromTo(b, { opacity: 0, y: 42 }, { opacity: 1, y: 0, duration: 1.2 }, i * 1.2);
+          if (i < beats.length - 1) tl.to(b, { opacity: 0, y: -42, duration: 0.9 }, i * 1.2 + 0.95);
+        });
+        // léger zoom de la vidéo + fondu du "scroll cue"
+        gsap.to('.cine-video', { scale: 1.18, ease: 'none', scrollTrigger: { trigger: '#cine', start: 'top top', end: 'bottom bottom', scrub: 1 } });
+        gsap.to('.cine-scrollcue', { opacity: 0, scrollTrigger: { trigger: '#cine', start: 'top top', end: '14% top', scrub: true } });
+      }
+      // Recalcule les mesures une fois tout chargé (vidéo, polices…)
+      window.addEventListener('load', () => ScrollTrigger.refresh());
+    })();
+
     // ══ NAV SCROLL ══
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
