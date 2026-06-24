@@ -714,15 +714,22 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
   const mood   = AMBIANCE_MODIFIERS[extras.ambiance] || '';
   const zone   = ZONE_COMPOSITION[extras.zone] || '';
   const sys =
+    `You are an elite tattoo concept artist and prompt engineer. For EACH request you design a bespoke, one-of-a-kind composition for THIS specific client — never a recycled template. ` +
+    `Make deliberate creative choices that vary from piece to piece: camera angle and viewpoint, the subject's exact pose and gesture, framing and crop, the specific supporting symbols, the asymmetry of the layout, and where the negative space falls. Two clients asking for the same subject must get visibly different concepts. ` +
     DESIGN_SYSTEM_PROMPT + ' ' +
     `The user has explicitly chosen the "${style.label}" style. Apply ONLY this style as defined below; do not borrow motifs from any other style. ` +
     style.recipe + ' ' +
     (mood ? mood + ' ' : '') +
     (zone ? zone + ' ' : '') +
-    `Now turn the user's idea into ONE single image-generation prompt that renders THEIR subject as the dominant focal point, fully inside the "${style.label}" style described above. ` +
-    `Lead with the subject, then describe how it is rendered in this exact style, then only the supporting/background elements that genuinely belong to this style. ` +
+    `Now invent ONE distinctive composition and write it as a single image-generation prompt for gpt-image-1, optimised for a beautiful, high-fidelity render. Be concretely visual and specific — cover, in flowing prose (not a list): ` +
+    `(1) the exact subject, its pose/expression/angle as the dominant focal point; ` +
+    `(2) the rendering technique of THIS style — line weight, shading method, contrast, level of realism; ` +
+    `(3) light direction and how it sculpts volume; ` +
+    `(4) key textures and where fine detail concentrates vs. fades; ` +
+    `(5) the supporting/background elements that genuinely belong to this style and how they connect to the subject; ` +
+    `(6) where the generous negative space sits. ` +
     `Pure black and grey unless the user explicitly asks for color. Fully clothed figures, no nudity, no gore. ` +
-    `Output ONLY the final image prompt in English, 90-140 words, no preamble, no bullet points, no style name.`;
+    `Output ONLY the final image prompt in English, 100-150 words, no preamble, no bullet points, no headings, no style name.`;
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -733,7 +740,7 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
           { role: 'system', content: sys },
           { role: 'user', content: userIdea },
         ],
-        temperature: 0.7, max_tokens: 450,
+        temperature: 0.95, max_tokens: 500,
       }),
     });
     const data = await resp.json();
