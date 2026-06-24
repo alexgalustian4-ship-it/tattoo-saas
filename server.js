@@ -166,6 +166,13 @@ const STYLES = {
     defaultFormat: 'portrait',
     colorByDefault: false,
     keyMarkers: 'symbolic black & grey concept composition, one strong central subject, fine drafting lines, sacred-geometry construction, generous negative space, premium editorial layout',
+    // Template figé (prompt validé par le client sur ChatGPT). ${SUBJECT} = idée du client,
+    // injectée telle quelle → le prompt qui atteint gpt-image-1 reste identique au prompt qui marche.
+    template:
+      `A heroic classical white marble sculpture of ${'${SUBJECT}'}, Greco-Roman, carved with the polished realism of a Michelangelo statue, in a dynamic powerful pose with strong dimensional anatomy. ` +
+      `Rendered as ultra-smooth polished marble: seamless soft gradients, glossy highlights, razor-sharp carved detail, strong three-dimensional volume, bright clean whites and deep grey shadows, smooth continuous tone with no grain, no stippling and no sketchy pencil strokes. ` +
+      `Behind the subject, a radiant halo of fine thin sun rays and faint concentric sacred-geometry construction circles with golden-ratio arcs; a bold white starburst sunburst as a focal accent; soft pale grey smoke clouds drifting at the base; small technical dot-grid annotations in the corners, kept light and elegant. ` +
+      `Pure solid white background, perfectly centered, symmetrical editorial composition, generous negative space. Premium black and grey tattoo concept design, high contrast, no color, flat 2D, no skin, no mockup, no frame, ready to tattoo.`,
     recipe:
       `Create the tattoo in the studio's signature Concept style: reimagine the subject as a heroic classical white marble sculpture, Greco-Roman, with the polished realism of a Michelangelo statue (even animals or objects are carved marble). ` +
       `Rendering: ultra-smooth polished marble — seamless soft gradients, glossy highlights, razor-sharp carved detail, strong three-dimensional volume, high contrast with bright clean whites and deep grey shadows. Smooth continuous tone, never grainy or sketchy. ` +
@@ -700,11 +707,9 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
     if (grayscale) img = img.grayscale();
     // Finition studio : étire la plage tonale (blancs purs + noirs profonds),
     // léger surcroît de contraste, puis netteté → look premium contrasté.
-    // Léger seulement : le rendu vient maintenant du prompt. On évite de sur-
-    // traiter (ça accentuerait le grain). Petit coup de contraste + netteté douce.
-    img = img
-      .linear(1.06, -6)               // contraste très léger
-      .sharpen({ sigma: 0.6 });       // netteté douce
+    // Quasi rien : le rendu vient du prompt. PAS de sharpen (ça accentue le grain).
+    // Juste un soupçon de contraste pour des blancs propres.
+    img = img.linear(1.04, -4);
     const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
@@ -758,6 +763,34 @@ async function enhancePrompt(userIdea, styleKey, extras = {}) {
     return out ? out.trim() : null;
   } catch (e) {
     console.warn('⚠ enhancePrompt failed:', e.message);
+    return null;
+  }
+}
+
+// Extrait UNIQUEMENT le sujet (traduit/condensé en anglais) pour l'injecter dans
+// un template figé. Pas de mots de style/rendu → le template garde le contrôle du look.
+async function enhanceSubject(userIdea, extras = {}) {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey || !userIdea) return null;
+  const sys =
+    `Translate and condense the user's tattoo idea into a short, vivid ENGLISH subject phrase for an image prompt. ` +
+    `Describe ONLY the subject, its pose/gesture and any key objects it holds or interacts with — 8 to 25 words. ` +
+    `Do NOT mention any art style, rendering, material, lighting, background, color or composition. No preamble, output only the phrase.`;
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: userIdea }],
+        temperature: 0.85, max_tokens: 80,
+      }),
+    });
+    const data = await resp.json();
+    const out = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    return out ? out.trim().replace(/^["']|["']$/g, '') : null;
+  } catch (e) {
+    console.warn('⚠ enhanceSubject failed:', e.message);
     return null;
   }
 }
@@ -1066,7 +1099,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'concept-marble-v1', finish: 'linear1.06+sharpen0.6', stripe: !!stripe });
+  res.json({ build: 'concept-template-v2', finish: 'linear1.04 (no sharpen)', stripe: !!stripe });
 });
 
 // Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
@@ -1513,15 +1546,24 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
       const size = zone ? openAISizeForZone(zone) : sizeForFormat(getStyle(style).defaultFormat);
       const bw   = !wantsColor(sujet) && !getStyle(style).colorByDefault;
 
-      // Enrichissement automatique du prompt DANS le style choisi (sauf free prompt brut)
-      let designPrompt = prompt;
-      if (!freePrompt) {
+      // Construction du prompt final.
+      const styleObj = getStyle(style);
+      let openaiPrompt;
+      if (!freePrompt && styleObj.template) {
+        // MODE TEMPLATE : prompt figé validé + injection du sujet uniquement (zéro dilution).
+        const subj = (await enhanceSubject(sujet, { ambiance, zone })) || sujet;
+        openaiPrompt = styleObj.template.replace(/\$\{SUBJECT\}/g, subj);
+        console.log('   🏛️ Template style', style, '| sujet:', subj);
+      } else if (!freePrompt) {
+        // MODE ENRICHI : réécriture dans le style choisi.
         const enhanced = await enhancePrompt(sujet, style, { ambiance, zone });
-        if (enhanced) { designPrompt = enhanced; console.log('   ✨ Prompt enrichi (style', style + ')'); }
+        const designPrompt = enhanced || prompt;
+        if (enhanced) console.log('   ✨ Prompt enrichi (style', style + ')');
+        openaiPrompt = buildRenderWrapper(designPrompt, { bw });
+      } else {
+        // FREE PROMPT : texte brut de l'utilisateur.
+        openaiPrompt = buildRenderWrapper(prompt, { bw });
       }
-
-      // Wrapper de rendu premium (réutilisable)
-      const openaiPrompt = buildRenderWrapper(designPrompt, { bw });
 
       // ── Log du PROMPT FINAL EXACT envoyé à gpt-image-1 (audit / debug) ──
       finalPrompt = openaiPrompt;
