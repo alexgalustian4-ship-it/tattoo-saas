@@ -1026,6 +1026,7 @@
     .ai-chat:focus-within { border-color: rgba(255,255,255,0.22); box-shadow: 0 30px 90px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.04); }
     .ai-chat-input {
       width: 100%; background: transparent; border: none; outline: none; resize: none;
+      -webkit-appearance: none; appearance: none; box-shadow: none; border-radius: 0;
       color: var(--text); font-family: inherit; font-size: 1.05rem; line-height: 1.55;
       padding: 16px 16px 8px; min-height: 88px;
     }
@@ -1126,16 +1127,32 @@
       50%     { opacity: 0.85; transform: translate(-50%,0) scale(1.18); }
     }
     .ai-hub { position: relative; }
+    /* Jeux de lumière : deux halos argentés qui dérivent en sens inverse */
+    .ai-hub::before, .ai-hub::after {
+      content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none;
+      border-radius: 50%; filter: blur(48px);
+    }
     .ai-hub::before {
-      content: ''; position: absolute; top: 80px; left: 50%; transform: translate(-50%,0);
-      width: 440px; height: 240px; border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(176,180,194,0.10) 0%, transparent 70%);
-      filter: blur(44px); z-index: -1; pointer-events: none;
-      animation: breathe 7s ease-in-out infinite;
+      top: 56px; width: 470px; height: 260px;
+      background: radial-gradient(ellipse, rgba(176,180,194,0.12) 0%, transparent 70%);
+      animation: hubGlowA 11s ease-in-out infinite;
+    }
+    .ai-hub::after {
+      top: 118px; width: 360px; height: 220px;
+      background: radial-gradient(ellipse, rgba(150,160,210,0.10) 0%, transparent 70%);
+      animation: hubGlowB 14s ease-in-out infinite;
+    }
+    @keyframes hubGlowA {
+      0%,100% { transform: translate(-58%,0)    scale(1);    opacity: 0.65; }
+      50%     { transform: translate(-43%,-14px) scale(1.12); opacity: 1; }
+    }
+    @keyframes hubGlowB {
+      0%,100% { transform: translate(-42%,0)   scale(1.05); opacity: 0.5; }
+      50%     { transform: translate(-60%,16px) scale(0.92); opacity: 0.85; }
     }
     @media (prefers-reduced-motion: reduce) {
       .reveal-init { opacity: 1 !important; transform: none; filter: none; }
-      .ai-hub::before { animation: none; }
+      .ai-hub::before, .ai-hub::after { animation: none; }
     }
 
     /* Tool switcher pills (commun à tous les outils) */
