@@ -78,6 +78,7 @@
     html.js .fade-up.visible, html.js .fade-left.visible, html.js .fade-right.visible { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) {
       html.js .fade-up, html.js .fade-left, html.js .fade-right { opacity: 1; transform: none; }
+      .hero-content { animation: none; }
     }
 
     .d1 { transition-delay: 0.08s; }
@@ -187,8 +188,9 @@
     .ss-figure, .ss-slider { transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s; }
     .ss-slider-wrap:hover .ss-figure, .ss-slider-wrap:hover .ss-slider { transform: translateY(-5px); box-shadow: 0 34px 74px rgba(0,0,0,0.5); }
     @keyframes heroReveal {
-      0%   { opacity: 0; transform: translateY(26px); }
-      100% { opacity: 1; transform: none; }
+      0%   { opacity: 0; transform: translateY(26px); filter: blur(12px); }
+      55%  { filter: blur(2.4px); }
+      100% { opacity: 1; transform: none; filter: blur(0); }
     }
 
     .hero-eyebrow {
@@ -221,6 +223,48 @@
       font-size: clamp(0.88rem, 1.5vw, 1rem);
       color: var(--muted); line-height: 1.8;
       margin-bottom: 48px; max-width: 440px; margin-left: auto; margin-right: auto;
+    }
+
+    /* ══ HERO — Couches premium (additif, GPU) ════════════════════ */
+    .hero-fx {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; will-change: transform;
+    }
+    #hero-marble { z-index: 1; }
+    #hero-cad {
+      z-index: 1; opacity: 0.05; mix-blend-mode: screen;
+      animation: cadBreath 15s ease-in-out infinite;
+    }
+    #hero-cad .cad-spin     { transform-box: fill-box; transform-origin: center; animation: cadSpin 260s linear infinite; }
+    #hero-cad .cad-spin-rev { transform-box: fill-box; transform-origin: center; animation: cadSpin 340s linear infinite reverse; }
+    @keyframes cadSpin   { to { transform: rotate(360deg); } }
+    @keyframes cadBreath { 0%,100% { opacity: 0.042; } 50% { opacity: 0.06; } }
+    /* Lumière « marbre poli » qui suit le curseur (transform-only) */
+    #hero-light {
+      position: absolute; left: 0; top: 0; z-index: 1;
+      width: 540px; height: 540px; margin: -270px 0 0 -270px;
+      pointer-events: none; opacity: 0; will-change: transform, opacity;
+      transition: opacity 0.7s ease;
+      background: radial-gradient(circle, rgba(210,214,226,0.07) 0%, rgba(210,214,226,0.03) 34%, transparent 62%);
+    }
+    /* CTA premium — scopé au hero, n'altère pas le composant global */
+    #hero .cta-btn {
+      overflow: hidden; isolation: isolate;
+      transition: background .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1), box-shadow .45s cubic-bezier(.16,1,.3,1);
+    }
+    #hero .cta-btn::after {
+      content: ''; position: absolute; top: 0; bottom: 0; left: -150%;
+      width: 55%; z-index: -1; pointer-events: none;
+      background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+      transform: skewX(-20deg);
+      transition: left .7s cubic-bezier(.16,1,.3,1);
+    }
+    #hero .cta-btn:hover { box-shadow: 0 18px 44px rgba(176,180,194,0.20), 0 2px 8px rgba(0,0,0,0.28); }
+    #hero .cta-btn:hover::after { left: 165%; }
+    #hero .cta-btn:active { transform: translateY(0) scale(0.985); transition-duration: .12s; }
+    @media (prefers-reduced-motion: reduce) {
+      #hero-cad, #hero-cad .cad-spin, #hero-cad .cad-spin-rev { animation: none; }
+      #hero-light { display: none; }
     }
 
     /* ══ TOOL CARDS ═════════════════════════════ */
@@ -802,7 +846,7 @@
 
     /* ══ VIDEO BG ══════════════════════════════ */
     #video-bg {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
     }
     #video-bg video {
       width: 100%; height: 100%; object-fit: cover; display: block;
@@ -1069,6 +1113,52 @@
       <line x1="0" y1="450" x2="1440" y2="450" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
       <line x1="720" y1="0" x2="720" y2="900" stroke="rgba(176,180,194,0.03)" stroke-width="0.5"/>
     </svg>
+
+    <!-- Poussière de marbre (canvas GPU, piloté par JS) -->
+    <canvas id="hero-marble" class="hero-fx" aria-hidden="true"></canvas>
+
+    <!-- Overlay technique CAO : géométrie sacrée, cercles de construction, calibration -->
+    <svg id="hero-cad" class="hero-fx" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+         stroke="rgba(226,229,238,0.9)" fill="none" stroke-width="0.6">
+      <!-- Géométrie sacrée — fleur de vie -->
+      <g class="cad-spin">
+        <circle cx="720" cy="450" r="120"/>
+        <circle cx="720" cy="330" r="120"/>
+        <circle cx="720" cy="570" r="120"/>
+        <circle cx="616" cy="390" r="120"/>
+        <circle cx="824" cy="390" r="120"/>
+        <circle cx="616" cy="510" r="120"/>
+        <circle cx="824" cy="510" r="120"/>
+        <circle cx="720" cy="450" r="240"/>
+      </g>
+      <!-- Cercles de construction + crosshair -->
+      <g class="cad-spin-rev">
+        <circle cx="720" cy="450" r="300"/>
+        <circle cx="720" cy="450" r="300" stroke-dasharray="2 11"/>
+        <line x1="420" y1="450" x2="1020" y2="450"/>
+        <line x1="720" y1="150" x2="720" y2="750"/>
+      </g>
+      <!-- Points de calibration (coins) -->
+      <g stroke-width="0.7">
+        <path d="M70,70 h26 M70,70 v26"/>
+        <path d="M1370,70 h-26 M1370,70 v26"/>
+        <path d="M70,830 h26 M70,830 v-26"/>
+        <path d="M1370,830 h-26 M1370,830 v-26"/>
+        <circle cx="83" cy="83" r="3"/>
+        <circle cx="1357" cy="83" r="3"/>
+        <circle cx="83" cy="817" r="3"/>
+        <circle cx="1357" cy="817" r="3"/>
+      </g>
+      <!-- Repères techniques — échelle de mesure -->
+      <g stroke-width="0.6" opacity="0.8">
+        <line x1="500" y1="822" x2="940" y2="822"/>
+        <path d="M500,816v12 M555,818v7 M610,818v7 M665,818v7 M720,816v12 M775,818v7 M830,818v7 M885,818v7 M940,816v12"/>
+      </g>
+    </svg>
+
+    <!-- Lumière marbre suivant le curseur -->
+    <div id="hero-light" aria-hidden="true"></div>
 
     <div class="hero-content">
       <p class="hero-eyebrow fade-up">AI-powered tattoo design studio</p>
@@ -1732,26 +1822,131 @@
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
     })();
 
-    // ══ EFFET AMBIANT : particules flottantes dans le hero ══
-    (function heroParticles(){
+    // ══ HERO — POUSSIÈRE DE MARBRE + PARALLAXE + LUMIÈRE (GPU · 1 boucle rAF) ══
+    (function heroAmbiance(){
       const hero = document.getElementById('hero');
       if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const layer = document.createElement('div');
-      layer.className = 'hero-particles';
-      hero.appendChild(layer);
-      const N = window.innerWidth < 700 ? 11 : 20;
-      for (let i = 0; i < N; i++){
-        const p = document.createElement('span');
-        const size = (1 + Math.random() * 2.4).toFixed(1);
-        p.style.left = (Math.random() * 100).toFixed(2) + '%';
-        p.style.top = (Math.random() * 100).toFixed(2) + '%';
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.opacity = (0.12 + Math.random() * 0.32).toFixed(2);
-        p.style.animationDuration = (9 + Math.random() * 11).toFixed(1) + 's';
-        p.style.animationDelay = (-Math.random() * 14).toFixed(1) + 's';
-        layer.appendChild(p);
+
+      const fine = matchMedia('(pointer: fine)').matches;
+      const lowPower = window.innerWidth < 820 || (navigator.deviceMemory && navigator.deviceMemory < 4);
+
+      // — Couche poussière de marbre —
+      const mc = document.getElementById('hero-marble');
+      const ctx = mc.getContext('2d');
+      let W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const COUNT = lowPower ? 34 : 84;
+      const parts = [];
+      function seed(){
+        parts.length = 0;
+        for (let i = 0; i < COUNT; i++){
+          const x = Math.random() * W, y = Math.random() * H;
+          parts.push({
+            bx: x, by: y, x, y, vx: 0, vy: 0,
+            r: (0.4 + Math.random() * 1.05) * dpr,
+            a: 0.05 + Math.random() * 0.20,
+            dx: (Math.random() - 0.5) * 0.05,           // dérive horizontale très lente
+            dy: -(0.015 + Math.random() * 0.04),        // remontée extrêmement lente
+            ph: Math.random() * 6.283
+          });
+        }
       }
+      function sizeMarble(){
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = mc.width  = Math.round(hero.clientWidth  * dpr);
+        H = mc.height = Math.round(hero.clientHeight * dpr);
+        seed();
+      }
+      sizeMarble();
+      addEventListener('resize', sizeMarble);
+
+      // — Souris (brute en px canvas + normalisée pour la parallaxe) —
+      const mouse = { x: -9999, y: -9999, has: false };
+      const m  = { x: 0.5, y: 0.5 };   // cible normalisée
+      const ms = { x: 0.5, y: 0.5 };   // valeur lissée
+      if (fine){
+        hero.addEventListener('mousemove', e => {
+          const r = hero.getBoundingClientRect();
+          mouse.x = (e.clientX - r.left) * dpr;
+          mouse.y = (e.clientY - r.top)  * dpr;
+          mouse.has = true;
+          m.x = (e.clientX - r.left) / r.width;
+          m.y = (e.clientY - r.top)  / r.height;
+        });
+        hero.addEventListener('mouseleave', () => {
+          mouse.has = false; mouse.x = mouse.y = -9999; m.x = 0.5; m.y = 0.5;
+        });
+      }
+
+      // — Références des couches pour la parallaxe (≤12px) —
+      const bgCanvas = document.querySelector('#video-bg canvas');
+      const svg      = document.getElementById('tattoo-svg');
+      const cad      = document.getElementById('hero-cad');
+      const light    = document.getElementById('hero-light');
+      const content  = document.querySelector('.hero-content');
+      // On libère la propriété transform du contenu une fois l'intro terminée
+      let contentReady = false;
+      if (content) content.addEventListener('animationend', e => {
+        if (e.animationName === 'heroReveal') { content.style.animation = 'none'; contentReady = true; }
+      }, { once: true });
+
+      const REPEL = 92 * dpr;          // rayon de répulsion du curseur
+      let px = 0, py = 0, t = 0;
+
+      function frame(){
+        t += 0.016;
+        ms.x += (m.x - ms.x) * 0.06;
+        ms.y += (m.y - ms.y) * 0.06;
+        px = (ms.x - 0.5) * 2;         // -1..1
+        py = (ms.y - 0.5) * 2;
+
+        // — Dessin de la poussière —
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#eef0f6';
+        for (let i = 0; i < parts.length; i++){
+          const p = parts[i];
+          p.bx += p.dx; p.by += p.dy;
+          if (p.by < -4) { p.by = H + 4; p.bx = Math.random() * W; }
+          if (p.bx < -4) p.bx = W + 4; else if (p.bx > W + 4) p.bx = -4;
+          const breath = Math.sin(t * 0.5 + p.ph) * 1.3 * dpr;   // micro-respiration
+          const tx = p.bx, ty = p.by + breath;
+          if (mouse.has){
+            const ddx = p.x - mouse.x, ddy = p.y - mouse.y;
+            const d2 = ddx*ddx + ddy*ddy;
+            if (d2 < REPEL*REPEL){
+              const d = Math.sqrt(d2) || 1;
+              const f = (1 - d / REPEL) * 5.5;
+              p.vx += (ddx / d) * f; p.vy += (ddy / d) * f;
+            }
+          }
+          p.vx += (tx - p.x) * 0.012;   // ressort de retour vers la base
+          p.vy += (ty - p.y) * 0.012;
+          p.vx *= 0.86; p.vy *= 0.86;
+          p.x += p.vx; p.y += p.vy;
+          ctx.globalAlpha = p.a;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, 6.283);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // — Parallaxe + micro-mouvement permanent (tout respire, ≤12px) —
+        const ix = Math.sin(t * 0.12) * 1.2, iy = Math.cos(t * 0.10) * 1.2;
+        if (bgCanvas) bgCanvas.style.transform = `translate3d(${(px*3.5 + ix*0.4).toFixed(2)}px, ${(py*3.5 + iy*0.4).toFixed(2)}px, 0)`;
+        if (svg)      svg.style.transform      = `translate3d(${(px*-9 + ix).toFixed(2)}px, ${(py*-9 + iy).toFixed(2)}px, 0)`;
+        mc.style.transform                     = `translate3d(${(px*-7).toFixed(2)}px, ${(py*-7).toFixed(2)}px, 0)`;
+        if (cad)      cad.style.transform       = `translate3d(${(px*12 + ix).toFixed(2)}px, ${(py*12 + iy).toFixed(2)}px, 0)`;
+        if (content && contentReady) content.style.transform = `translate3d(${(px*5).toFixed(2)}px, ${(py*5).toFixed(2)}px, 0)`;
+
+        // — Lumière marbre suivant le curseur —
+        if (light && fine){
+          const r = hero.getBoundingClientRect();
+          light.style.transform = `translate3d(${(ms.x * r.width).toFixed(1)}px, ${(ms.y * r.height).toFixed(1)}px, 0)`;
+          light.style.opacity = mouse.has ? '1' : '0';
+        }
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
     })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
