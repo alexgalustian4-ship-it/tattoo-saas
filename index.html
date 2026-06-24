@@ -1681,7 +1681,15 @@
       let loaded = 0, ready = false, target = 0, current = 0;
 
       function sizeCanvas(){ const dpr = Math.min(window.devicePixelRatio || 1, 2); canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); }
-      function drawCover(img){ if (!img || !img.width) return; const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height, s = Math.max(cw / iw, ch / ih), w = iw * s, h = ih * s; ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h); }
+      function drawCover(img){
+        if (!img || !img.width) return;
+        const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height;
+        let s = Math.max(cw / iw, ch / ih);
+        if (lowPower) s *= 0.8;   // mobile : moins zoomé (on dézoome un peu, bords sombres comblés)
+        const w = iw * s, h = ih * s;
+        ctx.fillStyle = '#0b0b0f'; ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+      }
       function computeTarget(){
         const scrub = innerHeight * 1.6;
         const p = Math.max(0, Math.min(1, scrollY / scrub));
