@@ -1590,44 +1590,109 @@
       el.classList.add('visible');
     });
 
-    // ══ VIDEO BG — SCRUB AU SCROLL (la vidéo suit le scroll) ══
+    // ══ VIDEO BG — SCRUB CANVAS (frames pré-décodées = fluidité garantie) ══
     const videoEl = document.querySelector('#video-bg video');
-    (function scrubVideo(){
-      if (!videoEl) return;
-      let duration = 0, targetTime = 0, ready = false;
-      // Distance de scroll sur laquelle la vidéo se déroule entièrement (~1.4 écran)
-      const scrubPx = () => window.innerHeight * 1.4;
+    (function canvasScrub(){
+      const bg = document.getElementById('video-bg');
+      if (!videoEl || !bg) return;
 
-      function prime(){
-        duration = videoEl.duration || 0;
-        ready = duration > 0;
-        // "réveille" le décodeur (muted → autorisé) puis met en pause pour piloter currentTime
-        videoEl.play().then(() => videoEl.pause()).catch(() => {});
-        computeTarget();
+      // Mobile / faible mémoire → simple lecture en boucle (pas de scrub, pas de saturation mémoire)
+      const isMobile = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches;
+      if (isMobile) {
+        videoEl.loop = true; videoEl.muted = true;
+        videoEl.play().catch(() => {});
+        return;
       }
-      videoEl.addEventListener('loadedmetadata', prime);
-      if (videoEl.readyState >= 1) prime();
 
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
+      bg.insertBefore(canvas, bg.firstChild);
+      videoEl.style.opacity = '0';                 // vidéo = source de décodage, invisible
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      // Loader minimal pendant le pré-décodage
+      const loader = document.createElement('div');
+      loader.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:#080808;color:#cfd2dd;font-size:0.8rem;letter-spacing:0.08em;transition:opacity .5s;';
+      loader.innerHTML = '<div style="text-align:center"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:0.05em;margin-bottom:14px;color:#fff">INK<span style="color:#3a3a44">.</span>STUDIO</div><div id="scrub-pct" style="color:#8a8a96">Chargement… 0%</div></div>';
+      document.body.appendChild(loader);
+      const pctEl = loader.querySelector('#scrub-pct');
+
+      const frames = [];
+      let N = 0, ready = false, target = 0, current = 0;
+
+      // Filet de sécurité : si le pré-décodage échoue ou traîne, on retombe sur la lecture en boucle
+      const safety = setTimeout(() => {
+        if (!ready) { try { loader.remove(); } catch(e){} videoEl.style.opacity = '1'; videoEl.loop = true; videoEl.play().catch(() => {}); }
+      }, 50000);
+      function fallbackLoop(){ try { loader.remove(); } catch(e){} videoEl.style.opacity = '1'; videoEl.loop = true; videoEl.play().catch(() => {}); }
+
+      function sizeCanvas(){
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(window.innerWidth * dpr);
+        canvas.height = Math.round(window.innerHeight * dpr);
+      }
+      function drawCover(img){
+        if (!img) return;
+        const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height;
+        const s = Math.max(cw / iw, ch / ih);
+        const w = iw * s, h = ih * s;
+        ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+      }
+      function seekTo(t){
+        return new Promise(res => {
+          let done = false;
+          const h = () => { if (done) return; done = true; videoEl.removeEventListener('seeked', h); res(); };
+          videoEl.addEventListener('seeked', h);
+          try { videoEl.currentTime = t; } catch(e){ res(); }
+          setTimeout(() => { if (!done){ done = true; videoEl.removeEventListener('seeked', h); res(); } }, 1200);
+        });
+      }
       function computeTarget(){
-        const p = Math.max(0, Math.min(1, window.scrollY / scrubPx()));
-        targetTime = p * (duration || videoEl.duration || 0);
+        const p = Math.max(0, Math.min(1, window.scrollY / (window.innerHeight * 1.4)));
+        target = p * (N - 1);
       }
-      window.addEventListener('scroll', computeTarget, { passive: true });
-      window.addEventListener('resize', computeTarget);
+      function loop(){
+        current += (target - current) * 0.18;
+        if (Math.abs(target - current) < 0.01) current = target;
+        drawCover(frames[Math.max(0, Math.min(N - 1, Math.round(current)))]);
+        requestAnimationFrame(loop);
+      }
 
-      // Lissage : on rapproche doucement currentTime de la cible chaque frame (anti-saccade)
-      function tick(){
-        if (ready || videoEl.duration) {
-          const cur = videoEl.currentTime;
-          const diff = targetTime - cur;
-          if (Math.abs(diff) > 0.01) {
-            const next = cur + diff * 0.18;
-            try { videoEl.currentTime = next; } catch(e){}
-          }
+      async function init(){
+       try {
+        const dur = videoEl.duration || 0;
+        if (!dur) { clearTimeout(safety); fallbackLoop(); return; }
+        const vw = videoEl.videoWidth || 1280, vh = videoEl.videoHeight || 720;
+        N = Math.min(72, Math.max(40, Math.round(dur * 4.5)));   // ~4.5 frames/s, cap 72
+        sizeCanvas();
+        const maxW = 960, scale = Math.min(1, maxW / vw);
+        const fw = Math.round(vw * scale), fh = Math.round(vh * scale);
+        const tmp = document.createElement('canvas'); tmp.width = fw; tmp.height = fh;
+        const tctx = tmp.getContext('2d');
+        videoEl.pause();
+        for (let i = 0; i < N; i++){
+          await seekTo((i / (N - 1)) * dur);
+          tctx.drawImage(videoEl, 0, 0, fw, fh);
+          const img = new Image();
+          img.src = tmp.toDataURL('image/jpeg', 0.82);
+          await img.decode().catch(() => {});
+          frames.push(img);
+          pctEl.textContent = 'Chargement… ' + Math.round(((i + 1) / N) * 100) + '%';
+          if (i === 0) drawCover(img);
         }
-        requestAnimationFrame(tick);
+        ready = true;
+        clearTimeout(safety);
+        computeTarget(); current = target;
+        drawCover(frames[Math.round(current)]);
+        loader.style.opacity = '0'; setTimeout(() => loader.remove(), 600);
+        window.addEventListener('scroll', computeTarget, { passive: true });
+        window.addEventListener('resize', () => { sizeCanvas(); drawCover(frames[Math.round(current)]); });
+        loop();
+       } catch(e){ clearTimeout(safety); if(!ready) fallbackLoop(); }
       }
-      requestAnimationFrame(tick);
+
+      videoEl.addEventListener('loadedmetadata', init, { once: true });
+      if (videoEl.readyState >= 1) init();
     })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
