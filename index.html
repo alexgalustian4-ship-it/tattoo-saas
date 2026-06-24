@@ -727,17 +727,25 @@
       font-size: 0.75rem; color: var(--muted); letter-spacing: 0.03em;
     }
     /* Text side */
+    .ss-text { position: relative; }
+    .ss-text::before {
+      content: ''; position: absolute; z-index: -1; inset: -28px -46px;
+      background: radial-gradient(ellipse 82% 92% at 42% 50%, rgba(6,6,9,0.62) 0%, rgba(6,6,9,0.3) 50%, transparent 80%);
+      pointer-events: none;
+    }
     .ss-text .ss-eyebrow {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+      text-transform: uppercase; color: var(--silver); margin-bottom: 18px;
     }
     .ss-text h2 {
       font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem);
       font-weight: 800; line-height: 1.15; color: #fff; margin-bottom: 20px;
     }
     .ss-text p {
-      font-size: 0.9rem; color: var(--muted); line-height: 1.75; margin-bottom: 32px;
+      font-size: 0.92rem; color: rgba(255,255,255,0.82); line-height: 1.75; margin-bottom: 32px;
     }
+    /* puces ✓ des vitrines : passe le gris (inline) en clair */
+    .ss-text [style*="color:var(--muted)"] { color: rgba(255,255,255,0.8) !important; }
     .ss-cta {
       display: inline-flex; align-items: center; gap: 10px;
       background: #fff; color: #0a0a0e;
