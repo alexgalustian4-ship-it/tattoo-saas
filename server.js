@@ -167,12 +167,11 @@ const STYLES = {
     colorByDefault: false,
     keyMarkers: 'symbolic black & grey concept composition, one strong central subject, fine drafting lines, sacred-geometry construction, generous negative space, premium editorial layout',
     recipe:
-      `Create the tattoo in a Concept style. This style is built around visual storytelling rather than simple illustration. Every element must contribute to a larger symbolic narrative. The composition should feel like an artistic concept piece created by a high-end tattoo designer. ` +
-      `Visual Identity: strong central subject; supporting elements connected through symbolism; intelligent composition rather than decoration; minimal but meaningful background; clean hierarchy; large areas of breathing space; sophisticated visual balance. ` +
-      `Composition built with multiple visual layers: primary subject; secondary symbolic elements; architectural or environmental details when relevant; geometric construction only if it strengthens the composition; atmospheric depth; natural visual flow. Every object should interact with the others; avoid isolated floating elements. ` +
-      `Storytelling: the tattoo must communicate an idea, emotion or philosophy; every symbol has a purpose; avoid generic symbolism or random combinations. ` +
-      `Artistic direction: think like a creative director designing an editorial artwork; mix realism with conceptual composition; allow objects to overlap naturally; create tension between positive and negative space; use scale creatively. Keep the focal point highly detailed while secondary elements become progressively lighter. ` +
-      `The final result should look like a luxury custom tattoo concept designed by an elite artist — unique, intelligent, emotionally powerful, premium, never a generic AI-generated image.`,
+      `Create the tattoo in the studio's signature Concept style: reimagine the subject as a heroic classical white marble sculpture, Greco-Roman, with the polished realism of a Michelangelo statue (even animals or objects are carved marble). ` +
+      `Rendering: ultra-smooth polished marble — seamless soft gradients, glossy highlights, razor-sharp carved detail, strong three-dimensional volume, high contrast with bright clean whites and deep grey shadows. Smooth continuous tone, never grainy or sketchy. ` +
+      `Behind and around the subject, build the signature concept collage: a radiant halo of fine thin rays, faint concentric sacred-geometry construction circles and golden-ratio arcs, a bold white starburst/sunburst as a focal accent, soft pale grey smoke clouds drifting at the base, and small technical dot-grid annotations in the corners. These stay light and elegant, never cluttered. ` +
+      `Composition: one dominant central marble subject, symmetrical editorial layout, generous white negative space, every element connected and intentional, clear hierarchy with detail concentrated on the subject and fading outward. ` +
+      `The final result should look like a high-end conceptual marble-and-sacred-geometry tattoo design — premium, museum-grade, clean, instantly recognizable, never a generic AI illustration.`,
   },
 
   baroque: {
@@ -701,11 +700,11 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
     if (grayscale) img = img.grayscale();
     // Finition studio : étire la plage tonale (blancs purs + noirs profonds),
     // léger surcroît de contraste, puis netteté → look premium contrasté.
+    // Léger seulement : le rendu vient maintenant du prompt. On évite de sur-
+    // traiter (ça accentuerait le grain). Petit coup de contraste + netteté douce.
     img = img
-      .normalise()                    // étire min→0 / max→255 (vrais blancs/noirs)
-      .linear(1.32, -34)              // contraste marqué, noirs denses, blancs propres
-      .gamma(1.08)                    // accentue la séparation des tons
-      .sharpen({ sigma: 1.6 });       // netteté forte des détails
+      .linear(1.06, -6)               // contraste très léger
+      .sharpen({ sigma: 0.6 });       // netteté douce
     const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
@@ -1067,7 +1066,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'contrast-142ac1b', finish: 'normalise+linear1.32+gamma1.08+sharpen1.6', stripe: !!stripe });
+  res.json({ build: 'concept-marble-v1', finish: 'linear1.06+sharpen0.6', stripe: !!stripe });
 });
 
 // Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
