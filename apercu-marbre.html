@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>INK.STUDIO — Aperçu Galerie de marbre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ivory:#F4F0E8; --ivory-2:#FBF8F2; --paper:#FFFFFF;
+    --ink:#1B1916; --muted:#6E6A61; --line:#E3DCD0;
+    --silver:#9A958B; --gold:#B2965C;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',system-ui,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(120% 80% at 80% -10%, #FBF8F2 0%, transparent 55%),
+      radial-gradient(100% 70% at 0% 100%, #EFE9DE 0%, transparent 55%),
+      var(--ivory);
+    background-attachment:fixed; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Cormorant Garamond',serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:20px 32px;background:rgba(244,240,232,0.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;letter-spacing:0.04em}
+  .logo span{color:var(--gold)}
+  .nav-links{display:flex;gap:30px}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.04em;transition:color .2s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{background:var(--ink);color:var(--ivory-2);text-decoration:none;font-size:0.8rem;font-weight:500;
+    padding:10px 22px;border-radius:30px;transition:transform .2s, box-shadow .2s}
+  .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(27,25,22,0.22)}
+
+  /* HERO */
+  .hero{display:grid;grid-template-columns:1.05fr 0.95fr;gap:50px;align-items:center;padding:70px 0 90px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:0.66rem;font-weight:600;letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--muted);border:1px solid var(--line);background:rgba(255,255,255,0.6);
+    padding:8px 16px;border-radius:30px;margin-bottom:26px}
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+  .hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,5.2vw,4.3rem);font-weight:600;
+    line-height:1.04;letter-spacing:-0.01em;margin-bottom:24px}
+  .hero h1 em{font-style:italic;color:var(--gold)}
+  .hero p.lead{font-size:1.04rem;color:var(--muted);max-width:480px;margin-bottom:34px;line-height:1.75}
+  .cta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:30px}
+  .btn-primary{background:var(--ink);color:var(--ivory-2);text-decoration:none;font-size:0.9rem;font-weight:500;
+    padding:15px 30px;border-radius:34px;transition:transform .2s, box-shadow .2s}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(27,25,22,0.25)}
+  .btn-ghost{color:var(--ink);text-decoration:none;font-size:0.9rem;font-weight:500;padding:15px 8px;border-bottom:1px solid transparent;transition:border-color .2s}
+  .btn-ghost:hover{border-color:var(--ink)}
+  .trust-micro{display:flex;align-items:center;gap:14px;font-size:0.82rem;color:var(--muted)}
+  .stars{color:var(--gold);letter-spacing:2px}
+  .trust-micro strong{color:var(--ink);font-weight:600}
+  .dot-sep{width:4px;height:4px;border-radius:50%;background:var(--line)}
+
+  /* HERO VISUAL */
+  .hero-visual{position:relative;display:flex;align-items:center;justify-content:center}
+  .frame{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    padding:18px;box-shadow:0 40px 90px rgba(27,25,22,0.14);max-width:430px;width:100%}
+  .frame img{width:100%;display:block;border-radius:10px}
+  .frame::before{content:'';position:absolute;inset:-1px;border-radius:18px;
+    background:linear-gradient(135deg, rgba(178,150,92,0.35), transparent 40%);-webkit-mask:
+      linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1px;pointer-events:none}
+  .badge-ai{position:absolute;left:-16px;bottom:34px;background:var(--paper);border:1px solid var(--line);
+    border-radius:14px;padding:12px 16px;box-shadow:0 16px 40px rgba(27,25,22,0.16);display:flex;align-items:center;gap:10px}
+  .badge-ai .pulse{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(178,150,92,0.5);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(178,150,92,0.5)}50%{box-shadow:0 0 0 7px rgba(178,150,92,0)}}
+  .badge-ai b{font-size:0.78rem;font-weight:600}
+  .badge-ai span{font-size:0.68rem;color:var(--muted);display:block}
+  /* faint construction lines behind visual */
+  .hero-visual::after{content:'';position:absolute;inset:-6%;z-index:-1;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 45%, transparent 58%, rgba(154,149,139,0.16) 58.5%, transparent 60%),
+      radial-gradient(circle at 50% 45%, transparent 72%, rgba(154,149,139,0.10) 72.5%, transparent 74%);
+    pointer-events:none}
+
+  /* TRUST BAND */
+  .trust-band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,0.45)}
+  .trust-inner{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:42px 0}
+  .stat{text-align:center}
+  .stat .num{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:600;line-height:1}
+  .stat .lbl{font-size:0.78rem;color:var(--muted);letter-spacing:0.04em;margin-top:8px}
+  .trust-note{text-align:center;font-size:0.8rem;color:var(--muted);padding:0 0 38px;letter-spacing:0.04em}
+
+  /* STYLES */
+  .section{padding:90px 0}
+  .sec-head{text-align:center;margin-bottom:48px}
+  .sec-eyebrow{font-size:0.66rem;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold)}
+  .sec-head h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:600;margin-top:10px}
+  .styles-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+  .style-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s;cursor:pointer}
+  .style-card:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(27,25,22,0.14)}
+  .style-card .img{aspect-ratio:3/4;background:#EDE7DC center/cover no-repeat}
+  .style-card .cap{padding:14px 14px 16px}
+  .style-card .cap b{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600}
+  .style-card .cap p{font-size:0.72rem;color:var(--muted);margin-top:3px;line-height:1.5}
+
+  /* TESTIMONIAL */
+  .quote-wrap{max-width:760px;margin:0 auto;text-align:center;padding:20px 0 0}
+  .quote{font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:500;font-style:italic;line-height:1.4}
+  .quote-by{margin-top:22px;font-size:0.82rem;color:var(--muted)}
+  .quote-by b{color:var(--ink);font-weight:600}
+
+  footer{border-top:1px solid var(--line);text-align:center;padding:40px;color:var(--muted);font-size:0.78rem}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;gap:40px;padding:50px 0 60px}
+    .nav-links{display:none}
+    .styles-grid{grid-template-columns:repeat(2,1fr)}
+    .trust-inner{grid-template-columns:1fr;gap:30px}
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">INK<span>.</span>STUDIO</div>
+    <div class="nav-links">
+      <a href="#">Le studio</a>
+      <a href="#styles">Styles</a>
+      <a href="#">Tarifs</a>
+      <a href="#">Galerie</a>
+    </div>
+    <a href="#" class="nav-cta">Créer un design</a>
+  </nav>
+
+  <header class="wrap hero">
+    <div class="hero-text">
+      <span class="eyebrow"><span class="dot"></span>Studio de tatouage augmenté par l'IA</span>
+      <h1 class="serif">Des tatouages dignes<br>d'un <em>musée</em>, conçus<br>par l'IA.</h1>
+      <p class="lead">Décris ton idée — notre IA sculpte une pièce unique en noir &amp; gris, en moins de 60 secondes. À toi de la garder, prête à tatouer.</p>
+      <div class="cta-row">
+        <a href="#" class="btn-primary">Créer mon design →</a>
+        <a href="#styles" class="btn-ghost">Découvrir les styles</a>
+      </div>
+      <div class="trust-micro">
+        <span class="stars">★★★★★</span>
+        <strong>4,9/5</strong>
+        <span class="dot-sep"></span>
+        <span><strong>12 000+</strong> designs créés</span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="frame">
+        <img src="images/hero-marble.png" alt="Statue de marbre conçue par l'IA" />
+      </div>
+      <div class="badge-ai">
+        <span class="pulse"></span>
+        <div><b>Conçu par IA</b><span>en 58 secondes</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="trust-band">
+    <div class="wrap trust-inner">
+      <div class="stat"><div class="num serif">12 000+</div><div class="lbl">designs créés</div></div>
+      <div class="stat"><div class="num serif">4,9/5</div><div class="lbl">note moyenne client</div></div>
+      <div class="stat"><div class="num serif">60 s</div><div class="lbl">pour un design unique</div></div>
+    </div>
+    <p class="trust-note">Adopté par des tatoueurs et passionnés dans le monde entier · Paiement sécurisé · Satisfait ou remboursé</p>
+  </section>
+
+  <section class="wrap section" id="styles">
+    <div class="sec-head">
+      <div class="sec-eyebrow">Cinq univers artistiques</div>
+      <h2 class="serif">Choisis ton style signature</h2>
+    </div>
+    <div class="styles-grid">
+      <div class="style-card"><div class="img" style="background-image:url('images/style-concept.png')"></div><div class="cap"><b>Concept</b><p>Marbre &amp; géométrie sacrée</p></div></div>
+      <div class="style-card"><div class="img" style="background-image:url('images/style-baroque.png')"></div><div class="cap"><b>Baroque</b><p>Architecture, clair-obscur</p></div></div>
+      <div class="style-card"><div class="img" style="background-image:url('images/style-japonais.png')"></div><div class="cap"><b>Japonais</b><p>Irezumi, mouvement</p></div></div>
+      <div class="style-card"><div class="img" style="background-image:url('images/style-geometrique.png')"></div><div class="cap"><b>Géométrique</b><p>Précision, dotwork</p></div></div>
+      <div class="style-card"><div class="img" style="background-image:url('images/style-realisme.png')"></div><div class="cap"><b>Réalisme</b><p>Noir &amp; gris photoréaliste</p></div></div>
+    </div>
+  </section>
+
+  <section class="wrap section" style="padding-top:0">
+    <div class="quote-wrap">
+      <p class="quote serif">« Je montre le design généré à mon client avant l'aiguille. Le taux de validation a explosé — et la qualité est bluffante. »</p>
+      <p class="quote-by"><b>Marco V.</b> — Tatoueur, Studio Eternal Ink</p>
+    </div>
+  </section>
+
+  <footer>© 2026 INK.STUDIO — Aperçu direction « Galerie de marbre »</footer>
+
+</body>
+</html>
