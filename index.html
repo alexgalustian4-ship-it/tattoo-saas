@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script>document.documentElement.classList.add('js');</script>
+  <script>document.documentElement.classList.add('js');try{if(localStorage.getItem('promo_dismissed'))document.documentElement.classList.add('promo-hidden');}catch(e){}</script>
   <title>INK.STUDIO — Design your tattoo with AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,12 +88,29 @@
 
     /* ══ NAV ════════════════════════════════════ */
     #nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      position: fixed; top: 40px; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 40px; height: 58px;
       border-bottom: 1px solid transparent;
       transition: background 0.4s, border-color 0.4s;
     }
+    /* Bandeau offre */
+    .promo-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 150; height: 40px;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      background: linear-gradient(90deg, #14121b 0%, #0c0c12 100%);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem; color: #d8d8e0; padding: 0 44px;
+    }
+    .promo-bar strong { color: #fff; font-weight: 600; }
+    .promo-bar a { color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.4); white-space: nowrap; }
+    .promo-bar a:hover { border-color: #fff; }
+    .promo-x { position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #8a8a96; cursor: pointer; font-size: 14px; line-height: 1; }
+    .promo-x:hover { color: #fff; }
+    html.promo-hidden .promo-bar { display: none; }
+    html.promo-hidden #nav { top: 0; }
+    @media (max-width: 600px){ .promo-bar { font-size: 0.68rem; gap: 10px; padding: 0 36px; } }
     #nav.scrolled {
       background: rgba(8,8,8,0.97);
       border-bottom-color: var(--border);
@@ -813,6 +830,13 @@
   </style>
 </head>
 <body>
+
+  <!-- ══ BANDEAU OFFRE ══ -->
+  <div class="promo-bar" id="promo-bar">
+    <span>🎁 <strong>30 crédits gratuits</strong> offerts à l'inscription — sans carte bancaire</span>
+    <a href="pricing.html">Voir les offres →</a>
+    <button class="promo-x" aria-label="Fermer" onclick="document.documentElement.classList.add('promo-hidden');try{localStorage.setItem('promo_dismissed','1')}catch(e){}">✕</button>
+  </div>
 
   <!-- ══ CURSEUR ══ -->
   <div id="cursor-dot"></div>
