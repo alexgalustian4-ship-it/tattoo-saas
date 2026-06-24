@@ -1108,6 +1108,9 @@
     </div>
   </section>
 
+  <!-- Espace de scroll : laisse l'animation du hero se terminer avant le contenu -->
+  <div id="hero-spacer" style="height:62vh; position:relative; z-index:1; pointer-events:none;"></div>
+
   <!-- ══ BENTO GRID ══ -->
   <section id="tools-bar" style="width:100%;padding:56px 5vw;border-top:1px solid var(--border);position:relative;z-index:1">
     <style>
@@ -1679,7 +1682,15 @@
 
       function sizeCanvas(){ const dpr = Math.min(window.devicePixelRatio || 1, 2); canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); }
       function drawCover(img){ if (!img || !img.width) return; const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height, s = Math.max(cw / iw, ch / ih), w = iw * s, h = ih * s; ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h); }
-      function computeTarget(){ const p = Math.max(0, Math.min(1, scrollY / (innerHeight * 1.4))); target = p * (N - 1); }
+      function computeTarget(){
+        const scrub = innerHeight * 1.6;
+        const p = Math.max(0, Math.min(1, scrollY / scrub));
+        target = p * (N - 1);
+        // Flou progressif du fond quand on dépasse l'animation → transition douce vers le contenu
+        const over = Math.max(0, (scrollY - scrub) / innerHeight);
+        const blur = Math.min(13, over * 20);
+        canvas.style.filter = blur > 0.3 ? 'blur(' + blur.toFixed(1) + 'px)' : 'none';
+      }
       function loop(){ current += (target - current) * 0.18; if (Math.abs(target - current) < 0.01) current = target; drawCover(frames[Math.max(0, Math.min(N - 1, Math.round(current)))]); requestAnimationFrame(loop); }
 
       function start(){
