@@ -164,7 +164,12 @@
         radial-gradient(ellipse 110% 38% at 50% 112%, rgba(8,8,8,0.85) 0%, transparent 60%);
     }
 
-    .hero-content { position: relative; z-index: 2; max-width: 680px; text-shadow: 0 1px 22px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.5); will-change: transform; }
+    .hero-content { position: relative; z-index: 2; max-width: 680px; text-shadow: 0 1px 22px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.5);
+      animation: heroReveal 1.4s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+    @keyframes heroReveal {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.99); filter: blur(9px); }
+      100% { opacity: 1; transform: none; filter: blur(0); }
+    }
 
     .hero-eyebrow {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.2em;
@@ -778,6 +783,11 @@
     }
     #nav, #hero, #styles, #how, #social-proof, #cta-final, footer {
       position: relative; z-index: 1;
+    }
+    /* Fond opaque sur les sections de contenu → la vidéo ne transparaît QUE dans le hero (lisibilité) */
+    #tools-bar, #styles, #stencil-showcase, #ps-showcase, .showcase,
+    #how, #social-proof, #deco-video-section, #cta-final, footer {
+      background: var(--bg);
     }
 
     /* ══ SECTION VIDEO BACKGROUNDS ══════════════ */
@@ -1665,26 +1675,6 @@
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
     })();
 
-    // ══ EFFET 3D À LA SOURIS (parallaxe du hero) ══
-    (function heroParallax(){
-      const hero = document.getElementById('hero');
-      const content = document.querySelector('.hero-content');
-      if (!hero || !content || matchMedia('(pointer: coarse)').matches) return;
-      hero.style.perspective = '1100px';
-      let tx = 0, ty = 0, cx = 0, cy = 0;
-      window.addEventListener('mousemove', e => {
-        tx = (e.clientX / window.innerWidth - 0.5);
-        ty = (e.clientY / window.innerHeight - 0.5);
-      }, { passive: true });
-      function raf(){
-        cx += (tx - cx) * 0.07; cy += (ty - cy) * 0.07;
-        content.style.transform = `translate3d(${(-cx*24).toFixed(2)}px, ${(-cy*16).toFixed(2)}px, 0) rotateY(${(-cx*5).toFixed(2)}deg) rotateX(${(cy*4).toFixed(2)}deg)`;
-        const bgCanvas = document.querySelector('#video-bg canvas');
-        if (bgCanvas) bgCanvas.style.transform = `scale(1.08) translate3d(${(cx*18).toFixed(2)}px, ${(cy*14).toFixed(2)}px, 0)`;
-        requestAnimationFrame(raf);
-      }
-      requestAnimationFrame(raf);
-    })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
     // CSS animation for spinner
