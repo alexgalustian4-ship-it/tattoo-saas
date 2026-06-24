@@ -12,10 +12,10 @@
     :root {
       --bg:       #080808;
       --bg-card:  #0f0f0f;
-      --silver:   #c4c7d2;
-      --dim:      #8e909c;
-      --text:     #f0f0f4;
-      --muted:    #a6a8b4;
+      --silver:   #cfd2dc;
+      --dim:      #cdced5;
+      --text:     #f6f6f9;
+      --muted:    #dddee4;
       --border:   #191919;
       --border-m: #242424;
     }
@@ -269,10 +269,10 @@
       font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
       letter-spacing: 0.01em; color: var(--text); margin-bottom: 8px;
     }
-    .tool-desc { font-size: 0.76rem; color: #666672; line-height: 1.65; flex: 1; }
+    .tool-desc { font-size: 0.76rem; color: #dcdde3; line-height: 1.65; flex: 1; }
     .tool-cta {
       margin-top: 16px; font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.08em; color: #606070;
+      letter-spacing: 0.08em; color: #c6c7ce;
       display: flex; align-items: center; gap: 5px; transition: color 0.2s, gap 0.2s;
     }
     .tool-card:hover .tool-cta { color: var(--silver); gap: 8px; }
@@ -308,8 +308,8 @@
       font-size: 14px; margin-bottom: 12px; flex-shrink: 0;
     }
     .atool-name { font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .atool-desc { font-size: 0.7rem; color: #666672; line-height: 1.6; flex: 1; }
-    .atool-cta { margin-top: 12px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; color: #606070; transition: color 0.2s; }
+    .atool-desc { font-size: 0.7rem; color: #dcdde3; line-height: 1.6; flex: 1; }
+    .atool-cta { margin-top: 12px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; color: #c6c7ce; transition: color 0.2s; }
     .atool-card:hover .atool-cta { color: var(--silver); }
     @media (max-width: 800px) {
       .all-tools-grid { grid-template-columns: repeat(2, 1fr); }
@@ -402,7 +402,7 @@
       color: var(--silver); letter-spacing: 0.04em; margin-bottom: 3px;
       transition: color 0.2s;
     }
-    .style-desc { font-size: 0.68rem; color: #666672; line-height: 1.5; }
+    .style-desc { font-size: 0.68rem; color: #dcdde3; line-height: 1.5; }
 
     /* ══ HOW ════════════════════════════════════ */
     #how {
@@ -437,7 +437,7 @@
       font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700;
       color: var(--silver); margin-bottom: 12px; letter-spacing: 0.02em;
     }
-    .how-desc { font-size: 0.8rem; color: #666672; line-height: 1.8; }
+    .how-desc { font-size: 0.8rem; color: #dcdde3; line-height: 1.8; }
 
     /* ══ SOCIAL PROOF ═══════════════════════════ */
     #social-proof {
@@ -535,7 +535,7 @@
     .footer-left { display: flex; flex-direction: column; gap: 8px; }
     .footer-logo {
       font-family: 'Syne', sans-serif; font-size: 0.88rem;
-      font-weight: 800; letter-spacing: 0.08em; color: #606068;
+      font-weight: 800; letter-spacing: 0.08em; color: #c6c7ce;
     }
     .footer-copy { font-size: 0.65rem; color: #383840; letter-spacing: 0.05em; }
     .footer-links {
@@ -567,7 +567,7 @@
       display: flex; align-items: center; justify-content: center; font-size: 16px;
     }
     .how-title { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--text); }
-    .how-desc { font-size: 0.76rem; color: #666672; line-height: 1.65; }
+    .how-desc { font-size: 0.76rem; color: #dcdde3; line-height: 1.65; }
     @media (max-width: 900px) { .how-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 500px) { .how-grid { grid-template-columns: 1fr; } }
 
@@ -729,8 +729,8 @@
     /* Text side */
     .ss-text { position: relative; }
     .ss-text::before {
-      content: ''; position: absolute; z-index: -1; inset: -28px -46px;
-      background: radial-gradient(ellipse 82% 92% at 42% 50%, rgba(6,6,9,0.62) 0%, rgba(6,6,9,0.3) 50%, transparent 80%);
+      content: ''; position: absolute; z-index: -1; inset: -34px -54px;
+      background: radial-gradient(ellipse 86% 96% at 44% 50%, rgba(4,4,7,0.8) 0%, rgba(4,4,7,0.5) 48%, rgba(4,4,7,0.15) 72%, transparent 86%);
       pointer-events: none;
     }
     .ss-text .ss-eyebrow {
