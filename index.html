@@ -161,10 +161,10 @@
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background:
         radial-gradient(ellipse 65% 55% at 50% 40%, rgba(180,180,200,0.022) 0%, transparent 65%),
-        radial-gradient(ellipse 100% 45% at 50% 105%, rgba(8,8,8,1) 0%, transparent 55%);
+        radial-gradient(ellipse 110% 38% at 50% 112%, rgba(8,8,8,0.85) 0%, transparent 60%);
     }
 
-    .hero-content { position: relative; z-index: 2; max-width: 680px; }
+    .hero-content { position: relative; z-index: 2; max-width: 680px; text-shadow: 0 1px 22px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.5); will-change: transform; }
 
     .hero-eyebrow {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.2em;
@@ -178,9 +178,10 @@
       font-family: 'Syne', sans-serif;
       font-size: clamp(2.4rem, 6vw, 4.2rem);
       font-weight: 800; line-height: 1.12; letter-spacing: -0.02em;
-      color: var(--text); margin-bottom: 18px;
+      color: #fff; margin-bottom: 18px;
+      text-shadow: 0 2px 50px rgba(0,0,0,0.55), 0 2px 10px rgba(0,0,0,0.5);
     }
-    .hero-title em { font-style: normal; color: #555; }
+    .hero-title em { font-style: normal; color: rgba(255,255,255,0.42); }
     .hero-sub {
       font-size: clamp(0.88rem, 1.5vw, 1rem);
       color: var(--muted); line-height: 1.8;
@@ -772,7 +773,7 @@
     #video-bg::after {
       content: '';
       position: absolute; inset: 0;
-      background: rgba(8,8,8,0.58);
+      background: radial-gradient(ellipse 115% 95% at 50% 42%, rgba(8,8,9,0.16) 0%, rgba(8,8,9,0.40) 58%, rgba(8,8,9,0.66) 100%);
       pointer-events: none;
     }
     #nav, #hero, #styles, #how, #social-proof, #cta-final, footer {
@@ -1642,6 +1643,27 @@
       });
       // Sécurité : démarre même si quelques images manquent
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
+    })();
+
+    // ══ EFFET 3D À LA SOURIS (parallaxe du hero) ══
+    (function heroParallax(){
+      const hero = document.getElementById('hero');
+      const content = document.querySelector('.hero-content');
+      if (!hero || !content || matchMedia('(pointer: coarse)').matches) return;
+      hero.style.perspective = '1100px';
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      window.addEventListener('mousemove', e => {
+        tx = (e.clientX / window.innerWidth - 0.5);
+        ty = (e.clientY / window.innerHeight - 0.5);
+      }, { passive: true });
+      function raf(){
+        cx += (tx - cx) * 0.07; cy += (ty - cy) * 0.07;
+        content.style.transform = `translate3d(${(-cx*24).toFixed(2)}px, ${(-cy*16).toFixed(2)}px, 0) rotateY(${(-cx*5).toFixed(2)}deg) rotateX(${(cy*4).toFixed(2)}deg)`;
+        const bgCanvas = document.querySelector('#video-bg canvas');
+        if (bgCanvas) bgCanvas.style.transform = `scale(1.08) translate3d(${(cx*18).toFixed(2)}px, ${(cy*14).toFixed(2)}px, 0)`;
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
     })();
 
     // ── Stencil showcase ──────────────────────────────────────────────
