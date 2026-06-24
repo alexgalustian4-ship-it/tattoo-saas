@@ -89,7 +89,7 @@
 
     /* ══ NAV ════════════════════════════════════ */
     #nav {
-      position: fixed; top: 40px; left: 0; right: 0; z-index: 100;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 40px; height: 58px;
       border-bottom: 1px solid transparent;
@@ -943,13 +943,6 @@
   </style>
 </head>
 <body>
-
-  <!-- ══ BANDEAU OFFRE ══ -->
-  <div class="promo-bar" id="promo-bar">
-    <span>🎁 <strong>30 crédits gratuits</strong> offerts à l'inscription — sans carte bancaire</span>
-    <a href="pricing.html">Voir les offres →</a>
-    <button class="promo-x" aria-label="Fermer" onclick="document.documentElement.classList.add('promo-hidden');try{localStorage.setItem('promo_dismissed','1')}catch(e){}">✕</button>
-  </div>
 
   <!-- ══ CURSEUR ══ -->
   <div id="cursor-dot"></div>
