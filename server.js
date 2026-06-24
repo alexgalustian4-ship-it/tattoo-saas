@@ -1065,6 +1065,11 @@ async function saveGeneration(userId, type, dataUrl, params) {
   }
 }
 
+// Marqueur de version (diagnostic déploiement)
+app.get('/version', (req, res) => {
+  res.json({ build: 'contrast-142ac1b', finish: 'normalise+linear1.32+gamma1.08+sharpen1.6', stripe: !!stripe });
+});
+
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
