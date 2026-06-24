@@ -711,29 +711,9 @@
       background: radial-gradient(ellipse, rgba(176,180,194,0.1) 0%, transparent 70%);
       pointer-events: none;
     }
-    /* Generic showcase wrapper + zig-zag */
-    .showcase {
-      padding: 100px 5vw;
-      border-top: 1px solid var(--border);
-      position: relative; z-index: 1; overflow: hidden;
-    }
-    .showcase::before {
-      content: '';
-      position: absolute; top: 50%;
-      transform: translateY(-50%);
-      width: 600px; height: 600px;
-      background: radial-gradient(ellipse, rgba(176,180,194,0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .showcase.glow-left::before  { left: -10%; }
-    .showcase.glow-right::before { right: -10%; }
-    .ss-inner.reverse > .ss-slider-wrap { order: 2; }
-    .ss-inner.reverse > .ss-text        { order: 1; }
     @media (max-width: 900px) {
       .ss-inner { grid-template-columns: 1fr; gap: 40px; }
-      #stencil-showcase, #ps-showcase, .showcase { padding: 60px 5vw; }
-      .ss-inner.reverse > .ss-slider-wrap,
-      .ss-inner.reverse > .ss-text { order: 0; }
+      #stencil-showcase, #ps-showcase { padding: 60px 5vw; }
     }
 
     /* ══ VIDEO BG ══════════════════════════════ */
@@ -814,7 +794,7 @@
   <nav id="nav">
     <a href="/" class="nav-logo">INK<span>.</span>STUDIO</a>
     <div class="nav-links">
-      <a href="#generate-showcase">Tools</a>
+      <a href="#bento">All tools</a>
       <a href="#styles">Styles</a>
       <a href="pricing.html">Pricing</a>
       <a href="outil.html#history-section">My projects</a>
@@ -1015,43 +995,54 @@
   </section>
 
   <!-- ══ BENTO GRID ══ -->
-  <!-- ══ GENERATE SHOWCASE ══ -->
-  <section id="generate-showcase" class="showcase glow-right">
-    <div class="ss-inner">
+  <section id="bento" style="width:100%;padding:90px 5vw;border-top:1px solid var(--border);position:relative;z-index:1">
+    <div class="section-inner">
+      <span class="section-label fade-up" style="text-align:center;display:block">All tools</span>
+      <h2 class="section-title fade-up d1" style="text-align:center">Everything you need,<br>in one place</h2>
+      <div class="bento-grid fade-up d2">
 
-      <!-- Left: before/after slider -->
-      <div class="ss-slider-wrap fade-up">
-        <div class="ss-slider" id="gen-slider">
-          <img loading="lazy" src="images/generate-after.png" alt="AI design" style="object-fit:contain;background:#fff" />
-          <div class="ss-after-layer" id="gen-after-layer">
-            <img loading="lazy" src="images/generate-before.png" alt="Idea" style="object-fit:contain;background:#fff" />
-          </div>
-          <div class="ss-line" id="gen-line"></div>
-          <div class="ss-knob" id="gen-knob">
-            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
-          </div>
-          <div class="ss-badges">
-            <span class="ss-badge">Idea</span>
-            <span class="ss-badge after">Design</span>
-          </div>
-        </div>
-        <p class="ss-caption">Drag to compare</p>
+        <!-- 1. Generate -->
+        <a href="outil.html?mode=create" class="bento-card bento-large bento-glow">
+          <div class="bento-preview" style="background-image:url('images/card-generate.png?v=2');background-position:center;background-size:cover;opacity:0.42"></div>
+          <div class="bento-icon">✦</div>
+          <p class="bento-title">Generate a design</p>
+          <p class="bento-desc">Describe your idea — AI creates a unique pro design in your style in under 60 seconds.</p>
+          <p class="bento-cta">Try →</p>
+        </a>
+
+        <!-- 2. Stencil -->
+        <a href="outil.html?mode=stencil" class="bento-card bento-medium bento-pro">
+          <div class="bento-icon" style="color:#b0b4c2">▦</div>
+          <p class="bento-title">Instant stencil</p>
+          <p class="bento-desc">Convert any design into a print-ready stencil in 1 second. No Photoshop needed.</p>
+          <p class="bento-cta" style="color:#b0b4c2">Try →</p>
+        </a>
+
+        <!-- 3. Merge designs -->
+        <a href="outil.html?mode=merge" class="bento-card bento-medium">
+          <div class="bento-icon">⬡</div>
+          <p class="bento-title">Merge designs</p>
+          <p class="bento-desc">Fuse 2 to 4 designs into one unique masterpiece.</p>
+          <p class="bento-cta">Try →</p>
+        </a>
+
+        <!-- 4. Photo → Tattoo -->
+        <a href="outil.html?mode=pet" class="bento-card bento-wide">
+          <div class="bento-icon">◧</div>
+          <p class="bento-title">Photo → Tattoo</p>
+          <p class="bento-desc">Upload a photo — AI turns it into a tattoo-ready design.</p>
+          <p class="bento-cta">Try →</p>
+        </a>
+
+        <!-- 5. Place on skin -->
+        <a href="outil.html?mode=body" class="bento-card bento-wide">
+          <div class="bento-icon">◈</div>
+          <p class="bento-title">Place on skin</p>
+          <p class="bento-desc">Upload your design and see it rendered realistically on your body, exactly where you want it.</p>
+          <p class="bento-cta">Try →</p>
+        </a>
+
       </div>
-
-      <!-- Right: text -->
-      <div class="ss-text fade-up d2">
-        <p class="ss-eyebrow">Core Tool — Generate a design</p>
-        <h2>Your idea.<br>A pro design.<br>In 60 seconds.</h2>
-        <p>Describe what you want — AI creates a unique, studio-quality tattoo design in your chosen style. No artist brief, no back-and-forth, no waiting.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> 5 signature artistic styles</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Unique result in under 60 seconds</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> High-resolution download</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Yours to keep — full commercial use</div>
-        </div>
-        <a href="outil.html?mode=create" class="ss-cta">Try the generator →</a>
-      </div>
-
     </div>
   </section>
 
@@ -1148,45 +1139,6 @@
     </div>
   </section>
 
-  <!-- ══ MERGE SHOWCASE ══ -->
-  <section id="merge-showcase" class="showcase glow-left">
-    <div class="ss-inner reverse">
-
-      <!-- Slider -->
-      <div class="ss-slider-wrap fade-up">
-        <div class="ss-slider" id="merge-slider">
-          <img loading="lazy" src="images/merge-after.png" alt="Merged design" style="object-fit:contain;background:#fff" />
-          <div class="ss-after-layer" id="merge-after-layer">
-            <img loading="lazy" src="images/merge-before.png" alt="Source designs" style="object-fit:contain;background:#fff" />
-          </div>
-          <div class="ss-line" id="merge-line"></div>
-          <div class="ss-knob" id="merge-knob">
-            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
-          </div>
-          <div class="ss-badges">
-            <span class="ss-badge">Sources</span>
-            <span class="ss-badge after">Merged</span>
-          </div>
-        </div>
-        <p class="ss-caption">Drag to compare</p>
-      </div>
-
-      <!-- Text -->
-      <div class="ss-text fade-up d2">
-        <p class="ss-eyebrow">Pro Tool — Merge designs</p>
-        <h2>Two designs.<br>One unique<br>masterpiece.</h2>
-        <p>Fuse 2 to 4 of your designs into a single, coherent composition. AI blends styles, lines and motifs into one piece that finally feels yours.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Combine up to 4 designs</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Seamless style blending</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> One-of-a-kind result, every time</div>
-        </div>
-        <a href="outil.html?mode=merge" class="ss-cta">Try Merge →</a>
-      </div>
-
-    </div>
-  </section>
-
   <!-- ══ PLACE ON SKIN SHOWCASE ══ -->
   <section id="ps-showcase">
     <div class="ss-inner">
@@ -1232,45 +1184,6 @@
     </div>
   </section>
 
-
-  <!-- ══ PHOTO → TATTOO SHOWCASE ══ -->
-  <section id="photo-showcase" class="showcase glow-right">
-    <div class="ss-inner reverse">
-
-      <!-- Slider -->
-      <div class="ss-slider-wrap fade-up">
-        <div class="ss-slider" id="photo-slider">
-          <img loading="lazy" src="images/photo-after.png" alt="Tattoo design" style="object-fit:contain;background:#fff" />
-          <div class="ss-after-layer" id="photo-after-layer">
-            <img loading="lazy" src="images/photo-before.png" alt="Original photo" style="object-fit:cover" />
-          </div>
-          <div class="ss-line" id="photo-line"></div>
-          <div class="ss-knob" id="photo-knob">
-            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
-          </div>
-          <div class="ss-badges">
-            <span class="ss-badge">Photo</span>
-            <span class="ss-badge after">Tattoo</span>
-          </div>
-        </div>
-        <p class="ss-caption">Drag to compare</p>
-      </div>
-
-      <!-- Text -->
-      <div class="ss-text fade-up d2">
-        <p class="ss-eyebrow">Pro Tool — Photo → Tattoo</p>
-        <h2>Any photo.<br>A tattoo-ready<br>design.</h2>
-        <p>Upload a photo — a pet, a portrait, a place — and AI transforms it into a clean, inkable tattoo design that keeps what matters and drops the noise.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Pets, portraits, objects, places</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Clean, inkable linework</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Keeps the likeness, drops the noise</div>
-        </div>
-        <a href="outil.html?mode=pet" class="ss-cta">Try Photo → Tattoo →</a>
-      </div>
-
-    </div>
-  </section>
 
   <!-- ══ HOW IT WORKS ══ -->
   <section id="how" style="width:100%;padding:110px 5vw;border-top:1px solid var(--border);position:relative;z-index:1;overflow:hidden;">
@@ -1681,30 +1594,6 @@
       window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
       window.addEventListener('touchend', () => { dragging = false; });
     })();
-
-    // Generic before/after slider init (Generate, Merge, Photo→Tattoo)
-    function initBASlider(prefix) {
-      const slider = document.getElementById(prefix + '-slider');
-      const layer  = document.getElementById(prefix + '-after-layer');
-      const line   = document.getElementById(prefix + '-line');
-      const knob   = document.getElementById(prefix + '-knob');
-      if (!slider) return;
-      let dragging = false;
-      function setPos(x) {
-        const rect = slider.getBoundingClientRect();
-        const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
-        layer.style.clipPath = `inset(0 ${(100 - pct * 100).toFixed(1)}% 0 0)`;
-        line.style.left = knob.style.left = (pct * 100).toFixed(1) + '%';
-      }
-      setPos(slider.getBoundingClientRect().left + slider.offsetWidth / 2);
-      slider.onmousedown = e => { dragging = true; setPos(e.clientX); e.preventDefault(); };
-      slider.ontouchstart = e => { dragging = true; setPos(e.touches[0].clientX); };
-      window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
-      window.addEventListener('mouseup', () => { dragging = false; });
-      window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
-      window.addEventListener('touchend', () => { dragging = false; });
-    }
-    ['gen', 'merge', 'photo'].forEach(initBASlider);
 
     // Tab switching
     function ssTab(tab) {
