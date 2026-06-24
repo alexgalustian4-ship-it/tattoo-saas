@@ -52,7 +52,7 @@
     }
     #video-bg::after {
       content: ''; position: absolute; inset: 0;
-      background: rgba(8,8,9,0.55);   /* assez sombre pour lire, assez clair pour voir la vidéo */
+      background: rgba(8,8,9,0.45);   /* assez sombre pour lire, assez clair pour voir la vidéo */
       pointer-events: none;
     }
 
@@ -459,7 +459,7 @@
       background:
         radial-gradient(ellipse 70% 50% at 50% -5%, rgba(176,180,194,0.10) 0%, transparent 60%),
         radial-gradient(ellipse 90% 60% at 50% 110%, rgba(99,102,241,0.05) 0%, transparent 60%),
-        var(--bg);
+        transparent;   /* base transparente → laisse voir la vidéo de fond */
       background-attachment: fixed;
     }
     main {
