@@ -1070,6 +1070,32 @@ app.get('/version', (req, res) => {
   res.json({ build: 'contrast-142ac1b', finish: 'normalise+linear1.32+gamma1.08+sharpen1.6', stripe: !!stripe });
 });
 
+// Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
+app.get('/finish-test', async (req, res) => {
+  try {
+    const sharp = require('sharp');
+    // Dégradé gris doux et peu contrasté (mean ~128, faible stdev)
+    const w = 256, h = 64;
+    const raw = Buffer.alloc(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) raw[y * w + x] = 96 + Math.round((x / w) * 64); // 96..160
+    const inBuf = await sharp(raw, { raw: { width: w, height: h, channels: 1 } }).png().toBuffer();
+    const before = await sharp(inBuf).stats();
+    const dataUrl = 'data:image/png;base64,' + inBuf.toString('base64');
+    const outUrl = await finishImage(dataUrl, { grayscale: true });
+    const changed = outUrl !== dataUrl;
+    const outBuf = Buffer.from(outUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const after = await sharp(outBuf).stats();
+    res.json({
+      finishImageRan: changed,
+      before: { min: before.channels[0].min, max: before.channels[0].max, stdev: Math.round(before.channels[0].stdev) },
+      after:  { min: after.channels[0].min,  max: after.channels[0].max,  stdev: Math.round(after.channels[0].stdev) },
+      note: changed ? 'finishImage a modifié l\'image (contraste élargi)' : 'finishImage A ÉCHOUÉ (renvoie l\'original)',
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
