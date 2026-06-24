@@ -1108,55 +1108,6 @@ app.get('/version', (req, res) => {
   res.json({ build: 'gpt-image-2-v5', imageModel: IMAGE_MODEL, finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
 });
 
-// Test d'un modèle d'image (diagnostic : vérifie nom + paramètres sans casser la prod)
-app.get('/img-test', async (req, res) => {
-  const apiKey = process.env.OPENAI_API_KEY || '';
-  if (!apiKey) return res.json({ error: 'no_api_key' });
-  const model = req.query.model || 'gpt-image-2';
-  const quality = req.query.quality || 'high';
-  const size = req.query.size || '1024x1024';
-  try {
-    const resp = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, prompt: 'a simple thin black ring outline centered on a pure white background', n: 1, size, quality, moderation: 'low' }),
-    });
-    const data = await resp.json();
-    const d0 = data.data && data.data[0];
-    res.json({
-      model, size, quality, httpStatus: resp.status, ok: resp.ok,
-      gotImage: !!(d0 && (d0.b64_json || d0.url)),
-      error: data.error ? { message: data.error.message, type: data.error.type, param: data.error.param } : null,
-    });
-  } catch (e) { res.json({ error: e.message }); }
-});
-
-// Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
-app.get('/finish-test', async (req, res) => {
-  try {
-    const sharp = require('sharp');
-    // Dégradé gris doux et peu contrasté (mean ~128, faible stdev)
-    const w = 256, h = 64;
-    const raw = Buffer.alloc(w * h);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) raw[y * w + x] = 96 + Math.round((x / w) * 64); // 96..160
-    const inBuf = await sharp(raw, { raw: { width: w, height: h, channels: 1 } }).png().toBuffer();
-    const before = await sharp(inBuf).stats();
-    const dataUrl = 'data:image/png;base64,' + inBuf.toString('base64');
-    const outUrl = await finishImage(dataUrl, { grayscale: true });
-    const changed = outUrl !== dataUrl;
-    const outBuf = Buffer.from(outUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    const after = await sharp(outBuf).stats();
-    res.json({
-      finishImageRan: changed,
-      before: { min: before.channels[0].min, max: before.channels[0].max, stdev: Math.round(before.channels[0].stdev) },
-      after:  { min: after.channels[0].min,  max: after.channels[0].max,  stdev: Math.round(after.channels[0].stdev) },
-      note: changed ? 'finishImage a modifié l\'image (contraste élargi)' : 'finishImage A ÉCHOUÉ (renvoie l\'original)',
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // Connexion via Google (le front envoie le credential GSI)
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
