@@ -827,6 +827,26 @@
       .deco-vid-grid { grid-template-columns: 1fr; }
       .deco-vid-tall { grid-row: span 1; }
       .deco-vid-tall video { min-height: 220px; }
+      /* ── HERO mobile : placement & espacements ── */
+      #hero { padding: 88px 18px 52px; }
+      .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.16em; margin-bottom: 16px; }
+      .hero-eyebrow::before, .hero-eyebrow::after { width: 18px; }
+      .hero-title { font-size: clamp(2rem, 9vw, 3.1rem); line-height: 1.08; margin-bottom: 14px; }
+      .hero-sub { margin-bottom: 30px; }
+      .cta-btn { margin-bottom: 34px !important; margin-top: 22px !important; }
+      .proof-bar { max-width: 360px; margin-bottom: 30px; }
+      .proof-item { padding: 12px 6px; }
+      .proof-num { font-size: 1.05rem; }
+      .proof-label { font-size: 0.54rem; }
+      .trust-strip { flex-wrap: wrap; justify-content: center; row-gap: 10px; }
+    }
+    /* viewport mobile sans saut de barre d'adresse */
+    @supports (min-height: 100svh) { #hero { min-height: 100svh; } }
+    /* très petits écrans */
+    @media (max-width: 380px) {
+      .hero-title { font-size: clamp(1.8rem, 10vw, 2.6rem); }
+      .proof-bar { max-width: 320px; }
+      .proof-num { font-size: 0.95rem; }
     }
   </style>
 </head>
