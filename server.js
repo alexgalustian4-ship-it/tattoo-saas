@@ -225,13 +225,15 @@ const STYLES = {
     colorByDefault: false,
     keyMarkers: 'hyper-realistic black & grey realism, smooth photoreal shading, deep contrast, ultra-fine detail, lifelike textures, dramatic lighting',
     recipe:
-      `Create the tattoo in a Realism style. Focus on lifelike imagery with exceptional accuracy, natural proportions and realistic depth; every subject authentic, dimensional and emotionally expressive while remaining fully tattooable. Premium black & grey realism unless color is explicitly requested. ` +
-      `Visual Identity: photorealistic appearance; natural anatomy; accurate proportions; high depth perception; strong focal point; clean visual hierarchy; timeless composition. ` +
-      `Composition: one dominant realistic subject; supporting elements only when they strengthen the story; natural layering; balanced negative space; smooth visual flow; strong depth and perspective. Avoid unnecessary decorative elements. ` +
-      `Realism principles: preserve realistic anatomy, authentic proportions, natural perspective, facial accuracy, believable expressions, realistic textures, correct lighting and physical depth. Never exaggerate features unless requested; avoid stylized or cartoon-like interpretations. ` +
-      `Lighting is essential: realistic directional lighting, smooth value transitions, deep shadows, bright highlights, natural contrast defining volume. Authentic textures (skin, marble, stone, metal, fabric, feathers, fur, hair, leather, smoke, water) that never become noisy. ` +
-      `Exceptional detail in eyes, facial features, hands, muscles, wrinkles, hair, clothing folds and key symbolic objects, reducing detail away from the focal point. Depth via foreground/midground/background and atmospheric perspective. Prioritize tattoo longevity over photographic perfection. ` +
-      `The final result should resemble a world-class black and grey realism tattoo by an elite artist — authentic, emotionally powerful, technically flawless, timeless, never AI-generated or a digitally manipulated photograph.`,
+      `Create the tattoo in a Realism style — smooth, photorealistic black & grey, like a real healed black-and-grey realism tattoo or a high-end black-and-white photograph. Premium black & grey unless color is explicitly requested. ` +
+      `CRITICAL render quality: ultra-smooth, seamless value gradients with soft tonal transitions; deep rich true blacks; bright glossy specular highlights; strong three-dimensional volume and depth. ` +
+      `Absolutely AVOID a pencil-sketch, drawing, charcoal, engraving, etching, woodcut, cross-hatching, line-hatching, stippling or dotwork look — no visible pencil strokes, no sketchy lines, no grainy stipple shading. Shading must read as continuous photographic tone, not hand-drawn marks. ` +
+      `Visual Identity: photorealistic appearance; natural anatomy; accurate proportions; high depth perception; strong focal point; clean visual hierarchy. ` +
+      `Composition: one dominant realistic subject, isolated cleanly on pure white; supporting elements only when they truly strengthen the story; balanced negative space; strong depth and perspective. No ground, no rocks, no scenery, no scattered debris, no decorative filler unless explicitly requested. ` +
+      `Realism principles: realistic anatomy, authentic proportions, natural perspective, believable expression, realistic textures, correct directional lighting and physical depth. Never stylized or cartoon-like. ` +
+      `Lighting: realistic directional light, smooth value transitions, deep shadows, bright highlights, natural contrast defining volume. Authentic surface textures (skin, scales, metal, fabric, fur, hair, water) that stay smooth and never become noisy or grainy. ` +
+      `Exceptional smooth detail at the focal point (eyes, face, key textures), gently fading outward. Depth via subtle atmospheric perspective. Prioritize tattoo longevity. ` +
+      `The final result should resemble a world-class smooth black & grey realism tattoo by an elite artist — authentic, dimensional, glossy, technically flawless, never a pencil drawing, sketch or AI-looking illustration.`,
   },
 };
 
