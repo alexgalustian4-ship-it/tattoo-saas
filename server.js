@@ -703,8 +703,9 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
     // léger surcroît de contraste, puis netteté → look premium contrasté.
     img = img
       .normalise()                    // étire min→0 / max→255 (vrais blancs/noirs)
-      .linear(1.12, -14)              // +contraste global, noirs un peu plus denses
-      .sharpen({ sigma: 1.0 });       // netteté des détails
+      .linear(1.32, -34)              // contraste marqué, noirs denses, blancs propres
+      .gamma(1.08)                    // accentue la séparation des tons
+      .sharpen({ sigma: 1.6 });       // netteté forte des détails
     const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
