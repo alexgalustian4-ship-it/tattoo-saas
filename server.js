@@ -678,6 +678,7 @@ function buildRenderWrapper(designPrompt, { bw = true } = {}) {
     `${colorRule} ` +
     `Rendering finish (CRITICAL): ultra-smooth, polished, high-fidelity digital rendering — soft continuous tonal gradients, airbrushed seamless shading, glossy specular highlights, rich deep blacks, strong three-dimensional volume and depth, crisp clean edges, premium gallery-quality finish. ` +
     `Surfaces look smooth and sculpted (like polished stone or a refined 3D render), never textured with marks. ` +
+    `High dynamic range and strong contrast: bright clean white highlights and deep rich true blacks across the full tonal range, razor-sharp crisp detail, pristine pure white background — punchy and high-definition, never flat, hazy, washed-out or muddy. ` +
     `Do NOT make it look like a pencil sketch, charcoal, engraving, etching, woodcut, cross-hatching, stippling or grainy dotted shading — no visible strokes, no grain, no noise, no scratchy or sketchy texture; all shading reads as perfectly smooth continuous tone. ` +
     `One dominant focal point, generous negative space, clean tattooable linework and shading. ` +
     `Centered, full design visible, no mockup, no skin, no paper texture, no drop shadow, no frame. Ready to tattoo.`
@@ -698,8 +699,12 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
     const buf = Buffer.from(b64, 'base64');
     let img = sharp(buf);
     if (grayscale) img = img.grayscale();
-    // Minimal post-processing — let gpt-image-1 output speak for itself
-    img = img.sharpen({ sigma: 0.5 });
+    // Finition studio : étire la plage tonale (blancs purs + noirs profonds),
+    // léger surcroît de contraste, puis netteté → look premium contrasté.
+    img = img
+      .normalise()                    // étire min→0 / max→255 (vrais blancs/noirs)
+      .linear(1.12, -14)              // +contraste global, noirs un peu plus denses
+      .sharpen({ sigma: 1.0 });       // netteté des détails
     const out = await img.png().toBuffer();
     return 'data:image/png;base64,' + out.toString('base64');
   } catch (e) {
