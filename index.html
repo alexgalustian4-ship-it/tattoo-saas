@@ -874,7 +874,12 @@
       #hero { padding: 88px 18px 52px; }
       .hero-eyebrow { font-size: 0.6rem; letter-spacing: 0.16em; margin-bottom: 16px; }
       .hero-eyebrow::before, .hero-eyebrow::after { width: 18px; }
-      .hero-title { font-size: clamp(2rem, 9vw, 3.1rem); line-height: 1.08; margin-bottom: 14px; }
+      .hero-title {
+        font-size: clamp(2rem, 9vw, 3.1rem); line-height: 1.08; margin-bottom: 14px;
+        background: none; -webkit-text-fill-color: #fff; color: #fff; animation: none;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.45);
+      }
+      .hero-title em { -webkit-text-fill-color: #fff; color: #fff; }
       .hero-sub { margin-bottom: 30px; }
       .cta-btn { margin-bottom: 34px !important; margin-top: 22px !important; }
       .proof-bar { max-width: 360px; margin-bottom: 30px; }
