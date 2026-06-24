@@ -655,9 +655,12 @@ const upload = multer({ dest: 'uploads/' });
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 // ─────────────────────────────────────────────────
-// OpenAI image generation — gpt-image-1 (best quality)
+// OpenAI image generation
+// Modèle configurable via env IMAGE_MODEL (défaut gpt-image-2, plus récent).
+// Pour revenir en arrière : IMAGE_MODEL=gpt-image-1 dans Railway.
 // ─────────────────────────────────────────────────
-// Taille gpt-image-1 par format
+const IMAGE_MODEL = process.env.IMAGE_MODEL || 'gpt-image-2';
+// Taille par format
 function sizeForFormat(format) {
   return format === 'portrait' ? '1024x1536'
        : format === 'landscape' ? '1536x1024'
@@ -862,7 +865,7 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
     const resp = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size, quality: 'high', moderation: 'low' }),
+      body: JSON.stringify({ model: IMAGE_MODEL, prompt, n: 1, size, quality: 'high', moderation: 'low' }),
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error('OpenAI generations error: ' + JSON.stringify(data).slice(0, 300));
@@ -1102,7 +1105,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'concept-template-v4-modlow', finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
+  res.json({ build: 'gpt-image-2-v5', imageModel: IMAGE_MODEL, finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
 });
 
 // Test d'un modèle d'image (diagnostic : vérifie nom + paramètres sans casser la prod)
