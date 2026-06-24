@@ -953,7 +953,12 @@ app.get('/rework-result/:filename', (req, res) => {
 // ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+// Le webhook Stripe a besoin du body BRUT pour vérifier la signature → on
+// applique express.json() partout SAUF sur /webhook.
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') return next();
+  express.json({ limit: '2mb' })(req, res, next);
+});
 
 // ═══════════════════════════════════════════════════
 // AUTH — Google vérifié serveur + session cookie + comptes DB
@@ -1078,6 +1083,161 @@ app.get('/me', async (req, res) => {
 
 // Déconnexion
 app.post('/auth/logout', (req, res) => { clearSession(res); res.json({ ok: true }); });
+
+// ═══════════════════════════════════════════════════
+// STRIPE — abonnements (Checkout + Portail client + Webhook)
+// Variables d'env requises (Railway) :
+//   STRIPE_SECRET_KEY      sk_test_... puis sk_live_...
+//   STRIPE_WEBHOOK_SECRET  whsec_...
+//   STRIPE_PRICE_PRO       price_...  (14,99€/mois)
+//   STRIPE_PRICE_STUDIO    price_...  (39,99€/mois)
+//   PUBLIC_URL             https://ton-domaine (sinon déduit de la requête)
+// ═══════════════════════════════════════════════════
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); console.log('✓ Stripe activé'); }
+  catch (e) { console.warn('⚠ Stripe init failed:', e.message); }
+} else {
+  console.warn('⚠ STRIPE_SECRET_KEY absent — paiements désactivés');
+}
+
+const STRIPE_PRICES = { pro: process.env.STRIPE_PRICE_PRO, studio: process.env.STRIPE_PRICE_STUDIO };
+// Price ID → nom de plan (pour le webhook)
+const PRICE_TO_PLAN = {};
+if (STRIPE_PRICES.pro)    PRICE_TO_PLAN[STRIPE_PRICES.pro]    = 'pro';
+if (STRIPE_PRICES.studio) PRICE_TO_PLAN[STRIPE_PRICES.studio] = 'studio';
+
+function baseUrl(req) {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, '');
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
+  return `${proto}://${req.headers.host}`;
+}
+
+// Récupère (ou crée) le client Stripe lié à l'utilisateur
+async function getOrCreateCustomer(user) {
+  if (user.stripe_customer_id) return user.stripe_customer_id;
+  const customer = await stripe.customers.create({
+    email: user.email,
+    name: user.name || undefined,
+    metadata: { user_id: String(user.id) },
+  });
+  await db.query('UPDATE users SET stripe_customer_id=$1 WHERE id=$2', [customer.id, user.id]);
+  return customer.id;
+}
+
+// Applique un plan à un utilisateur + recharge ses crédits
+async function setUserPlan(userId, plan) {
+  const credits = PLAN_CREDITS[plan] != null ? PLAN_CREDITS[plan] : PLAN_CREDITS.free;
+  await db.query(
+    `UPDATE users SET plan=$1, credits_remaining=$2, credits_reset_at = now() + interval '30 days' WHERE id=$3`,
+    [plan, credits, userId]
+  );
+  console.log(`✓ Plan utilisateur #${userId} → ${plan} (${credits} crédits)`);
+}
+
+// ── Créer une session de paiement (abonnement) ──
+app.post('/create-checkout-session', async (req, res) => {
+  if (!stripe || !db) return res.status(404).json({ error: 'paiement_indisponible' });
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'non_connecté' });
+
+  const plan = (req.body && req.body.plan || '').trim();
+  const priceId = STRIPE_PRICES[plan];
+  if (!priceId) return res.status(400).json({ error: 'plan_invalide' });
+
+  try {
+    const customerId = await getOrCreateCustomer(user);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
+      client_reference_id: String(user.id),
+      metadata: { user_id: String(user.id), plan },
+      success_url: `${baseUrl(req)}/compte.html?checkout=success`,
+      cancel_url: `${baseUrl(req)}/pricing.html?checkout=cancel`,
+    });
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('❌ create-checkout-session:', e.message);
+    res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
+// ── Ouvrir le portail client (gérer/annuler l'abonnement) ──
+app.post('/create-portal-session', async (req, res) => {
+  if (!stripe || !db) return res.status(404).json({ error: 'paiement_indisponible' });
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'non_connecté' });
+  if (!user.stripe_customer_id) return res.status(400).json({ error: 'pas_de_client' });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripe_customer_id,
+      return_url: `${baseUrl(req)}/compte.html`,
+    });
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('❌ create-portal-session:', e.message);
+    res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
+// ── Webhook Stripe (body brut requis) ──
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) return res.status(503).send('stripe disabled');
+  const sig = req.headers['stripe-signature'];
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  let event;
+  try {
+    event = secret
+      ? stripe.webhooks.constructEvent(req.body, sig, secret)
+      : JSON.parse(req.body.toString());   // dev sans secret (non sécurisé)
+  } catch (e) {
+    console.error('❌ webhook signature:', e.message);
+    return res.status(400).send(`Webhook Error: ${e.message}`);
+  }
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const s = event.data.object;
+        const userId = s.metadata && s.metadata.user_id || s.client_reference_id;
+        let plan = s.metadata && s.metadata.plan;
+        // Sécurité : reconfirmer le plan via le price de l'abonnement
+        if (s.subscription) {
+          const sub = await stripe.subscriptions.retrieve(s.subscription);
+          const priceId = sub.items.data[0] && sub.items.data[0].price.id;
+          if (PRICE_TO_PLAN[priceId]) plan = PRICE_TO_PLAN[priceId];
+        }
+        if (userId && plan) await setUserPlan(Number(userId), plan);
+        break;
+      }
+      case 'customer.subscription.updated': {
+        const sub = event.data.object;
+        const priceId = sub.items.data[0] && sub.items.data[0].price.id;
+        const plan = PRICE_TO_PLAN[priceId];
+        const r = await db.query('SELECT id FROM users WHERE stripe_customer_id=$1', [sub.customer]);
+        if (r.rows[0]) {
+          if (sub.status === 'active' && plan) await setUserPlan(r.rows[0].id, plan);
+          else if (['canceled', 'unpaid', 'past_due'].includes(sub.status)) await setUserPlan(r.rows[0].id, 'free');
+        }
+        break;
+      }
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object;
+        const r = await db.query('SELECT id FROM users WHERE stripe_customer_id=$1', [sub.customer]);
+        if (r.rows[0]) await setUserPlan(r.rows[0].id, 'free');
+        break;
+      }
+      default:
+        break;
+    }
+    res.json({ received: true });
+  } catch (e) {
+    console.error('❌ webhook handler:', e.message);
+    res.status(500).send('handler error');
+  }
+});
 
 // Images générées (volume persistant)
 app.use('/gens', express.static(GENS_DIR));
