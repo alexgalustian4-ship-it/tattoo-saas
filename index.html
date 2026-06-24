@@ -1592,7 +1592,7 @@
     (function frameScrub(){
       const bg = document.getElementById('video-bg');
       if (!bg) return;
-      const TOTAL = 60;   // images/hero-frames/0001.jpg … 0060.jpg
+      const TOTAL = 120;   // images/hero-frames/0001.jpg … 0120.jpg
       const lowPower = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory < 4);
       const STRIDE = lowPower ? 2 : 1;   // mobile : 1 image sur 2 (mémoire)
       const indices = [];
