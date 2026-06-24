@@ -3013,6 +3013,8 @@
 
       async function generate() {
         const prompt = input.value.trim(); if (!prompt) return;
+        // Compte requis pour générer (gratuit + crédits offerts) — on demande l'inscription avant tout
+        if (!currentUser) { showAuthModal('signup'); return; }
         gen.disabled = true; resWrap.classList.remove('show');
         setLoading(status, 'Generating your design…');
         try {
@@ -3024,7 +3026,7 @@
           fd.append('freePrompt', '0');
           if (fileInp.files[0]) fd.append('inspiration', await resizeImage(fileInp.files[0]));
           const resp = await fetch('/generate', { method: 'POST', body: fd, credentials: 'include' });
-          if (resp.status === 401) { hideStatus(status); showAuthModal('login'); return; }
+          if (resp.status === 401) { hideStatus(status); showAuthModal('signup'); return; }
           const data = await resp.json();
           if (resp.status === 402) { setError(status, 'Crédits épuisés — passe à un plan supérieur pour continuer.'); return; }
           if (!resp.ok) throw new Error(data.error || 'Server error.');
@@ -3714,11 +3716,11 @@
       document.getElementById('auth-email').value = '';
       document.getElementById('auth-password').value = '';
       if (authMode === 'signup') {
-        title.textContent    = 'Unlock unlimited downloads';
-        sub.textContent      = 'Create a free account to download all your designs without limits.';
-        submit.textContent   = 'Create my free account';
+        title.textContent    = '🎁 30 crédits offerts';
+        sub.textContent      = 'Crée ton compte gratuit pour générer — 30 crédits gratuits offerts, sans carte bancaire, sans paiement.';
+        submit.textContent   = 'Créer mon compte gratuit';
         nameEl.style.display = 'block';
-        toggleTxt.innerHTML  = 'Already have an account? <a id="auth-toggle-link">Sign in</a>';
+        toggleTxt.innerHTML  = 'Déjà un compte ? <a id="auth-toggle-link">Se connecter</a>';
       } else {
         title.textContent    = 'Welcome back';
         sub.textContent      = 'Sign in to access your account and download your designs.';
