@@ -1105,6 +1105,29 @@ app.get('/version', (req, res) => {
   res.json({ build: 'concept-template-v4-modlow', finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
 });
 
+// Test d'un modèle d'image (diagnostic : vérifie nom + paramètres sans casser la prod)
+app.get('/img-test', async (req, res) => {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) return res.json({ error: 'no_api_key' });
+  const model = req.query.model || 'gpt-image-2';
+  const quality = req.query.quality || 'high';
+  const size = req.query.size || '1024x1024';
+  try {
+    const resp = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, prompt: 'a simple thin black ring outline centered on a pure white background', n: 1, size, quality, moderation: 'low' }),
+    });
+    const data = await resp.json();
+    const d0 = data.data && data.data[0];
+    res.json({
+      model, size, quality, httpStatus: resp.status, ok: resp.ok,
+      gotImage: !!(d0 && (d0.b64_json || d0.url)),
+      error: data.error ? { message: data.error.message, type: data.error.type, param: data.error.param } : null,
+    });
+  } catch (e) { res.json({ error: e.message }); }
+});
+
 // Auto-test du post-traitement (prouve que finishImage modifie bien l'image en prod)
 app.get('/finish-test', async (req, res) => {
   try {
