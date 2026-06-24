@@ -711,9 +711,37 @@
       background: radial-gradient(ellipse, rgba(176,180,194,0.1) 0%, transparent 70%);
       pointer-events: none;
     }
+    /* Vitrines génériques (Generate / Merge / Photo→Tattoo) + zig-zag */
+    .showcase {
+      padding: 100px 5vw;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1; overflow: hidden;
+    }
+    .showcase::before {
+      content: '';
+      position: absolute; top: 50%;
+      transform: translateY(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, rgba(176,180,194,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .showcase.glow-left::before  { left: -10%; }
+    .showcase.glow-right::before { right: -10%; }
+    .ss-inner.reverse > .ss-slider-wrap { order: 2; }
+    .ss-inner.reverse > .ss-text        { order: 1; }
+    /* Cadre image simple (pas de slider) */
+    .ss-figure {
+      position: relative; border-radius: 18px; overflow: hidden;
+      border: 1px solid #1e1e2e; background: #0a0a0f;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6); aspect-ratio: 1 / 1;
+    }
+    .ss-figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ss-figure .ss-badges { position: absolute; top: 14px; left: 0; right: 0; }
     @media (max-width: 900px) {
       .ss-inner { grid-template-columns: 1fr; gap: 40px; }
-      #stencil-showcase, #ps-showcase { padding: 60px 5vw; }
+      #stencil-showcase, #ps-showcase, .showcase { padding: 60px 5vw; }
+      .ss-inner.reverse > .ss-slider-wrap,
+      .ss-inner.reverse > .ss-text { order: 0; }
     }
 
     /* ══ VIDEO BG ══════════════════════════════ */
@@ -1180,6 +1208,75 @@
         <a href="outil.html?mode=body" class="ss-cta">Try for free →</a>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ══ GENERATE SHOWCASE ══ -->
+  <section id="generate-showcase" class="showcase glow-right">
+    <div class="ss-inner">
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-figure">
+          <img loading="lazy" src="images/card-generate.png" alt="AI generated design" />
+          <div class="ss-badges"><span class="ss-badge after">AI Design</span></div>
+        </div>
+      </div>
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow">Core Tool — Generate a design</p>
+        <h2>Your idea.<br>A pro design.<br>In 60 seconds.</h2>
+        <p>Describe what you want — AI creates a unique, studio-quality tattoo design in your chosen style. No artist brief, no waiting.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> 5 signature artistic styles</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Unique result in under 60 seconds</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> High-resolution download</div>
+        </div>
+        <a href="outil.html?mode=create" class="ss-cta">Try the generator →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MERGE SHOWCASE ══ -->
+  <section id="merge-showcase" class="showcase glow-left">
+    <div class="ss-inner reverse">
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-figure">
+          <img loading="lazy" src="images/card-merge.png" alt="Merged design" />
+          <div class="ss-badges"><span class="ss-badge after">Merged</span></div>
+        </div>
+      </div>
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow">Pro Tool — Merge designs</p>
+        <h2>Two designs.<br>One unique<br>masterpiece.</h2>
+        <p>Fuse 2 to 4 of your designs into a single, coherent composition. AI blends styles, lines and motifs into one piece that finally feels yours.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Combine up to 4 designs</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Seamless style blending</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> One-of-a-kind result, every time</div>
+        </div>
+        <a href="outil.html?mode=merge" class="ss-cta">Try Merge →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PHOTO → TATTOO SHOWCASE ══ -->
+  <section id="photo-showcase" class="showcase glow-right">
+    <div class="ss-inner reverse">
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-figure">
+          <img loading="lazy" src="images/style-realisme.png" alt="Photo turned into a tattoo design" />
+          <div class="ss-badges"><span class="ss-badge after">Tattoo</span></div>
+        </div>
+      </div>
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow">Pro Tool — Photo → Tattoo</p>
+        <h2>Any photo.<br>A tattoo-ready<br>design.</h2>
+        <p>Upload a photo — a pet, a portrait, a place — and AI transforms it into a clean, inkable tattoo design that keeps what matters and drops the noise.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Pets, portraits, objects, places</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Clean, inkable linework</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Keeps the likeness, drops the noise</div>
+        </div>
+        <a href="outil.html?mode=pet" class="ss-cta">Try Photo → Tattoo →</a>
+      </div>
     </div>
   </section>
 
