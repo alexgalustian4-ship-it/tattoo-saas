@@ -1052,7 +1052,7 @@ app.use(express.static(path.join(__dirname)));
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);   // requêtes same-origin / outils serveur
-    const ok = /\.railway\.app$/.test(origin) || /^https?:\/\/localhost(:\d+)?$/.test(origin);
+    const ok = /\.railway\.app$/.test(origin) || /^https?:\/\/(www\.)?inkhay\.com$/.test(origin) || /^https?:\/\/localhost(:\d+)?$/.test(origin);
     cb(null, ok);
   },
   credentials: true,
