@@ -68,16 +68,17 @@
     /* Le contenu est visible par défaut ; l'état caché ne s'applique que si JS tourne (html.js).
        => si le JS plante, rien n'est invisible. */
     .fade-up, .fade-left, .fade-right {
-      transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1),
-                  transform 0.9s cubic-bezier(0.22,1,0.36,1);
-      will-change: opacity, transform;
+      transition: opacity 1s cubic-bezier(0.22,1,0.36,1),
+                  transform 1s cubic-bezier(0.22,1,0.36,1),
+                  filter 1s cubic-bezier(0.22,1,0.36,1);
+      will-change: opacity, transform, filter;
     }
-    html.js .fade-up    { opacity: 0; transform: translateY(40px) scale(0.984); }
-    html.js .fade-left  { opacity: 0; transform: translateX(-28px); }
-    html.js .fade-right { opacity: 0; transform: translateX(28px); }
-    html.js .fade-up.visible, html.js .fade-left.visible, html.js .fade-right.visible { opacity: 1; transform: none; }
+    html.js .fade-up    { opacity: 0; transform: translateY(38px) scale(0.984); filter: blur(8px); }
+    html.js .fade-left  { opacity: 0; transform: translateX(-28px); filter: blur(8px); }
+    html.js .fade-right { opacity: 0; transform: translateX(28px); filter: blur(8px); }
+    html.js .fade-up.visible, html.js .fade-left.visible, html.js .fade-right.visible { opacity: 1; transform: none; filter: blur(0); }
     @media (prefers-reduced-motion: reduce) {
-      html.js .fade-up, html.js .fade-left, html.js .fade-right { opacity: 1; transform: none; }
+      html.js .fade-up, html.js .fade-left, html.js .fade-right { opacity: 1; transform: none; filter: none; }
       .hero-content { animation: none; }
     }
 
@@ -457,7 +458,9 @@
       width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
       border: 1px solid var(--border); background: var(--bg-card);
       display: flex; align-items: center; justify-content: center; color: var(--silver);
+      transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .35s, color .35s;
     }
+    .tb-item:hover .tb-ic { transform: translateY(-2px) scale(1.06); border-color: var(--border-m); color: #fff; }
     .tb-ic svg { width: 17px; height: 17px; }
     .tb-title { font-size: 0.8rem; font-weight: 600; color: var(--text); letter-spacing: 0.01em; }
     .tb-sub { font-size: 0.68rem; color: var(--dim); margin-top: 3px; line-height: 1.5; }
@@ -1726,6 +1729,29 @@
         }
         requestAnimationFrame(frame);
       });
+    })();
+
+    // ══ COMPTEURS ANIMÉS DES STATS (0 → valeur, à l'entrée à l'écran) ══
+    (function countUps(){
+      const nums = document.querySelectorAll('.proof-num[data-target]');
+      if (!nums.length || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const run = el => {
+        const target = parseInt(el.getAttribute('data-target'), 10) || 0;
+        const dur = 1100; let start = null;
+        el.textContent = '0';
+        function tick(ts){
+          if (start === null) start = ts;
+          const p = Math.min(1, (ts - start) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);   // easeOutCubic
+          el.textContent = Math.round(eased * target).toString();
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      };
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { run(e.target); io.unobserve(e.target); } });
+      }, { threshold: 0.5 });
+      nums.forEach(n => io.observe(n));
     })();
 
     // ══ HERO BG — SÉQUENCE D'IMAGES PILOTÉE PAR LE SCROLL (fluide partout, mobile inclus) ══
