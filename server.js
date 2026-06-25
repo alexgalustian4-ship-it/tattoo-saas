@@ -1140,7 +1140,8 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'security-v1', imageModel: IMAGE_MODEL, rateLimit: true, moderation: 'low', stripe: !!stripe });
+  res.json({ build: 'security-v1', imageModel: IMAGE_MODEL, rateLimit: true, moderation: 'low', stripe: !!stripe,
+    ip: req.ip, xff: req.headers['x-forwarded-for'] || null, pid: process.pid });
 });
 
 // Connexion via Google (le front envoie le credential GSI)
