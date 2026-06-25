@@ -554,15 +554,9 @@
     .tm-row { overflow: hidden; transform: translateZ(0); }
     .tm-track { display: flex; gap: 16px; width: max-content; will-change: transform; }
     .tm-track > .testimonial-card { flex: 0 0 330px; margin: 0; }
-    .tm-track.anim-left  { animation: tmLeft  52s linear infinite; }
-    .tm-track.anim-right { animation: tmRight 60s linear infinite; }
-    .tm-marquee:hover .tm-track { animation-play-state: paused; }
-    @keyframes tmLeft  { from { transform: translate3d(0,0,0); }       to { transform: translate3d(-50%,0,0); } }
-    @keyframes tmRight { from { transform: translate3d(-50%,0,0); }    to { transform: translate3d(0,0,0); } }
+    /* Défilement piloté en JS (rAF) — voir tmMarquee() ; pas d'animation CSS (bug iOS) */
     @media (max-width: 600px) {
       .tm-track > .testimonial-card { flex-basis: 268px; }
-      .tm-track.anim-left  { animation-duration: 38s; }
-      .tm-track.anim-right { animation-duration: 44s; }
     }
     @media (prefers-reduced-motion: reduce) {
       .tm-marquee::before, .tm-marquee::after { display: none; }
@@ -1689,11 +1683,48 @@
       el.classList.add('visible');
     });
 
-    // ══ AVIS : duplication des pistes pour un défilement infini sans couture ══
+    // ══ AVIS : marquee piloté en JS (rAF) — défilement continu, jamais de vide ══
     (function tmMarquee(){
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const marquee = document.querySelector('.tm-marquee');
+      if (!marquee) return;
+      let paused = false;
+      marquee.addEventListener('mouseenter', () => { paused = true; });
+      marquee.addEventListener('mouseleave', () => { paused = false; });
+
       document.querySelectorAll('.tm-track').forEach(track => {
-        track.innerHTML += track.innerHTML;   // double le set → translateX(-50%) boucle proprement
+        const row = track.parentElement;
+        const dir = track.classList.contains('anim-right') ? 1 : -1;   // 1 = vers la droite
+        const speed = track.classList.contains('anim-right') ? 0.42 : 0.52; // px / frame
+        const baseCount = track.children.length;
+        if (!baseCount) return;
+
+        // Duplique : TOUJOURS au moins 2 sets, puis assez pour couvrir 2× la largeur visible
+        let guard = 0;
+        do {
+          for (let i = 0; i < baseCount; i++) track.appendChild(track.children[i].cloneNode(true));
+          guard++;
+        } while (track.scrollWidth < row.clientWidth * 2 + 600 && guard < 14);
+        // Période = largeur d'un set logique (gap inter-set inclus)
+        function measure(){
+          return track.children[baseCount]
+            ? track.children[baseCount].offsetLeft - track.children[0].offsetLeft
+            : track.scrollWidth;
+        }
+        let wrap = measure();
+        let pos = 0;
+        addEventListener('resize', () => { wrap = measure() || wrap; });
+
+        function frame(){
+          if (!paused && wrap > 0) {
+            pos += speed;
+            if (pos >= wrap) pos -= wrap;
+            const tx = dir === 1 ? (pos - wrap) : (-pos);
+            track.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,0,0)';
+          }
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
       });
     })();
 
