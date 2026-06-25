@@ -914,8 +914,8 @@
     @media (max-width: 480px) {
       nav { padding: 0 14px; gap: 10px; }
       .nav-links { gap: 16px; }
-      /* On garde "All tools" + le dernier lien accessibles, on masque le superflu */
-      .nav-links a:nth-child(2), .nav-links a:nth-child(3) { display: none; }
+      /* Mobile : on garde uniquement "Pricing", on masque le superflu */
+      .nav-links a:nth-child(1), .nav-links a:nth-child(2) { display: none; }
       main { padding: 78px 14px 40px; }
       .tool-header { margin-bottom: 30px; }
       .tool-title { font-size: 1.5rem; }
@@ -1212,7 +1212,6 @@
   <nav>
     <a href="index.html" class="nav-logo">INK<span>.</span>STUDIO</a>
     <div class="nav-links">
-      <a href="index.html#tools-bar">All tools</a>
       <a href="index.html#styles">Styles</a>
       <a href="index.html#how">How it works</a>
       <a href="pricing.html">Pricing</a>
