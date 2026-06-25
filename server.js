@@ -14,10 +14,20 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);   // Railway est derrière un proxy → IP réelle via X-Forwarded-For
 
 // ── Rate limiting (anti-martelage / anti-abus) ──
-const genLimiter      = rateLimit({ windowMs: 15 * 60 * 1000, limit: 40,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
-const authLimiter     = rateLimit({ windowMs: 15 * 60 * 1000, limit: 25,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
-const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 8,   standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_accounts' } });
-const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 150, standardHeaders: true, legacyHeaders: false });
+// Clé sur la VRAIE IP client (1er élément de X-Forwarded-For), car derrière le
+// proxy Railway req.ip = IP de l'edge (variable) → sinon le compteur ne tient pas.
+const clientKey = (req) => {
+  const xff = req.headers['x-forwarded-for'];
+  return (xff ? String(xff).split(',')[0].trim() : req.ip) || 'unknown';
+};
+const mkLimiter = (windowMs, limit, message) => rateLimit({
+  windowMs, limit, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: clientKey, validate: false, message,
+});
+const genLimiter      = mkLimiter(15 * 60 * 1000, 40,  { error: 'too_many_requests' });
+const authLimiter     = mkLimiter(15 * 60 * 1000, 25,  { error: 'too_many_requests' });
+const registerLimiter = mkLimiter(60 * 60 * 1000, 8,   { error: 'too_many_accounts' });
+const downloadLimiter = mkLimiter(15 * 60 * 1000, 150, undefined);
 
 // Bloque les URL internes/privées (anti-SSRF) pour le proxy /download
 function isBlockedUrl(u){
@@ -1140,8 +1150,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'security-v1', imageModel: IMAGE_MODEL, rateLimit: true, moderation: 'low', stripe: !!stripe,
-    ip: req.ip, xff: req.headers['x-forwarded-for'] || null, pid: process.pid });
+  res.json({ build: 'security-v2', imageModel: IMAGE_MODEL, rateLimit: true, moderation: 'low', stripe: !!stripe });
 });
 
 // Connexion via Google (le front envoie le credential GSI)
