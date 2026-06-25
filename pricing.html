@@ -68,7 +68,7 @@
     .head p { font-size:0.92rem; color:var(--muted); line-height:1.8; }
 
     /* grille de prix */
-    .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:stretch; }
+    .plans { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; align-items:stretch; max-width:760px; margin:0 auto; }
     .plan { position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:34px 28px; display:flex; flex-direction:column; transition:border-color .3s, transform .35s cubic-bezier(0.22,1,0.36,1), box-shadow .35s; }
     .plan:hover { border-color:var(--border-m); transform:translateY(-4px); box-shadow:0 24px 60px rgba(0,0,0,0.5); }
     .plan.featured { border-color:#3a3a3a; background:linear-gradient(180deg,#131316 0%,#0d0d0f 100%); }
@@ -152,22 +152,6 @@
     </div>
 
     <div class="plans">
-      <!-- FREE -->
-      <div class="plan fade-up d1" data-plan="free">
-        <div class="plan-name">Free</div>
-        <div class="plan-tag">Pour découvrir le studio</div>
-        <div class="price"><span class="amount">0€</span></div>
-        <div class="credits-line">30 crédits / mois</div>
-        <ul>
-          <li>${check} Générateur de design IA</li>
-          <li>${check} Tous les styles artistiques</li>
-          <li>${check} Stencil &amp; aperçu sur peau</li>
-          <li class="off">${cross} Crédits limités</li>
-          <li class="off">${cross} File d'attente standard</li>
-        </ul>
-        <button class="btn" data-action="free">Commencer gratuitement</button>
-      </div>
-
       <!-- PRO -->
       <div class="plan featured fade-up d2" data-plan="pro">
         <div class="badge">Populaire</div>
