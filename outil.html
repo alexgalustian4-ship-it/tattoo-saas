@@ -2250,7 +2250,7 @@
         fd.append('freePrompt', '1');
         if (freeInspiInput.files[0]) fd.append('inspiration', await resizeImage(freeInspiInput.files[0]));
         const resp = await fetch('/generate', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -2413,7 +2413,7 @@
       const fd = new FormData();
       fd.append('image', new File([blob], 'design.png', { type: blob.type || 'image/png' }));
       const r = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
-      const data = await r.json();
+      const data = await readJson(r);
       { const ace = handleAuthCreditError(r.status); if (ace) throw new Error(ace); }
       if (!r.ok) throw new Error(data.error || 'Stencil failed');
       if (data.credits != null) updateCredits(data.credits);
@@ -2612,7 +2612,7 @@
         fd.append('elements', elementsDesign.value.trim());
         if (inspiInput.files[0]) fd.append('inspiration', await resizeImage(inspiInput.files[0]));
         const resp = await fetch('/generate', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -2920,7 +2920,7 @@
         fd.append('zone', selectedZone || 'dos');
         fd.append('model', selectedModel);
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3108,7 +3108,7 @@
           if (fileInp.files[0]) fd.append('inspiration', await resizeImage(fileInp.files[0]));
           const resp = await fetch('/generate', { method: 'POST', body: fd, credentials: 'include' });
           if (resp.status === 401) { hideStatus(status); showAuthModal('signup'); return; }
-          const data = await resp.json();
+          const data = await readJson(resp);
           if (resp.status === 402) { setError(status, 'Crédits épuisés — passe à un plan supérieur pour continuer.'); return; }
           if (!resp.ok) throw new Error(data.error || 'Server error.');
           if (data.credits != null) updateCredits(data.credits);
@@ -3261,7 +3261,7 @@
           const fd = new FormData();
           fd.append('image', resized);
           const res = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
-          const data = await res.json();
+          const data = await readJson(res);
           { const ace = handleAuthCreditError(res.status); if (ace) throw new Error(ace); }
           if (!res.ok) throw new Error(data.error || 'Erreur stencil');
           if (data.credits != null) updateCredits(data.credits);
@@ -3358,7 +3358,7 @@
         fd.append('photo',  await resizeImage(m2PhotoInput.files[0]));
         fd.append('zone',   m2SelectedZone || 'dos');
         const resp = await fetch('/place-uploaded-design', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3463,7 +3463,7 @@
         fd.append('style',   m3Style);
         fd.append('details', m3Details.value.trim());
         const resp = await fetch('/generate-pet-tattoo', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3508,7 +3508,7 @@
         fd.append('designUrl', m3DesignUrl);
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3593,7 +3593,7 @@
         fd.append('details', document.getElementById('m4-details').value.trim());
         fd.append('count',   m4Files.length);
         const resp = await fetch('/merge-tattoos', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3637,7 +3637,7 @@
         fd.append('designUrl', m4DesignUrl);
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
-        const data = await resp.json();
+        const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
         if (data.credits != null) updateCredits(data.credits);
@@ -3744,6 +3744,17 @@
       if (status === 401) { showAuthModal('signup'); return 'Connecte-toi pour utiliser cet outil — 30 crédits offerts.'; }
       if (status === 402) return 'Crédits épuisés — passe à un plan supérieur pour continuer.';
       return null;
+    }
+
+    // Lit la réponse en JSON de façon robuste. Si le serveur renvoie du HTML
+    // (page d'erreur 502 pendant un redéploiement, ou délai dépassé), on jette
+    // un message clair au lieu du cryptique « Unexpected token '<' ».
+    async function readJson(resp) {
+      const txt = await resp.text();
+      try { return JSON.parse(txt); }
+      catch {
+        throw new Error('Le serveur est momentanément occupé (ou en cours de mise à jour). Réessaie dans quelques secondes.');
+      }
     }
 
     // Clic sur le badge : connecté → menu compte, sinon → connexion
@@ -4457,7 +4468,7 @@
         if (fusionFile) fd.append('fusion', fusionFile, fusionFile.name);
 
         const r = await fetch('/rework', { method: 'POST', body: fd });
-        const data = await r.json();
+        const data = await readJson(r);
         { const ace = handleAuthCreditError(r.status); if (ace) throw new Error(ace); }
         if (!data.imageUrl) throw new Error(data.error || 'Generation failed');
         if (data.credits != null) updateCredits(data.credits);
