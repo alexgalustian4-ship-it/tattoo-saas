@@ -46,7 +46,7 @@ function isBlockedUrl(u){
 // BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
 // ═══════════════════════════════════════════════════
 // Crédits par plan (1 génération = 10 crédits → gros chiffres, même rentabilité)
-const PLAN_CREDITS = { free: 30, pro: 400, studio: 900 };
+const PLAN_CREDITS = { free: 30, pro: 400, studio: 1500 };
 // Coût en crédits par action (minimum 10 par outil)
 const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10 };
 const OWNER_EMAIL = 'alexgalustian4@gmail.com';
