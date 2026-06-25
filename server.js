@@ -14,10 +14,10 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);   // Railway est derrière un proxy → IP réelle via X-Forwarded-For
 
 // ── Rate limiting (anti-martelage / anti-abus) ──
-const genLimiter      = rateLimit({ windowMs: 15 * 60 * 1000, max: 40,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
-const authLimiter     = rateLimit({ windowMs: 15 * 60 * 1000, max: 25,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
-const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8,   standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_accounts' } });
-const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 150, standardHeaders: true, legacyHeaders: false });
+const genLimiter      = rateLimit({ windowMs: 15 * 60 * 1000, limit: 40,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
+const authLimiter     = rateLimit({ windowMs: 15 * 60 * 1000, limit: 25,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
+const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 8,   standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_accounts' } });
+const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 150, standardHeaders: true, legacyHeaders: false });
 
 // Bloque les URL internes/privées (anti-SSRF) pour le proxy /download
 function isBlockedUrl(u){
@@ -1140,7 +1140,7 @@ async function saveGeneration(userId, type, dataUrl, params) {
 
 // Marqueur de version (diagnostic déploiement)
 app.get('/version', (req, res) => {
-  res.json({ build: 'gpt-image-2-v5', imageModel: IMAGE_MODEL, finish: 'linear1.04 (no sharpen)', moderation: 'low', stripe: !!stripe });
+  res.json({ build: 'security-v1', imageModel: IMAGE_MODEL, rateLimit: true, moderation: 'low', stripe: !!stripe });
 });
 
 // Connexion via Google (le front envoie le credential GSI)
