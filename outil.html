@@ -3095,7 +3095,7 @@
       async function generate() {
         const prompt = input.value.trim(); if (!prompt) return;
         // Compte requis pour générer (gratuit + crédits offerts) — on demande l'inscription avant tout
-        if (!currentUser) { showAuthModal('signup'); return; }
+        if (REQUIRE_LOGIN && !currentUser) { showAuthModal('signup'); return; }
         gen.disabled = true; resWrap.classList.remove('show');
         setLoading(status, 'Generating your design…');
         try {
@@ -3658,6 +3658,8 @@
     const FREE_DOWNLOADS   = 1; // nombre de téléchargements gratuits avant auth
 
     let currentUser = null;
+    // ⚠️ MODE DÉMO : false = on peut générer sans compte. Remettre true pour exiger l'inscription. (doit matcher server.js)
+    const REQUIRE_LOGIN = false;
     let authPendingCallback = null;
     let authMode = 'signup'; // 'signup' | 'login'
 

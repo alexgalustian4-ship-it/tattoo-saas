@@ -50,6 +50,9 @@ const PLAN_CREDITS = { free: 30, pro: 400, studio: 1500 };
 // Coût en crédits par action (minimum 10 par outil)
 const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10 };
 const OWNER_EMAIL = 'alexgalustian4@gmail.com';
+// ⚠️ MODE DÉMO : false = génération SANS compte (pas de login, pas de débit).
+// Remettre à true pour réactiver la protection (compte requis + crédits).
+const REQUIRE_LOGIN = false;
 let db = null;
 try {
   if (process.env.DATABASE_URL) {
@@ -1138,6 +1141,7 @@ async function chargeCredits(userId, cost) {
 // Si la DB est inactive, laisse passer sans gating. Renvoie { user, isOwner, cost }.
 async function checkCredits(req, res, costType) {
   const cost = CREDIT_COST[costType] != null ? CREDIT_COST[costType] : 10;
+  if (!REQUIRE_LOGIN) return { user: null, isOwner: false, cost }; // mode démo : pas de login/débit
   if (!db) return { user: null, isOwner: false, cost };
   let user = await getSessionUser(req);
   if (!user) { res.status(401).json({ error: 'login_required' }); return null; }
@@ -1580,10 +1584,9 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
     }
 
     // ── Crédits : connexion requise + solde suffisant (si DB active) ──
-    const OWNER_EMAIL = 'alexgalustian4@gmail.com';
     let sessionUser = null;
     const creditCost = CREDIT_COST.design;
-    if (db) {
+    if (db && REQUIRE_LOGIN) {
       sessionUser = await getSessionUser(req);
       if (!sessionUser) return res.status(401).json({ error: 'login_required' });
       sessionUser = await applyMonthlyReset(sessionUser);
