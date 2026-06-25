@@ -1106,10 +1106,14 @@ async function getSessionUser(req) {
   } catch { return null; }
 }
 function publicUser(u) {
-  return u && {
+  if (!u) return u;
+  const isOwner = u.email === OWNER_EMAIL;
+  return {
     email: u.email, name: u.name, avatar: u.avatar_url,
-    plan: u.plan, credits: u.credits_remaining,
-    creditsMax: PLAN_CREDITS[u.plan] || PLAN_CREDITS.free,
+    plan: u.plan,
+    credits: isOwner ? '∞' : u.credits_remaining,
+    creditsMax: isOwner ? '∞' : (PLAN_CREDITS[u.plan] || PLAN_CREDITS.free),
+    unlimited: isOwner,
     creditsResetAt: u.credits_reset_at,
   };
 }
