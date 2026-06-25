@@ -1015,6 +1015,23 @@
       font-size: 0.72rem; color: #666; cursor: pointer;
     }
     #user-badge.visible { display: flex; }
+    /* ── Pastille crédits (toujours visible quand connecté) ── */
+    #credit-pill {
+      display: none; align-items: center; gap: 6px;
+      margin-right: 6px; padding: 5px 11px; border-radius: 999px;
+      background: linear-gradient(180deg, rgba(40,40,50,0.55), rgba(20,20,26,0.55));
+      border: 1px solid var(--border-hover);
+      color: #e8e9f0; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.02em;
+      cursor: pointer; text-decoration: none; white-space: nowrap;
+      transition: border-color .25s, box-shadow .25s, transform .15s, color .25s;
+    }
+    #credit-pill.visible { display: inline-flex; }
+    #credit-pill:hover { border-color: rgba(255,255,255,0.42); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+    #credit-pill .cp-ico { font-size: 0.66rem; color: #cfd2dc; line-height: 1; transition: color .25s; }
+    #credit-pill.low { border-color: rgba(232,176,92,0.6); color: #f1c27d; }
+    #credit-pill.low .cp-ico { color: #f1c27d; }
+    #credit-pill.empty { border-color: rgba(232,96,92,0.66); color: #f0908c; }
+    #credit-pill.empty .cp-ico { color: #f0908c; }
     #user-avatar {
       width: 26px; height: 26px; border-radius: 50%;
       background: #1e1e1e; border: 1px solid #2a2a2a;
@@ -1200,6 +1217,9 @@
       <a href="index.html#how">How it works</a>
       <a href="pricing.html">Pricing</a>
     </div>
+    <a id="credit-pill" href="pricing.html" title="Crédits restants — cliquez pour recharger">
+      <span class="cp-ico">◆</span><span id="credit-pill-num">—</span>
+    </a>
     <div id="user-badge" class="visible" onclick="handleBadgeClick()">
       <div id="user-avatar">?</div>
       <span id="user-name">Sign in</span>
@@ -3663,6 +3683,7 @@
         name.textContent = 'Sign in';
         avatar.textContent = '?';
       }
+      renderCreditPill();
     }
 
     // Met à jour le solde de crédits (après une génération)
@@ -3672,6 +3693,26 @@
       localStorage.setItem('ink_user', JSON.stringify(currentUser));
       const c = document.getElementById('acc-credits');
       if (c) c.textContent = n;
+      renderCreditPill();
+    }
+
+    // Pastille crédits toujours visible dans la nav (connecté uniquement)
+    function renderCreditPill() {
+      const pill = document.getElementById('credit-pill');
+      const num  = document.getElementById('credit-pill-num');
+      if (!pill || !num) return;
+      if (currentUser && currentUser.credits != null) {
+        const n = currentUser.credits;
+        num.textContent = n;
+        pill.classList.add('visible');
+        pill.classList.toggle('empty', n <= 0);
+        pill.classList.toggle('low', n > 0 && n <= 10);
+        pill.title = n <= 0
+          ? 'Plus de crédits — cliquez pour recharger'
+          : `${n} crédit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} — cliquez pour recharger`;
+      } else {
+        pill.classList.remove('visible', 'low', 'empty');
+      }
     }
 
     // Clic sur le badge : connecté → menu compte, sinon → connexion
