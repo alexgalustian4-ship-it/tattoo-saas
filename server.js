@@ -46,9 +46,10 @@ function isBlockedUrl(u){
 // BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
 // ═══════════════════════════════════════════════════
 // Crédits par plan (1 génération = 10 crédits → gros chiffres, même rentabilité)
-const PLAN_CREDITS = { free: 30, pro: 400, studio: 1500 };
-// Coût en crédits par action
-const CREDIT_COST = { design: 10, body: 15, stencil: 10, merge: 15, pet: 10 };
+const PLAN_CREDITS = { free: 30, pro: 400, studio: 900 };
+// Coût en crédits par action (minimum 10 par outil)
+const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10 };
+const OWNER_EMAIL = 'alexgalustian4@gmail.com';
 let db = null;
 try {
   if (process.env.DATABASE_URL) {
@@ -962,6 +963,8 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
   if (!apiKey) return res.status(500).json({ error: 'OpenAI API key not configured.' });
 
   try {
+    const gate = await checkCredits(req, res, 'rework');
+    if (!gate) return;
     const fusionNote = fusionFile ? ' Fuse the style and elements of the reference fusion image with the original design.' : '';
     const fullPrompt = `Tattoo design. ${zoneDesc ? zoneDesc + ' ' : ''}${prompt}.${fusionNote} Keep the same artistic style, line weight and composition for all areas outside the mask. Professional tattoo flash art, white background, high resolution.`;
     console.log('\n🎨 Rework via OpenAI inpainting');
@@ -1009,7 +1012,9 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
         resolution: '2k',
       };
       const { imageUrl } = await fetchHiggsfield(fallbackPayload);
-      return res.json({ imageUrl, fallback: true });
+      const credits = await chargeAfter(gate);
+      try { if (gate.user) await saveGeneration(gate.user.id, 'rework', imageUrl, { prompt }); } catch {}
+      return res.json({ imageUrl, fallback: true, credits });
     }
 
     const b64 = data.data?.[0]?.b64_json;
@@ -1026,7 +1031,9 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
       app._reworkTmp[path.basename(outPath)] = outPath;
     }
 
-    res.json({ imageUrl });
+    const credits = await chargeAfter(gate);
+    try { if (gate.user) await saveGeneration(gate.user.id, 'rework', imageUrl, { prompt }); } catch {}
+    res.json({ imageUrl, credits });
   } catch (err) {
     console.error('❌ /rework:', err.message);
     res.status(500).json({ error: err.message });
@@ -1123,6 +1130,30 @@ async function chargeCredits(userId, cost) {
     [cost, userId]
   );
   return r.rows[0] ? r.rows[0].credits_remaining : null;
+}
+
+// ── Garde-fou crédits avant une génération payante ──
+// Vérifie : connexion requise + solde suffisant. En cas de refus, répond
+// directement (401/402) et renvoie null → l'appelant doit faire `if (!gate) return;`.
+// Si la DB est inactive, laisse passer sans gating. Renvoie { user, isOwner, cost }.
+async function checkCredits(req, res, costType) {
+  const cost = CREDIT_COST[costType] != null ? CREDIT_COST[costType] : 10;
+  if (!db) return { user: null, isOwner: false, cost };
+  let user = await getSessionUser(req);
+  if (!user) { res.status(401).json({ error: 'login_required' }); return null; }
+  user = await applyMonthlyReset(user);
+  const isOwner = user.email === OWNER_EMAIL;
+  if (!isOwner && user.credits_remaining < cost) {
+    res.status(402).json({ error: 'no_credits', credits: user.credits_remaining });
+    return null;
+  }
+  return { user, isOwner, cost };
+}
+
+// Débite après succès. Renvoie le solde restant (null si owner / DB inactive).
+async function chargeAfter(gate) {
+  if (!gate || !gate.user || gate.isOwner) return null;
+  return await chargeCredits(gate.user.id, gate.cost);
 }
 
 // Dossier persistant des images générées (volume Railway)
@@ -1655,6 +1686,8 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
   fs.renameSync(req.file.path, photoPath);
 
   try {
+    const gate = await checkCredits(req, res, 'body');
+    if (!gate) return;
     console.log('\n📸 Rendu sur le corps — étape 2');
     console.log('   Zone   :', zone);
     console.log('   Modèle :', modelKey);
@@ -1699,12 +1732,12 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
       if (designPath && fs.existsSync(designPath)) fs.unlinkSync(designPath);
     }
 
+    const credits = await chargeAfter(gate);
     try {
-      const su = await getSessionUser(req);
-      if (su) await saveGeneration(su.id, 'on-body', imageUrl, { zone, model: 'gpt-image-1' });
+      if (gate.user) await saveGeneration(gate.user.id, 'on-body', imageUrl, { zone, model: 'gpt-image-1' });
     } catch {}
 
-    res.json({ imageUrl, jobId: null, model: 'gpt-image-1' });
+    res.json({ imageUrl, jobId: null, model: 'gpt-image-1', credits });
 
   } catch (err) {
     console.error('❌ /generate-on-body :', err.message);
@@ -1736,6 +1769,8 @@ app.post('/place-uploaded-design', upload.fields([
   fs.renameSync(req.files.photo[0].path,  photoPath);
 
   try {
+    const gate = await checkCredits(req, res, 'place');
+    if (!gate) return;
     console.log('\n🎨 Design uploadé — parcours 2');
     console.log('   Zone :', zone);
 
@@ -1761,7 +1796,12 @@ app.post('/place-uploaded-design', upload.fields([
       'Essaie avec une photo où la zone est bien visible sur un fond neutre.'
     );
 
-    res.json({ imageUrl });
+    const credits = await chargeAfter(gate);
+    try {
+      if (gate.user) await saveGeneration(gate.user.id, 'on-body', imageUrl, { zone, model: 'gpt_image_2' });
+    } catch {}
+
+    res.json({ imageUrl, credits });
 
   } catch (err) {
     console.error('❌ /place-uploaded-design :', err.message);
@@ -1806,6 +1846,8 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
     `High resolution, professional tattoo artist quality.`;
 
   try {
+    const gate = await checkCredits(req, res, 'pet');
+    if (!gate) return;
     console.log('\n🐾 Pet tattoo generation');
     console.log('   Style   :', style);
     console.log('   Details :', details || 'none');
@@ -1816,12 +1858,12 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
       `no photographic scene, no dark background. Centered, full design visible, clean crisp linework.`;
     const imageUrl = await openAIEditMulti(petPrompt, [photoPath], '1024x1024');
 
+    const credits = await chargeAfter(gate);
     try {
-      const su = await getSessionUser(req);
-      if (su) await saveGeneration(su.id, 'pet', imageUrl, { style, details, zone });
+      if (gate.user) await saveGeneration(gate.user.id, 'pet', imageUrl, { style, details, zone });
     } catch {}
 
-    res.json({ imageUrl, zone });
+    res.json({ imageUrl, zone, credits });
 
   } catch (err) {
     console.error('❌ /generate-pet-tattoo :', err.message);
@@ -1844,13 +1886,15 @@ app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
   fs.renameSync(req.file.path, imgPath);
 
   try {
+    const gate = await checkCredits(req, res, 'stencil');
+    if (!gate) return;
     console.log('\n🖊 Stencil via OpenAI gpt-image-1');
     const imageUrl = await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto');
+    const credits = await chargeAfter(gate);
     try {
-      const su = await getSessionUser(req);
-      if (su) await saveGeneration(su.id, 'stencil', imageUrl, {});
+      if (gate.user) await saveGeneration(gate.user.id, 'stencil', imageUrl, {});
     } catch {}
-    res.json({ imageUrl });
+    res.json({ imageUrl, credits });
   } catch (err) {
     console.error('❌ /stencil :', err.message);
     res.status(500).json({ error: clientError(err) });
@@ -1910,6 +1954,8 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
     `White background, professional tattoo flash art composition, high resolution, ready to tattoo.`;
 
   try {
+    const gate = await checkCredits(req, res, 'merge');
+    if (!gate) return;
     console.log(`\n⚡ Merge tattoos — ${tmpFiles.length} designs, style: ${style}`);
 
     const mergePrompt =
@@ -1917,12 +1963,12 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
       `no photographic scene, no dark background, centered, clean crisp linework.`;
     const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024');
 
+    const credits = await chargeAfter(gate);
     try {
-      const su = await getSessionUser(req);
-      if (su) await saveGeneration(su.id, 'merge', imageUrl, { style, details, count: base64Images.length });
+      if (gate.user) await saveGeneration(gate.user.id, 'merge', imageUrl, { style, details, count: base64Images.length });
     } catch {}
 
-    res.json({ imageUrl });
+    res.json({ imageUrl, credits });
   } catch (err) {
     console.error('❌ /merge-tattoos :', err.message);
     res.status(500).json({ error: clientError(err) });

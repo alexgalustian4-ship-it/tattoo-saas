@@ -2250,7 +2250,9 @@
         if (freeInspiInput.files[0]) fd.append('inspiration', await resizeImage(freeInspiInput.files[0]));
         const resp = await fetch('/generate', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         designImgUrl = data.imageUrl; designJobId = data.jobId;
         if (data.zone) selectedZone = data.zone;
         freeResultImg.src = data.imageUrl;
@@ -2411,7 +2413,9 @@
       fd.append('image', new File([blob], 'design.png', { type: blob.type || 'image/png' }));
       const r = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
       const data = await r.json();
+      { const ace = handleAuthCreditError(r.status); if (ace) throw new Error(ace); }
       if (!r.ok) throw new Error(data.error || 'Stencil failed');
+      if (data.credits != null) updateCredits(data.credits);
       return data.imageUrl;
     }
 
@@ -2608,7 +2612,9 @@
         if (inspiInput.files[0]) fd.append('inspiration', await resizeImage(inspiInput.files[0]));
         const resp = await fetch('/generate', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         designJobId = data.jobId; designImgUrl = data.imageUrl;
         if (data.zone) selectedZone = data.zone;
         designImg.src = data.imageUrl;
@@ -2914,7 +2920,9 @@
         fd.append('model', selectedModel);
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         bodyResultImg.src = data.imageUrl;
         bodyResultUrl = data.imageUrl;
         if (data.jobId) bodyJobId = data.jobId;
@@ -3253,7 +3261,9 @@
           fd.append('image', resized);
           const res = await fetch('/stencil', { method: 'POST', body: fd, credentials: 'include' });
           const data = await res.json();
+          { const ace = handleAuthCreditError(res.status); if (ace) throw new Error(ace); }
           if (!res.ok) throw new Error(data.error || 'Erreur stencil');
+          if (data.credits != null) updateCredits(data.credits);
 
           afterImg.src = data.imageUrl;
           dlBtn.href = data.imageUrl;
@@ -3348,7 +3358,9 @@
         fd.append('zone',   m2SelectedZone || 'dos');
         const resp = await fetch('/place-uploaded-design', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         m2ResultImg.src = data.imageUrl;
         document.getElementById('m2-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=tattoo-on-skin.jpg`, 'tattoo-on-skin.jpg');
         hideStatus(m2Status); show(m2Result);
@@ -3451,7 +3463,9 @@
         fd.append('details', m3Details.value.trim());
         const resp = await fetch('/generate-pet-tattoo', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         m3DesignUrl = data.imageUrl;
         m3ResultImg.src = data.imageUrl;
         m3BtnDl.onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo.jpg`, 'pet-tattoo.jpg');
@@ -3494,7 +3508,9 @@
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         m3BodyResultImg.src = data.imageUrl;
         document.getElementById('m3-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=pet-tattoo-on-skin.jpg`, 'pet-tattoo-on-skin.jpg');
         hideStatus(m3Status2); show(m3BodyResult);
@@ -3577,7 +3593,9 @@
         fd.append('count',   m4Files.length);
         const resp = await fetch('/merge-tattoos', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         m4DesignUrl = data.imageUrl;
         m4ResultImg.src = data.imageUrl;
         m4BtnDl.onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=merged-tattoo.jpg`, 'merged-tattoo.jpg');
@@ -3619,7 +3637,9 @@
         fd.append('zone',      'dos');
         const resp = await fetch('/generate-on-body', { method: 'POST', body: fd });
         const data = await resp.json();
+        { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
+        if (data.credits != null) updateCredits(data.credits);
         m4BodyResultImg.src = data.imageUrl;
         document.getElementById('m4-body-btn-dl').onclick = () => gatedDownload(`/download?url=${encodeURIComponent(data.imageUrl)}&filename=merged-tattoo-on-skin.jpg`, 'merged-tattoo-on-skin.jpg');
         hideStatus(m4Status2); show(m4BodyResult);
@@ -3713,6 +3733,14 @@
       } else {
         pill.classList.remove('visible', 'low', 'empty');
       }
+    }
+
+    // Réponses d'erreur communes des outils (connexion requise / crédits épuisés).
+    // Renvoie un message à afficher si géré, sinon null. Ouvre la modale de connexion si 401.
+    function handleAuthCreditError(status) {
+      if (status === 401) { showAuthModal('signup'); return 'Connecte-toi pour utiliser cet outil — 30 crédits offerts.'; }
+      if (status === 402) return 'Crédits épuisés — passe à un plan supérieur pour continuer.';
+      return null;
     }
 
     // Clic sur le badge : connecté → menu compte, sinon → connexion
@@ -4427,7 +4455,9 @@
 
         const r = await fetch('/rework', { method: 'POST', body: fd });
         const data = await r.json();
+        { const ace = handleAuthCreditError(r.status); if (ace) throw new Error(ace); }
         if (!data.imageUrl) throw new Error(data.error || 'Generation failed');
+        if (data.credits != null) updateCredits(data.credits);
 
         const resultImg = document.getElementById('rework-result-img');
         resultImg.src = data.imageUrl;
