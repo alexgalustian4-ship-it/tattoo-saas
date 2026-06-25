@@ -1056,6 +1056,8 @@
       color: var(--text); font-family: inherit; font-size: 1.05rem; line-height: 1.55;
       padding: 16px 16px 8px; min-height: 88px;
     }
+    /* Au focus, neutralise l'anneau global textarea:focus (spécificité > .ai-chat-input) */
+    .ai-chat-input:focus { box-shadow: none; border: none; outline: none; }
     .ai-chat-input::placeholder { color: #5a5e74; }
     .ai-chat-bar { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
     .ai-attach {
