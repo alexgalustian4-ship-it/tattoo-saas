@@ -7,9 +7,30 @@ const fs      = require('fs');
 const path    = require('path');
 const os      = require('os');
 const { execFile } = require('child_process');
+const rateLimit = require('express-rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+app.set('trust proxy', 1);   // Railway est derrière un proxy → IP réelle via X-Forwarded-For
+
+// ── Rate limiting (anti-martelage / anti-abus) ──
+const genLimiter      = rateLimit({ windowMs: 15 * 60 * 1000, max: 40,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
+const authLimiter     = rateLimit({ windowMs: 15 * 60 * 1000, max: 25,  standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_requests' } });
+const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8,   standardHeaders: true, legacyHeaders: false, message: { error: 'too_many_accounts' } });
+const downloadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 150, standardHeaders: true, legacyHeaders: false });
+
+// Bloque les URL internes/privées (anti-SSRF) pour le proxy /download
+function isBlockedUrl(u){
+  try {
+    const url = new URL(u);
+    if (url.protocol !== 'https:') return true;
+    const h = url.hostname.toLowerCase();
+    if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return true;
+    if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|::1)/.test(h)) return true;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
+    return false;
+  } catch { return true; }
+}
 
 // ═══════════════════════════════════════════════════
 // BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
@@ -651,7 +672,14 @@ function clientError(err) {
   return msg || 'Generation failed. Please try again in a moment.';
 }
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024, files: 4 },   // 10 Mo max, 4 fichiers max
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(png|jpe?g|webp|gif|heic|heif)$/i.test(file.mimetype)) cb(null, true);
+    else cb(null, false);   // rejette silencieusement les non-images
+  },
+});
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 // ─────────────────────────────────────────────────
@@ -909,7 +937,7 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
 // ─────────────────────────────────────────────────
 // POST /rework — Inpainting précis via OpenAI gpt-image-1
 // ─────────────────────────────────────────────────
-app.post('/rework', upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 'fusion' }]), async (req, res) => {
+app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask' }, { name: 'fusion' }]), async (req, res) => {
   const prompt    = (req.body.prompt    || '').trim();
   const zoneDesc  = (req.body.zoneDesc  || '').trim();
   const imageFile = req.files?.image?.[0];
@@ -1011,7 +1039,14 @@ app.get('/rework-result/:filename', (req, res) => {
 // Middleware
 // ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
-app.use(cors());
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);   // requêtes same-origin / outils serveur
+    const ok = /\.railway\.app$/.test(origin) || /^https?:\/\/localhost(:\d+)?$/.test(origin);
+    cb(null, ok);
+  },
+  credentials: true,
+}));
 // Le webhook Stripe a besoin du body BRUT pour vérifier la signature → on
 // applique express.json() partout SAUF sur /webhook.
 app.use((req, res, next) => {
@@ -1139,7 +1174,7 @@ app.post('/auth/google', async (req, res) => {
 
 // ── Inscription email + mot de passe ──
 const bcrypt = require('bcryptjs');
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', registerLimiter, async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
   const email = (req.body && req.body.email || '').trim().toLowerCase();
   const password = req.body && req.body.password || '';
@@ -1170,7 +1205,7 @@ app.post('/auth/register', async (req, res) => {
 });
 
 // ── Connexion email + mot de passe ──
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', authLimiter, async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
   const email = (req.body && req.body.email || '').trim().toLowerCase();
   const password = req.body && req.body.password || '';
@@ -1422,7 +1457,7 @@ app.get('/db-health', async (req, res) => {
 });
 
 // ── Download proxy (cross-origin image download) ──
-app.get('/download', async (req, res) => {
+app.get('/download', downloadLimiter, async (req, res) => {
   const { url, filename = 'ink-studio.jpg' } = req.query;
   if (!url) return res.status(400).send('Invalid URL');
 
@@ -1449,7 +1484,7 @@ app.get('/download', async (req, res) => {
     return res.send(buf);
   }
 
-  if (!url.startsWith('https://')) return res.status(400).send('Invalid URL');
+  if (isBlockedUrl(url)) return res.status(400).send('Invalid URL');   // anti-SSRF (bloque interne/privé)
   try {
     const r = await fetch(url);
     if (!r.ok) return res.status(502).send('Failed to fetch image');
@@ -1471,7 +1506,7 @@ app.get('/download', async (req, res) => {
 // File  : inspiration (optionnel)
 // Retour: { imageUrl, jobId, prompt, zone }
 // ─────────────────────────────────────────────────
-app.post('/generate', upload.single('inspiration'), async (req, res) => {
+app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res) => {
   const sujet      = (req.body.sujet    || req.body.description || '').trim();
   const style      = (req.body.style    || 'concept').trim();
   const ambiance   = (req.body.ambiance || 'epique').trim();
@@ -1596,7 +1631,7 @@ app.post('/generate', upload.single('inspiration'), async (req, res) => {
 // File  : photo
 // Retour: { imageUrl, jobId, model }
 // ─────────────────────────────────────────────────
-app.post('/generate-on-body', upload.single('photo'), async (req, res) => {
+app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, res) => {
   // designUrl = URL de l'image du design (retournée par /generate)
   const designUrl = (req.body.designUrl || '').trim();
   const zone      = (req.body.zone      || '').trim();
@@ -1733,7 +1768,7 @@ app.post('/place-uploaded-design', upload.fields([
 // Body  : style, details (texte libre), zone (optionnel)
 // Retour: { imageUrl }
 // ─────────────────────────────────────────────────
-app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
+app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No photo received.' });
 
   const style   = (req.body.style   || 'realism').trim();
@@ -1791,7 +1826,7 @@ app.post('/generate-pet-tattoo', upload.single('photo'), async (req, res) => {
 // File  : image
 // Retour: { imageUrl }
 // ─────────────────────────────────────────────────
-app.post('/stencil', upload.single('image'), async (req, res) => {
+app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Aucune image reçue.' });
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY non configurée.' });
 
@@ -1820,7 +1855,7 @@ app.post('/stencil', upload.single('image'), async (req, res) => {
 // Body  : style, details, count
 // Retour: { imageUrl }
 // ─────────────────────────────────────────────────
-app.post('/merge-tattoos', upload.fields([
+app.post('/merge-tattoos', genLimiter, upload.fields([
   { name: 'design0', maxCount: 1 },
   { name: 'design1', maxCount: 1 },
   { name: 'design2', maxCount: 1 },
