@@ -1560,7 +1560,7 @@ app.get('/download', downloadLimiter, async (req, res) => {
 // File  : inspiration (optionnel)
 // Retour: { imageUrl, jobId, prompt, zone }
 // ─────────────────────────────────────────────────
-app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res) => {
+app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, res) => {
   const sujet      = (req.body.sujet    || req.body.description || '').trim();
   const style      = (req.body.style    || 'concept').trim();
   const ambiance   = (req.body.ambiance || 'epique').trim();
@@ -1568,28 +1568,29 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
   const elements   = (req.body.elements || '').trim();
   const zone       = (req.body.zone     || '').trim();
   const freePrompt = req.body.freePrompt === '1';
-  const inspFile   = req.file || null;
+  const inspFiles  = req.files || [];   // jusqu'à 4 photos de référence
 
   if (!sujet) {
-    if (inspFile && fs.existsSync(inspFile.path)) fs.unlinkSync(inspFile.path);
+    inspFiles.forEach(f => { try { if (fs.existsSync(f.path)) fs.unlinkSync(f.path); } catch {} });
     return res.status(400).json({ error: 'Le sujet est vide.' });
   }
 
   // Free prompt: use the user's text directly, just add technical requirements
   const prompt = freePrompt
     ? `${sujet}. ${TECHNICAL_REQUIREMENTS}`
-    : buildPrompt({ sujet, style, ambiance, mot, elements, zone, withReference: !!inspFile });
-  let   inspPath   = null;
+    : buildPrompt({ sujet, style, ambiance, mot, elements, zone, withReference: inspFiles.length > 0 });
+  const inspPaths = [];   // chemins .jpg des références
 
   try {
     console.log('\n🎨 Nouvelle génération');
     console.log('   Sujet   :', sujet);
     console.log('   Style   :', style, '/ Ambiance :', ambiance);
-    console.log('   Ref     :', inspFile ? 'oui' : 'non');
+    console.log('   Refs    :', inspFiles.length);
 
-    if (inspFile) {
-      inspPath = inspFile.path + '.jpg';
-      fs.renameSync(inspFile.path, inspPath);
+    for (const f of inspFiles) {
+      const p = f.path + '.jpg';
+      fs.renameSync(f.path, p);
+      inspPaths.push(p);
     }
 
     // ── Crédits : connexion requise + solde suffisant (si DB active) ──
@@ -1643,16 +1644,17 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
       console.log(openaiPrompt);
       console.log('   ─────────────────────────────────────────────');
 
-      // Génération unique (pas de régénération auto : on ne risque jamais de remplacer
-      // une bonne image par une moins bonne). Le Quality Checker reste dispo si besoin.
-      let img = await generateWithOpenAI(openaiPrompt, inspPath, size);
+      // Génération unique. Plusieurs références → édition multi-images ; sinon génération texte.
+      let img = inspPaths.length
+        ? await openAIEditMulti(openaiPrompt, inspPaths, size)
+        : await generateWithOpenAI(openaiPrompt, null, size);
       imageUrl = await finishImage(img, { grayscale: bw });
       console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
       // ── Fallback : Higgsfield ──
       console.log('   Moteur  : Higgsfield (fallback)');
-      const payload = inspFile
-        ? { model: 'gpt_image_2', prompt, images: [fileToBase64(inspPath)], resolution: '2k' }
+      const payload = inspPaths.length
+        ? { model: 'gpt_image_2', prompt, images: inspPaths.map(p => fileToBase64(p)), resolution: '2k' }
         : { model: 'gpt_image_2', prompt };
       const r = await fetchHiggsfield(payload,
         'La génération a été bloquée par le filtre du modèle.\n' +
@@ -1677,7 +1679,7 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
     console.error('❌ /generate :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
-    if (inspPath && fs.existsSync(inspPath)) fs.unlinkSync(inspPath);
+    inspPaths.forEach(p => { try { if (fs.existsSync(p)) fs.unlinkSync(p); } catch {} });
   }
 });
 
