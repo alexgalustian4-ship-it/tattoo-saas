@@ -206,7 +206,7 @@
 
     function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
 
-    const PLAN_LABEL={ free:'Free', pro:'Pro', studio:'Studio' };
+    const PLAN_LABEL={ free:'Free', starter:'Starter', pro:'Pro', studio:'Studio', studioplus:'Studio+', atelier:'Atelier' };
 
     (async () => {
       let me = null;
