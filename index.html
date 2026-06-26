@@ -1762,16 +1762,23 @@
       }
 
       sizeCanvas();
+      function done(idx, bm) {
+        loaded++;
+        pctEl.textContent = 'Chargement… ' + Math.round((loaded / N) * 100) + '%';
+        if (idx === 0 && bm) drawCover(bm);
+        if (loaded >= N) start();
+      }
       indices.forEach((num, idx) => {
         const img = new Image();
-        img.onload = img.onerror = () => {
-          loaded++;
-          pctEl.textContent = 'Chargement… ' + Math.round((loaded / N) * 100) + '%';
-          if (idx === 0) drawCover(img);
-          if (loaded >= N) start();
+        img.onload = () => {
+          // Pré-décode en bitmap GPU → dessin instantané et constant (plus de saccade au 1er passage)
+          if (window.createImageBitmap) {
+            createImageBitmap(img).then(bm => { frames[idx] = bm; done(idx, bm); })
+                                  .catch(() => { frames[idx] = img; done(idx, img); });
+          } else { frames[idx] = img; done(idx, img); }
         };
+        img.onerror = () => done(idx, null);
         img.src = 'images/hero-frames/' + String(num).padStart(4, '0') + '.jpg';
-        frames[idx] = img;
       });
       // Sécurité : démarre même si quelques images manquent
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
