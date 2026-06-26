@@ -393,7 +393,9 @@
     /* ══ STYLES ═════════════════════════════════ */
     #styles {
       width: 100%; padding: 120px 5vw;
-      background: linear-gradient(180deg, #0c0c0f 0%, #08080a 100%);
+      background:
+        linear-gradient(180deg, rgba(8,8,10,0.90) 0%, rgba(8,8,10,0.80) 42%, rgba(8,8,10,0.96) 100%),
+        url('images/styles-bg.jpg') center center / cover no-repeat;
       border-top: 1px solid var(--border);
     }
     .section-inner { max-width: 1100px; margin: 0 auto; }
@@ -576,7 +578,9 @@
     #cta-final {
       width: 100%; padding: 120px 5vw; text-align: center;
       border-top: 1px solid var(--border);
-      background: rgba(8,8,8,0.9);
+      background:
+        linear-gradient(180deg, rgba(8,8,10,0.88) 0%, rgba(8,8,10,0.82) 50%, rgba(8,8,10,0.94) 100%),
+        url('images/cta-bg.jpg') center center / cover no-repeat;
       position: relative; overflow: hidden;
     }
     #cta-final::before {
@@ -912,7 +916,7 @@
     }
     /* Sections de contenu : voile sombre LÉGER (la vidéo transparaît, mais assez de contraste) */
     #tools-bar, #stencil-showcase, #ps-showcase, .showcase,
-    #how, #social-proof, #deco-video-section, #cta-final, footer {
+    #how, #social-proof, #deco-video-section, footer {
       background: rgba(7,7,9,0.55);
     }
 
