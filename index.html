@@ -945,6 +945,39 @@
       pointer-events: none;
     }
 
+    /* ══ REFLETS DE LUMIÈRE (premium) ═══════════ */
+    /* Calque lumière par section (au-dessus du contenu, en fusion "screen" → n'éclaire que les zones sombres, n'abîme pas le texte) */
+    .lightfx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; mix-blend-mode: screen; }
+    .lightfx .beam {
+      position: absolute; top: -60%; left: -70%; width: 55%; height: 220%;
+      background: linear-gradient(90deg, transparent 0%, rgba(210,220,255,0.06) 40%, rgba(255,255,255,0.12) 50%, rgba(210,220,255,0.06) 60%, transparent 100%);
+      filter: blur(26px); transform: rotate(16deg);
+      animation: beamDrift 19s linear infinite;
+    }
+    .lightfx .beam.b2 { width: 38%; animation-duration: 28s; animation-delay: -9s; opacity: 0.7; }
+    @keyframes beamDrift { 0% { left: -70%; } 100% { left: 135%; } }
+    .lightfx .star {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.35) 40%, transparent 72%);
+      opacity: 0; animation: starTwinkle var(--d, 5s) ease-in-out infinite var(--delay, 0s);
+    }
+    @keyframes starTwinkle { 0%, 100% { opacity: 0; transform: scale(0.6); } 50% { opacity: var(--o, 0.7); transform: scale(1); } }
+    /* Balayage lumineux qui glisse sur les cartes de styles */
+    .style-img-wrap::before {
+      content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.22) 50%, transparent 62%);
+      transform: translateX(-130%); animation: cardSweep 8s ease-in-out infinite;
+    }
+    .style-card:nth-child(2) .style-img-wrap::before { animation-delay: 1.1s; }
+    .style-card:nth-child(3) .style-img-wrap::before { animation-delay: 2.2s; }
+    .style-card:nth-child(4) .style-img-wrap::before { animation-delay: 3.3s; }
+    .style-card:nth-child(5) .style-img-wrap::before { animation-delay: 4.4s; }
+    @keyframes cardSweep { 0%, 22% { transform: translateX(-130%); } 40%, 100% { transform: translateX(130%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .lightfx { display: none; }
+      .style-img-wrap::before { animation: none; opacity: 0; }
+    }
+
     /* ══ RESPONSIVE ═════════════════════════════ */
     @media (max-width: 900px) {
       .style-card { flex-basis: calc((100% - 44px) / 3); }
@@ -2089,10 +2122,42 @@
 
     const ssInput = document.getElementById('ss-file-input');
     const ssLabel = document.getElementById('ss-upload-label');
-    ssInput.addEventListener('change', e => ssProcessFile(e.target.files[0]));
-    ssLabel.addEventListener('dragover', e => { e.preventDefault(); ssLabel.style.borderColor = '#b0b4c2'; });
-    ssLabel.addEventListener('dragleave', () => { ssLabel.style.borderColor = '#2a2a3a'; });
-    ssLabel.addEventListener('drop', e => { e.preventDefault(); ssLabel.style.borderColor = '#2a2a3a'; ssProcessFile(e.dataTransfer.files[0]); });
+    if (ssInput && ssLabel) {
+      ssInput.addEventListener('change', e => ssProcessFile(e.target.files[0]));
+      ssLabel.addEventListener('dragover', e => { e.preventDefault(); ssLabel.style.borderColor = '#b0b4c2'; });
+      ssLabel.addEventListener('dragleave', () => { ssLabel.style.borderColor = '#2a2a3a'; });
+      ssLabel.addEventListener('drop', e => { e.preventDefault(); ssLabel.style.borderColor = '#2a2a3a'; ssProcessFile(e.dataTransfer.files[0]); });
+    }
+
+    // ══ REFLETS DE LUMIÈRE : injecte un calque (faisceaux + poussière d'étoiles) dans chaque section de contenu (PAS le hero) ══
+    (function lightFX() {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const sels = ['#tools-bar', '#styles', '#stencil-showcase', '#ps-showcase', '#how', '#social-proof', '#cta-final'];
+      const lowPower = window.innerWidth < 820;
+      sels.forEach(sel => {
+        const sec = document.querySelector(sel);
+        if (!sec) return;
+        if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+        const fx = document.createElement('div');
+        fx.className = 'lightfx'; fx.setAttribute('aria-hidden', 'true');
+        const b1 = document.createElement('span'); b1.className = 'beam';
+        const b2 = document.createElement('span'); b2.className = 'beam b2';
+        fx.appendChild(b1); fx.appendChild(b2);
+        const n = lowPower ? 14 : 30;
+        for (let i = 0; i < n; i++) {
+          const s = document.createElement('span'); s.className = 'star';
+          const sz = (1 + Math.random() * 1.7).toFixed(1);
+          s.style.left = (Math.random() * 100).toFixed(1) + '%';
+          s.style.top = (Math.random() * 100).toFixed(1) + '%';
+          s.style.width = sz + 'px'; s.style.height = sz + 'px';
+          s.style.setProperty('--d', (3 + Math.random() * 5).toFixed(1) + 's');
+          s.style.setProperty('--o', (0.4 + Math.random() * 0.55).toFixed(2));
+          s.style.setProperty('--delay', (-Math.random() * 6).toFixed(1) + 's');
+          fx.appendChild(s);
+        }
+        sec.insertBefore(fx, sec.firstChild);
+      });
+    })();
   </script>
 
 </body>
