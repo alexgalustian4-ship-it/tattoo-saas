@@ -52,7 +52,7 @@ const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, p
 const OWNER_EMAIL = 'alexgalustian4@gmail.com';
 // ⚠️ MODE DÉMO : false = génération SANS compte (pas de login, pas de débit).
 // Remettre à true pour réactiver la protection (compte requis + crédits).
-const REQUIRE_LOGIN = false;
+const REQUIRE_LOGIN = true;
 let db = null;
 try {
   if (process.env.DATABASE_URL) {
