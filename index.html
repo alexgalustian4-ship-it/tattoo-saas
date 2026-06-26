@@ -1784,42 +1784,6 @@
       setTimeout(() => { if (!ready && loaded > 0) start(); }, 12000);
     })();
 
-    // ══ HERO SNAP : 1 swipe/scroll dans le hero → défile en douceur jusqu'à la section suivante ══
-    // (l'animation se joue pendant ce défilement programmé et régulier → fluide, pas de saccade)
-    (function heroSnap(){
-      const next = document.getElementById('tools-bar');
-      if (!next) return;
-      let busy = false;
-      const inHero = () => scrollY < innerHeight * 1.55;   // tant qu'on est dans la zone d'animation
-      function snapDown(){
-        if (busy || !inHero()) return;
-        busy = true;
-        next.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => { busy = false; }, 1100);
-      }
-      function snapUp(){
-        if (busy) return;
-        busy = true;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => { busy = false; }, 1100);
-      }
-      // Molette : dans le hero, un cran vers le bas = on saute à la suite (et inversement juste au-dessus de la section)
-      window.addEventListener('wheel', e => {
-        if (busy) { e.preventDefault(); return; }
-        if (e.deltaY > 6 && inHero())            { e.preventDefault(); snapDown(); }
-        else if (e.deltaY < -6 && scrollY > 10 && scrollY < innerHeight * 2.4 && !inHero()) { e.preventDefault(); snapUp(); }
-      }, { passive: false });
-      // Tactile
-      let ty0 = null;
-      window.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
-      window.addEventListener('touchmove', e => {
-        if (ty0 == null || busy) return;
-        const dy = ty0 - e.touches[0].clientY;
-        if (dy > 30 && inHero())       { snapDown(); ty0 = null; }
-        else if (dy < -30 && scrollY > 10 && scrollY < innerHeight * 2.4 && !inHero()) { snapUp(); ty0 = null; }
-      }, { passive: true });
-    })();
-
     // ══ HERO — POUSSIÈRE DE MARBRE + PARALLAXE + LUMIÈRE (GPU · 1 boucle rAF) ══
     (function heroAmbiance(){
       const hero = document.getElementById('hero');
