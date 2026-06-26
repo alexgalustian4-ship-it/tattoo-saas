@@ -1819,9 +1819,9 @@
       function loop(){
         current += (target - current) * 0.16;
         if (Math.abs(target - current) < 0.0005) current = target;
-        // Crossfade fluide sur desktop ; rendu simple (1 image) sur mobile pour la mémoire/CPU
-        if (lowPower) drawCover(frames[Math.max(0, Math.min(N - 1, Math.round(current)))]);
-        else drawFrame(current);
+        // Crossfade fluide partout (desktop + mobile) : interpole entre les images
+        // → plus de « saut » même quand on charge 1 image sur 2 sur mobile.
+        drawFrame(current);
         requestAnimationFrame(loop);
       }
 
