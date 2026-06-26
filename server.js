@@ -1145,9 +1145,14 @@ async function chargeCredits(userId, cost) {
 // Si la DB est inactive, laisse passer sans gating. Renvoie { user, isOwner, cost }.
 async function checkCredits(req, res, costType) {
   const cost = CREDIT_COST[costType] != null ? CREDIT_COST[costType] : 10;
-  if (!REQUIRE_LOGIN) return { user: null, isOwner: false, cost }; // mode démo : pas de login/débit
   if (!db) return { user: null, isOwner: false, cost };
+  // On récupère TOUJOURS l'utilisateur (pour sauvegarder l'historique), même en démo.
   let user = await getSessionUser(req);
+  if (!REQUIRE_LOGIN) {
+    // Mode démo : ni login obligatoire ni débit, mais on garde l'user pour l'historique.
+    const isOwner = !!user && user.email === OWNER_EMAIL;
+    return { user, isOwner, cost, demo: true };
+  }
   if (!user) { res.status(401).json({ error: 'login_required' }); return null; }
   user = await applyMonthlyReset(user);
   const isOwner = user.email === OWNER_EMAIL;
@@ -1160,7 +1165,7 @@ async function checkCredits(req, res, costType) {
 
 // Débite après succès. Renvoie le solde restant (null si owner / DB inactive).
 async function chargeAfter(gate) {
-  if (!gate || !gate.user || gate.isOwner) return null;
+  if (!gate || !gate.user || gate.isOwner || gate.demo) return null; // démo = pas de débit
   return await chargeCredits(gate.user.id, gate.cost);
 }
 
@@ -1588,15 +1593,18 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
     }
 
     // ── Crédits : connexion requise + solde suffisant (si DB active) ──
+    // On récupère TOUJOURS l'utilisateur (pour sauvegarder l'historique), même en démo.
     let sessionUser = null;
     const creditCost = CREDIT_COST.design;
-    if (db && REQUIRE_LOGIN) {
+    if (db) {
       sessionUser = await getSessionUser(req);
-      if (!sessionUser) return res.status(401).json({ error: 'login_required' });
-      sessionUser = await applyMonthlyReset(sessionUser);
-      const isOwner = sessionUser.email === OWNER_EMAIL;
-      if (!isOwner && sessionUser.credits_remaining < creditCost) {
-        return res.status(402).json({ error: 'no_credits', credits: sessionUser.credits_remaining });
+      if (REQUIRE_LOGIN) {
+        if (!sessionUser) return res.status(401).json({ error: 'login_required' });
+        sessionUser = await applyMonthlyReset(sessionUser);
+        const isOwner = sessionUser.email === OWNER_EMAIL;
+        if (!isOwner && sessionUser.credits_remaining < creditCost) {
+          return res.status(402).json({ error: 'no_credits', credits: sessionUser.credits_remaining });
+        }
       }
     }
 
@@ -1657,7 +1665,7 @@ app.post('/generate', genLimiter, upload.single('inspiration'), async (req, res)
     let savedUrl = null;
     if (db && sessionUser) {
       const isOwner = sessionUser.email === OWNER_EMAIL;
-      if (!isOwner) creditsLeft = await chargeCredits(sessionUser.id, creditCost);
+      if (REQUIRE_LOGIN && !isOwner) creditsLeft = await chargeCredits(sessionUser.id, creditCost); // pas de débit en démo
       savedUrl = await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
     }
     // Retourner l'URL /gens/ sauvegardée si dispo (évite d'envoyer une data URL géante au front)

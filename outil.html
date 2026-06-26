@@ -4662,6 +4662,10 @@
             id: p.id, type: p.type, imageUrl: p.image_url,
             params: p.params || {}, date: p.created_at,
           }));
+          // Récupère aussi les anciens projets stockés en local (ex. mode démo) sans doublon
+          const seen = new Set(projects.map(p => p.imageUrl));
+          const local = loadProjects().filter(p => p.imageUrl && !seen.has(p.imageUrl));
+          projects = projects.concat(local).sort((a, b) => new Date(b.date) - new Date(a.date));
         } else {
           projects = loadProjects(); // non connecté → ancien localStorage
         }
