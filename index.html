@@ -852,6 +852,29 @@
       transition: box-shadow 0.25s, transform 0.2s;
     }
     .ss-cta:hover { box-shadow: 0 0 28px rgba(255,255,255,0.18); transform: translateY(-2px); }
+    /* ── Grille outils : 2 par ligne, cartes compactes (image + texte court) ── */
+    .showcase-grid {
+      max-width: 1180px; margin: 0 auto; padding: 90px 5vw;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+      border-top: 1px solid var(--border); position: relative; z-index: 1;
+    }
+    .showcase-grid > section {
+      padding: 0 !important; border: none !important; overflow: visible !important;
+      background: transparent !important; min-height: 0;
+    }
+    .showcase-grid > section::before { display: none !important; }
+    .showcase-grid .ss-inner {
+      display: flex !important; flex-direction: column; gap: 16px;
+      max-width: none; margin: 0; align-items: stretch;
+    }
+    .showcase-grid .ss-inner.reverse > .ss-slider-wrap { order: 0; }
+    .showcase-grid .ss-inner.reverse > .ss-text { order: 1; }
+    .showcase-grid .ss-figure, .showcase-grid .ss-slider { aspect-ratio: 4 / 3; }
+    .showcase-grid .ss-text h2 { font-size: clamp(1.25rem, 2.2vw, 1.65rem); margin-bottom: 8px; }
+    .showcase-grid .ss-text p { font-size: 0.84rem; margin-bottom: 14px; }
+    .showcase-grid .ss-text::before { display: none; }
+    .showcase-grid .ss-caption { margin-top: 6px; }
+    @media (max-width: 760px) { .showcase-grid { grid-template-columns: 1fr; gap: 26px; padding: 64px 5vw; } }
     #ps-showcase {
       padding: 100px 5vw;
       border-top: 1px solid var(--border);
@@ -1146,6 +1169,8 @@
     </div>
   </section>
 
+  <!-- ══ OUTILS — grille 2 colonnes ══ -->
+  <div class="showcase-grid">
   <!-- ══ GENERATE SHOWCASE (1) ══ -->
   <section id="generate-showcase" class="showcase glow-right">
     <div class="ss-inner">
@@ -1159,11 +1184,6 @@
         <p class="ss-eyebrow">Core Tool — Generate a design</p>
         <h2>Your idea.<br>A pro design.<br>In 60 seconds.</h2>
         <p>Describe what you want — AI creates a unique, studio-quality tattoo design in your chosen style. No artist brief, no waiting.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> 5 signature artistic styles</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Unique result in under 60 seconds</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> High-resolution download</div>
-        </div>
         <a href="outil.html?mode=create" class="ss-cta">Try the generator →</a>
       </div>
     </div>
@@ -1197,20 +1217,6 @@
         <p class="ss-eyebrow">PRO Tool — Instant stencil</p>
         <h2>Your tattoo<br>as a stencil.<br>In 1 second.</h2>
         <p>Upload your design or generate one with AI — instantly convert it into a print-ready stencil. Clean lines, depth preserved. No Photoshop needed.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> No software required
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> Result in under one second
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> High-resolution PNG download
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> Works with any existing design
-          </div>
-        </div>
         <a href="outil.html?mode=stencil" class="ss-cta" style="margin-top:24px">Try Instant Stencil →</a>
       </div>
 
@@ -1230,11 +1236,6 @@
         <p class="ss-eyebrow">Pro Tool — Merge designs</p>
         <h2>Two designs.<br>One unique<br>masterpiece.</h2>
         <p>Fuse 2 to 4 of your designs into a single, coherent composition. AI blends styles, lines and motifs into one piece that finally feels yours.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Combine up to 4 designs</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> Seamless style blending</div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)"><span style="color:#b0b4c2;font-size:1rem">✓</span> One-of-a-kind result, every time</div>
-        </div>
         <a href="outil.html?mode=merge" class="ss-cta">Try Merge →</a>
       </div>
     </div>
@@ -1268,22 +1269,12 @@
         <p class="ss-eyebrow">Place on skin</p>
         <h2>See it on<br>your skin.<br>Before you ink.</h2>
         <p>Upload your design and a photo — AI places the tattoo exactly where you want it, in real conditions. Show it to your artist before committing.</p>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> Any placement — arm, chest, back, thigh…
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> Photorealistic result in under 60 seconds
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--muted)">
-            <span style="color:#b0b4c2;font-size:1rem">✓</span> Free — no account required
-          </div>
-        </div>
         <a href="outil.html?mode=body" class="ss-cta">Try for free →</a>
       </div>
 
     </div>
   </section>
+  </div><!-- /showcase-grid -->
 
   <!-- ══ PHOTO → TATTOO SHOWCASE ══ -->
   <section id="photo-showcase" class="showcase glow-right" style="display:none">
@@ -2050,7 +2041,7 @@
     // ══ REFLETS DE LUMIÈRE : injecte un calque (faisceaux + poussière d'étoiles) dans chaque section de contenu (PAS le hero) ══
     (function lightFX() {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const sels = ['#tools-bar', '#styles', '#stencil-showcase', '#ps-showcase', '#how', '#social-proof', '#cta-final'];
+      const sels = ['#tools-bar', '#styles', '#social-proof', '#cta-final'];
       const lowPower = window.innerWidth < 820;
       sels.forEach(sel => {
         const sec = document.querySelector(sel);
