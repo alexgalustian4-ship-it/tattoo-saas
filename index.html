@@ -1781,8 +1781,7 @@
       function drawCover(img){
         if (!img || !img.width) return;
         const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height;
-        let s = Math.max(cw / iw, ch / ih);
-        if (lowPower) s *= 0.8;   // mobile : moins zoomé (on dézoome un peu, bords sombres comblés)
+        const s = Math.max(cw / iw, ch / ih);   // cover plein écran (pas de bandes sombres)
         const w = iw * s, h = ih * s;
         ctx.fillStyle = '#0b0b0f'; ctx.fillRect(0, 0, cw, ch);
         ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
@@ -1800,8 +1799,7 @@
       function blit(img, alpha){
         if (!img || !img.width) return;
         const cw = canvas.width, ch = canvas.height, iw = img.width, ih = img.height;
-        let s = Math.max(cw / iw, ch / ih);
-        if (lowPower) s *= 0.8;
+        const s = Math.max(cw / iw, ch / ih);   // cover plein écran
         const w = iw * s, h = ih * s;
         ctx.globalAlpha = alpha;
         ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
