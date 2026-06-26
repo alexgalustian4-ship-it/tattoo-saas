@@ -391,7 +391,7 @@
         if(action==='none') return;
 
         if(action==='checkout'){
-          if(!me){ toast('Connecte-toi d\'abord pour t\'abonner.'); setTimeout(()=>location.href='outil.html',1400); return; }
+          if(!me){ localStorage.setItem('pending_checkout', JSON.stringify({plan:btn.dataset.target, period})); location.href='outil.html'; return; }
           const target=btn.dataset.target;
           btn.disabled=true; const old=btn.textContent; btn.textContent='Redirection…';
           try{
@@ -405,7 +405,7 @@
         }
 
         if(action==='pack'){
-          if(!me){ toast('Connecte-toi d\'abord pour acheter des crédits.'); setTimeout(()=>location.href='outil.html',1400); return; }
+          if(!me){ localStorage.setItem('pending_checkout', JSON.stringify({pack:btn.dataset.target})); location.href='outil.html'; return; }
           const pack=btn.dataset.target;
           btn.disabled=true; const old=btn.textContent; btn.textContent='Redirection…';
           try{

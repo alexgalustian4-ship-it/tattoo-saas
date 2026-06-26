@@ -3696,6 +3696,9 @@
             currentUser = { name: d.user.name, email: d.user.email, picture: d.user.avatar, provider: 'google', plan: d.user.plan, credits: d.user.credits };
             localStorage.setItem('ink_user', JSON.stringify(currentUser));
             updateUserBadge();
+            if (localStorage.getItem('pending_checkout')) resumePendingCheckout();   // déjà connecté → paiement direct
+          } else if (localStorage.getItem('pending_checkout')) {
+            showAuthModal('signup');   // pas connecté → on demande la connexion, puis paiement auto
           }
         })
         .catch(() => {});
@@ -3894,6 +3897,26 @@
       saveUser(user);
       closeAuthModal();
       if (authPendingCallback) { authPendingCallback(); authPendingCallback = null; }
+      resumePendingCheckout();   // si l'user venait de la page Pricing → on l'envoie au paiement
+    }
+
+    // Reprend un paiement en attente (déposé par la page Pricing dans localStorage) :
+    // une fois connecté, on crée la session Stripe et on redirige automatiquement.
+    async function resumePendingCheckout() {
+      const raw = localStorage.getItem('pending_checkout');
+      if (!raw) return;
+      localStorage.removeItem('pending_checkout');
+      let body; try { body = JSON.parse(raw); } catch { return; }
+      try {
+        const r = await fetch('/create-checkout-session', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', body: JSON.stringify(body),
+        });
+        const d = await r.json();
+        if (d.url) { window.location.href = d.url; return; }
+      } catch {}
+      // En cas d'échec, on renvoie vers la page Pricing
+      window.location.href = 'pricing.html';
     }
 
     // Google Sign-In
