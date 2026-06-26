@@ -977,16 +977,6 @@
       .lightfx { display: none; }
       .style-img-wrap::before { animation: none; opacity: 0; }
     }
-    /* Lueur futuriste qui suit le curseur / le toucher (s'allume sur le noir) */
-    #touch-glow {
-      position: fixed; inset: 0; pointer-events: none; z-index: 60;
-      mix-blend-mode: screen; opacity: 0; transition: opacity 0.55s ease;
-      background:
-        radial-gradient(260px circle at var(--gx, 50%) var(--gy, 50%), rgba(196,220,255,0.20) 0%, rgba(150,190,255,0.11) 32%, transparent 60%),
-        radial-gradient(60px circle at var(--gx, 50%) var(--gy, 50%), rgba(235,245,255,0.28) 0%, transparent 70%);
-    }
-    #touch-glow.on { opacity: 1; }
-    @media (prefers-reduced-motion: reduce) { #touch-glow { display: none; } }
 
     /* ══ RESPONSIVE ═════════════════════════════ */
     @media (max-width: 900px) {
@@ -2169,25 +2159,72 @@
       });
     })();
 
-    // ══ LUEUR FUTURISTE qui suit le curseur / le toucher ══
-    (function touchGlow() {
+    // ══ LUEUR FUTURISTE (canvas) : suit le pointeur + traînée de particules + onde au tap ══
+    (function fxGlow() {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const g = document.createElement('div'); g.id = 'touch-glow'; g.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(g);
-      let tx = window.innerWidth / 2, ty = window.innerHeight / 2, cx = tx, cy = ty, idle;
-      function move(x, y) {
-        tx = x; ty = y; g.classList.add('on');
-        clearTimeout(idle); idle = setTimeout(() => g.classList.remove('on'), 2600);
+      const cv = document.createElement('canvas');
+      cv.id = 'fx-glow'; cv.setAttribute('aria-hidden', 'true');
+      cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;mix-blend-mode:screen;';
+      document.body.appendChild(cv);
+      const ctx = cv.getContext('2d');
+      let W, H, dpr;
+      function size() { dpr = Math.min(window.devicePixelRatio || 1, 2); W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; }
+      size(); window.addEventListener('resize', size, { passive: true });
+
+      let tx = innerWidth / 2, ty = innerHeight / 2, cx = tx, cy = ty, lastX = tx, lastY = ty, active = 0, glowA = 0, idle;
+      const parts = [], rings = [];
+      function spawn(x, y) {
+        const dx = x - lastX, dy = y - lastY, dist = Math.hypot(dx, dy);
+        const n = Math.min(4, Math.floor(dist / 13));
+        for (let i = 0; i < n; i++) {
+          const t = n ? i / n : 0;
+          parts.push({ x: lastX + dx * t, y: lastY + dy * t, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 - 0.25, life: 1, r: 1 + Math.random() * 2 });
+        }
+        lastX = x; lastY = y;
       }
-      window.addEventListener('pointermove', e => move(e.clientX, e.clientY), { passive: true });
-      window.addEventListener('touchstart', e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-      window.addEventListener('touchmove',  e => { if (e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-      (function loop() {
-        cx += (tx - cx) * 0.18; cy += (ty - cy) * 0.18;
-        g.style.setProperty('--gx', cx.toFixed(1) + 'px');
-        g.style.setProperty('--gy', cy.toFixed(1) + 'px');
+      function onMove(x, y) { tx = x; ty = y; active = 1; spawn(x, y); clearTimeout(idle); idle = setTimeout(() => active = 0, 2400); }
+      function ripple(x, y) { rings.push({ x, y, r: 6, life: 1 }); active = 1; }
+      window.addEventListener('pointermove', e => onMove(e.clientX, e.clientY), { passive: true });
+      window.addEventListener('pointerdown', e => ripple(e.clientX, e.clientY), { passive: true });
+      window.addEventListener('touchstart', e => { if (e.touches[0]) { lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; onMove(lastX, lastY); ripple(lastX, lastY); } }, { passive: true });
+      window.addEventListener('touchmove', e => { if (e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+
+      function loop() {
+        ctx.clearRect(0, 0, W, H);
+        cx += (tx - cx) * 0.16; cy += (ty - cy) * 0.16;
+        glowA += ((active ? 1 : 0) - glowA) * 0.06;
+        ctx.globalCompositeOperation = 'lighter';
+        const gx = cx * dpr, gy = cy * dpr;
+        if (glowA > 0.01) {
+          let g = ctx.createRadialGradient(gx, gy, 0, gx, gy, 250 * dpr);
+          g.addColorStop(0, 'rgba(200,225,255,' + (0.16 * glowA).toFixed(3) + ')');
+          g.addColorStop(0.4, 'rgba(150,190,255,' + (0.06 * glowA).toFixed(3) + ')');
+          g.addColorStop(1, 'rgba(150,190,255,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+          let c = ctx.createRadialGradient(gx, gy, 0, gx, gy, 55 * dpr);
+          c.addColorStop(0, 'rgba(238,246,255,' + (0.30 * glowA).toFixed(3) + ')');
+          c.addColorStop(1, 'rgba(238,246,255,0)');
+          ctx.fillStyle = c; ctx.fillRect(0, 0, W, H);
+        }
+        for (let i = parts.length - 1; i >= 0; i--) {
+          const p = parts[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+          if (p.life <= 0) { parts.splice(i, 1); continue; }
+          const rad = p.r * dpr * (0.6 + p.life * 0.6) * 3;
+          const pg = ctx.createRadialGradient(p.x * dpr, p.y * dpr, 0, p.x * dpr, p.y * dpr, rad);
+          pg.addColorStop(0, 'rgba(214,232,255,' + (0.5 * p.life).toFixed(3) + ')');
+          pg.addColorStop(1, 'rgba(214,232,255,0)');
+          ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(p.x * dpr, p.y * dpr, rad, 0, 6.2832); ctx.fill();
+        }
+        for (let i = rings.length - 1; i >= 0; i--) {
+          const rg = rings[i]; rg.r += 4.5; rg.life -= 0.025;
+          if (rg.life <= 0) { rings.splice(i, 1); continue; }
+          ctx.strokeStyle = 'rgba(200,225,255,' + (0.45 * rg.life).toFixed(3) + ')';
+          ctx.lineWidth = 1.5 * dpr; ctx.beginPath(); ctx.arc(rg.x * dpr, rg.y * dpr, rg.r * dpr, 0, 6.2832); ctx.stroke();
+        }
+        ctx.globalCompositeOperation = 'source-over';
         requestAnimationFrame(loop);
-      })();
+      }
+      loop();
     })();
   </script>
 
