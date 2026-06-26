@@ -1758,7 +1758,7 @@
       if (!bg) return;
       const TOTAL = 106;   // images/hero-frames/0001.jpg … 0106.jpg
       const lowPower = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory < 4);
-      const STRIDE = lowPower ? 2 : 1;   // mobile : 1 image sur 2 (mémoire)
+      const STRIDE = 1;   // toutes les images partout (max de fluidité, même sur mobile)
       const indices = [];
       for (let i = 1; i <= TOTAL; i += STRIDE) indices.push(i);
       const N = indices.length;
