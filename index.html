@@ -1107,7 +1107,7 @@
   </section>
 
   <!-- Espace de scroll : laisse l'animation du hero se terminer avant le contenu -->
-  <div id="hero-spacer" style="height:62vh; position:relative; z-index:1; pointer-events:none;"></div>
+  <div id="hero-spacer" style="height:12vh; position:relative; z-index:1; pointer-events:none;"></div>
 
   <!-- ══ BENTO GRID ══ -->
   <section id="tools-bar" style="width:100%;padding:56px 5vw;position:relative;z-index:1;background:linear-gradient(to bottom, transparent 0%, rgba(7,7,9,0.55) 18%)">
@@ -1713,7 +1713,7 @@
         ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
       }
       function computeTarget(){
-        const scrub = innerHeight * 1.6;
+        const scrub = innerHeight * 0.7;   // zone d'animation courte → 1 swipe la traverse → section suivante
         const p = Math.max(0, Math.min(1, scrollY / scrub));
         target = p * (N - 1);
         // Flou progressif du fond quand on dépasse l'animation → transition douce vers le contenu
