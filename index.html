@@ -392,9 +392,8 @@
 
     /* ══ STYLES ═════════════════════════════════ */
     #styles {
-      width: 100%; padding: 90px 5vw;
-      background: rgba(8,8,8,0.85); border-top: 1px solid var(--border);
-      backdrop-filter: blur(4px);
+      width: 100%; padding: 120px 5vw;
+      background: #0a0a0c; border-top: 1px solid var(--border);
     }
     .section-inner { max-width: 1100px; margin: 0 auto; }
     .section-label {
@@ -403,14 +402,14 @@
     }
     .section-title {
       font-family: 'Syne', sans-serif; font-size: clamp(1.4rem, 3vw, 2rem);
-      font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-bottom: 40px;
+      font-weight: 800; letter-spacing: -0.01em; color: var(--text); margin-bottom: 56px;
     }
     .styles-grid {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 22px;
     }
     .style-card {
       display: flex; flex-direction: column;
-      flex: 0 0 calc((100% - 56px) / 5);
+      flex: 0 0 calc((100% - 88px) / 5);
       text-decoration: none; cursor: none;
       transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
     }
@@ -911,7 +910,7 @@
       position: relative; z-index: 1;
     }
     /* Sections de contenu : voile sombre LÉGER (la vidéo transparaît, mais assez de contraste) */
-    #tools-bar, #styles, #stencil-showcase, #ps-showcase, .showcase,
+    #tools-bar, #stencil-showcase, #ps-showcase, .showcase,
     #how, #social-proof, #deco-video-section, #cta-final, footer {
       background: rgba(7,7,9,0.55);
     }
@@ -940,14 +939,14 @@
 
     /* ══ RESPONSIVE ═════════════════════════════ */
     @media (max-width: 900px) {
-      .style-card { flex-basis: calc((100% - 28px) / 3); }
+      .style-card { flex-basis: calc((100% - 44px) / 3); }
       .testimonials-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 600px) {
       #nav { padding: 0 20px; }
       .nav-links { display: none; }
       .tools-grid { grid-template-columns: 1fr; }
-      .style-card { flex-basis: calc((100% - 14px) / 2); }
+      .style-card { flex-basis: calc((100% - 22px) / 2); }
       .how-grid { grid-template-columns: 1fr; }
       .testimonials-grid { grid-template-columns: 1fr; }
       footer { padding: 28px 20px; }
