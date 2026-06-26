@@ -1124,10 +1124,19 @@ function publicUser(u) {
 async function applyMonthlyReset(user) {
   if (!db || !user) return user;
   if (new Date(user.credits_reset_at) > new Date()) return user;
-  const amount = PLAN_CREDITS[user.plan] || PLAN_CREDITS.free;
+  // Plan payant : on AJOUTE les crédits du mois (ils s'accumulent, jamais perdus).
+  // Plan free : on n'accumule pas (anti-farming) — on prolonge juste la période, le solde est conservé.
+  if (user.plan && user.plan !== 'free') {
+    const amount = PLAN_CREDITS[user.plan] || 0;
+    const r = await db.query(
+      `UPDATE users SET credits_remaining = credits_remaining + $1, credits_reset_at = now() + interval '30 days' WHERE id=$2 RETURNING *`,
+      [amount, user.id]
+    );
+    return r.rows[0];
+  }
   const r = await db.query(
-    `UPDATE users SET credits_remaining=$1, credits_reset_at = now() + interval '30 days' WHERE id=$2 RETURNING *`,
-    [amount, user.id]
+    `UPDATE users SET credits_reset_at = now() + interval '30 days' WHERE id=$1 RETURNING *`,
+    [user.id]
   );
   return r.rows[0];
 }
@@ -1373,12 +1382,24 @@ async function getOrCreateCustomer(user) {
 
 // Applique un plan à un utilisateur + recharge ses crédits
 async function setUserPlan(userId, plan) {
-  const credits = PLAN_CREDITS[plan] != null ? PLAN_CREDITS[plan] : PLAN_CREDITS.free;
-  await db.query(
-    `UPDATE users SET plan=$1, credits_remaining=$2, credits_reset_at = now() + interval '30 days' WHERE id=$3`,
-    [plan, credits, userId]
-  );
-  console.log(`✓ Plan utilisateur #${userId} → ${plan} (${credits} crédits)`);
+  const cur = await db.query('SELECT plan FROM users WHERE id=$1', [userId]);
+  if (!cur.rows[0]) return;
+  const oldPlan = cur.rows[0].plan;
+  // IDEMPOTENT : si le plan ne change pas (webhook/sync répétés), on ne retouche PAS les crédits.
+  if (oldPlan === plan) return;
+  if (plan === 'free') {
+    // Annulation/retour free : on garde le solde de crédits déjà acquis (rien n'est perdu).
+    await db.query(`UPDATE users SET plan='free' WHERE id=$1`, [userId]);
+    console.log(`✓ Plan utilisateur #${userId} → free (crédits conservés)`);
+  } else {
+    // Souscription / upgrade : on AJOUTE les crédits du plan au solde existant (jamais perdus).
+    const credits = PLAN_CREDITS[plan] || 0;
+    await db.query(
+      `UPDATE users SET plan=$1, credits_remaining = credits_remaining + $2, credits_reset_at = now() + interval '30 days' WHERE id=$3`,
+      [plan, credits, userId]
+    );
+    console.log(`✓ Plan utilisateur #${userId} → ${plan} (+${credits} crédits, solde cumulé)`);
+  }
 }
 
 // ── Créer une session de paiement (abonnement) ──
