@@ -973,6 +973,7 @@
     .style-card:nth-child(4) .style-img-wrap::before { animation-delay: 3.3s; }
     .style-card:nth-child(5) .style-img-wrap::before { animation-delay: 4.4s; }
     @keyframes cardSweep { 0%, 22% { transform: translateX(-130%); } 40%, 100% { transform: translateX(130%); } }
+    .lightfx.fx-paused .beam, .lightfx.fx-paused .star { animation-play-state: paused; }
     @media (prefers-reduced-motion: reduce) {
       .lightfx { display: none; }
       .style-img-wrap::before { animation: none; opacity: 0; }
@@ -1751,7 +1752,8 @@
       function loop(){
         current += (target - current) * 0.16;
         if (Math.abs(target - current) < 0.0005) current = target;
-        drawFrame(current);
+        // Ne redessine QUE si le hero est (quasi) visible → libère le GPU quand on lit le contenu
+        if (scrollY < innerHeight * 2.8) drawFrame(current);
         requestAnimationFrame(loop);
       }
 
@@ -2066,7 +2068,7 @@
         const b1 = document.createElement('span'); b1.className = 'beam';
         const b2 = document.createElement('span'); b2.className = 'beam b2';
         fx.appendChild(b1); fx.appendChild(b2);
-        const n = lowPower ? 14 : 30;
+        const n = lowPower ? 8 : 16;
         for (let i = 0; i < n; i++) {
           const s = document.createElement('span'); s.className = 'star';
           const sz = (1 + Math.random() * 1.7).toFixed(1);
@@ -2079,7 +2081,18 @@
           fx.appendChild(s);
         }
         sec.insertBefore(fx, sec.firstChild);
+        fx._sec = sec;
       });
+      // Pause les animations lumière quand la section sort de l'écran (économie GPU)
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            const fx = e.target.querySelector(':scope > .lightfx');
+            if (fx) fx.classList.toggle('fx-paused', !e.isIntersecting);
+          });
+        }, { rootMargin: '120px' });
+        document.querySelectorAll('.lightfx').forEach(fx => io.observe(fx.parentElement));
+      }
     })();
 
     // ══ LUEUR FUTURISTE (canvas) : suit le pointeur + traînée de particules + onde au tap ══
@@ -2112,10 +2125,17 @@
       window.addEventListener('touchstart', e => { if (e.touches[0]) { lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; onMove(lastX, lastY); ripple(lastX, lastY); } }, { passive: true });
       window.addEventListener('touchmove', e => { if (e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
 
+      let lastBusy = true;
       function loop() {
-        ctx.clearRect(0, 0, W, H);
         cx += (tx - cx) * 0.16; cy += (ty - cy) * 0.16;
         glowA += ((active ? 1 : 0) - glowA) * 0.06;
+        const busy = glowA > 0.012 || parts.length || rings.length;
+        if (!busy) {                       // rien à dessiner → un dernier clear puis on saute le rendu
+          if (lastBusy) { ctx.clearRect(0, 0, W, H); lastBusy = false; }
+          requestAnimationFrame(loop); return;
+        }
+        lastBusy = true;
+        ctx.clearRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'lighter';
         const gx = cx * dpr, gy = cy * dpr;
         if (glowA > 0.01) {
