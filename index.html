@@ -2049,7 +2049,7 @@
     }
 
     // ══ REFLETS DE LUMIÈRE : injecte un calque (faisceaux + poussière d'étoiles) dans chaque section de contenu (PAS le hero) ══
-    (function lightFX() {
+    function lightFX() {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const sels = ['#tools-bar', '#styles', '#social-proof', '#cta-final'];
       const lowPower = window.innerWidth < 820;
@@ -2087,11 +2087,12 @@
         }, { rootMargin: '120px' });
         document.querySelectorAll('.lightfx').forEach(fx => io.observe(fx.parentElement));
       }
-    })();
+    }
 
     // ══ LUEUR FUTURISTE (canvas) : suit le pointeur + traînée de particules + onde au tap ══
-    (function fxGlow() {
+    function fxGlow() {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const noTrail = matchMedia('(pointer: coarse)').matches;   // mobile : pas de traînée (allège)
       const cv = document.createElement('canvas');
       cv.id = 'fx-glow'; cv.setAttribute('aria-hidden', 'true');
       cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;mix-blend-mode:screen;';
@@ -2104,6 +2105,7 @@
       let tx = innerWidth / 2, ty = innerHeight / 2, cx = tx, cy = ty, lastX = tx, lastY = ty, active = 0, glowA = 0, idle;
       const parts = [], rings = [];
       function spawn(x, y) {
+        if (noTrail) { lastX = x; lastY = y; return; }   // mobile : pas de particules
         const dx = x - lastX, dy = y - lastY, dist = Math.hypot(dx, dy);
         const n = Math.min(4, Math.floor(dist / 13));
         for (let i = 0; i < n; i++) {
@@ -2162,7 +2164,12 @@
         requestAnimationFrame(loop);
       }
       loop();
-    })();
+    }
+
+    // Lancer les effets décoratifs APRÈS le chargement (priorité au hero au démarrage → plus de bug)
+    function startFX() { try { lightFX(); } catch (e) {} try { fxGlow(); } catch (e) {} }
+    if (document.readyState === 'complete') setTimeout(startFX, 600);
+    else window.addEventListener('load', () => setTimeout(startFX, 600));
   </script>
 
 </body>
