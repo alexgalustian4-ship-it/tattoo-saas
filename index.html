@@ -1756,7 +1756,7 @@
     (function frameScrub(){
       const bg = document.getElementById('video-bg');
       if (!bg) return;
-      const TOTAL = 169;   // images/hero-frames/0001.jpg … 0169.jpg
+      const TOTAL = 106;   // images/hero-frames/0001.jpg … 0106.jpg
       const lowPower = window.innerWidth < 820 || matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory < 4);
       const STRIDE = lowPower ? 2 : 1;   // mobile : 1 image sur 2 (mémoire)
       const indices = [];
