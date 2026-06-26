@@ -965,8 +965,9 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) return res.status(500).json({ error: 'OpenAI API key not configured.' });
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'rework');
+    gate = await checkCredits(req, res, 'rework');
     if (!gate) return;
     const fusionNote = fusionFile ? ' Fuse the style and elements of the reference fusion image with the original design.' : '';
     const fullPrompt = `Tattoo design. ${zoneDesc ? zoneDesc + ' ' : ''}${prompt}.${fusionNote} Keep the same artistic style, line weight and composition for all areas outside the mask. Professional tattoo flash art, white background, high resolution.`;
@@ -1038,6 +1039,7 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
     try { if (gate.user) await saveGeneration(gate.user.id, 'rework', imageUrl, { prompt }); } catch {}
     res.json({ imageUrl, credits });
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /rework:', err.message);
     res.status(500).json({ error: err.message });
   } finally {
@@ -1140,33 +1142,47 @@ async function chargeCredits(userId, cost) {
 }
 
 // ── Garde-fou crédits avant une génération payante ──
-// Vérifie : connexion requise + solde suffisant. En cas de refus, répond
-// directement (401/402) et renvoie null → l'appelant doit faire `if (!gate) return;`.
-// Si la DB est inactive, laisse passer sans gating. Renvoie { user, isOwner, cost }.
+// RÉSERVE (débite) les crédits de façon ATOMIQUE avant la génération → empêche la
+// faille de course (2 requêtes simultanées qui passeraient la vérif toutes les deux).
+// En cas de refus, répond directement (401/402) et renvoie null → `if (!gate) return;`.
+// Si la génération échoue ensuite, l'appelant doit appeler refundCredits(gate).
 async function checkCredits(req, res, costType) {
   const cost = CREDIT_COST[costType] != null ? CREDIT_COST[costType] : 10;
-  if (!db) return { user: null, isOwner: false, cost };
+  if (!db) return { user: null, isOwner: false, cost, charged: false };
   // On récupère TOUJOURS l'utilisateur (pour sauvegarder l'historique), même en démo.
   let user = await getSessionUser(req);
   if (!REQUIRE_LOGIN) {
     // Mode démo : ni login obligatoire ni débit, mais on garde l'user pour l'historique.
     const isOwner = !!user && user.email === OWNER_EMAIL;
-    return { user, isOwner, cost, demo: true };
+    return { user, isOwner, cost, demo: true, charged: false };
   }
   if (!user) { res.status(401).json({ error: 'login_required' }); return null; }
   user = await applyMonthlyReset(user);
-  const isOwner = user.email === OWNER_EMAIL;
-  if (!isOwner && user.credits_remaining < cost) {
+  if (user.email === OWNER_EMAIL) return { user, isOwner: true, cost, charged: false };
+  // Débit ATOMIQUE conditionnel : ne réussit QUE si le solde est suffisant.
+  // Deux requêtes simultanées ne peuvent pas réussir toutes les deux.
+  const r = await db.query(
+    'UPDATE users SET credits_remaining = credits_remaining - $1 WHERE id=$2 AND credits_remaining >= $1 RETURNING credits_remaining',
+    [cost, user.id]
+  );
+  if (!r.rows[0]) {
     res.status(402).json({ error: 'no_credits', credits: user.credits_remaining });
     return null;
   }
-  return { user, isOwner, cost };
+  return { user, isOwner: false, cost, creditsLeft: r.rows[0].credits_remaining, charged: true };
 }
 
-// Débite après succès. Renvoie le solde restant (null si owner / DB inactive).
+// Renvoie le solde restant après réservation (déjà débité). null si owner / démo / DB inactive.
 async function chargeAfter(gate) {
-  if (!gate || !gate.user || gate.isOwner || gate.demo) return null; // démo = pas de débit
-  return await chargeCredits(gate.user.id, gate.cost);
+  return gate && gate.creditsLeft != null ? gate.creditsLeft : null;
+}
+
+// Rembourse les crédits réservés si la génération échoue.
+async function refundCredits(gate) {
+  if (!gate || !gate.charged || !gate.user || !db) return;
+  try {
+    await db.query('UPDATE users SET credits_remaining = credits_remaining + $1 WHERE id=$2', [gate.cost, gate.user.id]);
+  } catch {}
 }
 
 // Dossier persistant des images générées (volume Railway)
@@ -1580,6 +1596,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
     ? `${sujet}. ${TECHNICAL_REQUIREMENTS}`
     : buildPrompt({ sujet, style, ambiance, mot, elements, zone, withReference: inspFiles.length > 0 });
   const inspPaths = [];   // chemins .jpg des références
+  let gate = null;
 
   try {
     console.log('\n🎨 Nouvelle génération');
@@ -1593,21 +1610,10 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       inspPaths.push(p);
     }
 
-    // ── Crédits : connexion requise + solde suffisant (si DB active) ──
-    // On récupère TOUJOURS l'utilisateur (pour sauvegarder l'historique), même en démo.
-    let sessionUser = null;
-    const creditCost = CREDIT_COST.design;
-    if (db) {
-      sessionUser = await getSessionUser(req);
-      if (REQUIRE_LOGIN) {
-        if (!sessionUser) return res.status(401).json({ error: 'login_required' });
-        sessionUser = await applyMonthlyReset(sessionUser);
-        const isOwner = sessionUser.email === OWNER_EMAIL;
-        if (!isOwner && sessionUser.credits_remaining < creditCost) {
-          return res.status(402).json({ error: 'no_credits', credits: sessionUser.credits_remaining });
-        }
-      }
-    }
+    // ── Crédits : réservation atomique AVANT génération (anti double-génération) ──
+    gate = await checkCredits(req, res, 'design');
+    if (!gate) return;
+    const sessionUser = gate.user;
 
     let imageUrl, jobId = null, finalPrompt = prompt;
 
@@ -1662,12 +1668,10 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       imageUrl = r.imageUrl; jobId = r.jobId;
     }
 
-    // Débit des crédits + sauvegarde en historique après succès
-    let creditsLeft = null;
+    // Crédits déjà réservés (atomique) ; on sauvegarde l'historique après succès
+    const creditsLeft = await chargeAfter(gate);
     let savedUrl = null;
     if (db && sessionUser) {
-      const isOwner = sessionUser.email === OWNER_EMAIL;
-      if (REQUIRE_LOGIN && !isOwner) creditsLeft = await chargeCredits(sessionUser.id, creditCost); // pas de débit en démo
       savedUrl = await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
     }
     // Retourner l'URL /gens/ sauvegardée si dispo (évite d'envoyer une data URL géante au front)
@@ -1676,6 +1680,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
     res.json({ imageUrl: responseUrl, jobId, prompt, zone, credits: creditsLeft, finalPrompt });
 
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /generate :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
@@ -1702,8 +1707,9 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
   const photoPath = req.file.path + '.jpg';
   fs.renameSync(req.file.path, photoPath);
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'body');
+    gate = await checkCredits(req, res, 'body');
     if (!gate) return;
     console.log('\n📸 Rendu sur le corps — étape 2');
     console.log('   Zone   :', zone);
@@ -1757,6 +1763,7 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
     res.json({ imageUrl, jobId: null, model: 'gpt-image-1', credits });
 
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /generate-on-body :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
@@ -1785,8 +1792,9 @@ app.post('/place-uploaded-design', upload.fields([
   fs.renameSync(req.files.design[0].path, designPath);
   fs.renameSync(req.files.photo[0].path,  photoPath);
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'place');
+    gate = await checkCredits(req, res, 'place');
     if (!gate) return;
     console.log('\n🎨 Design uploadé — parcours 2');
     console.log('   Zone :', zone);
@@ -1821,6 +1829,7 @@ app.post('/place-uploaded-design', upload.fields([
     res.json({ imageUrl, credits });
 
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /place-uploaded-design :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
@@ -1862,8 +1871,9 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
     `White background, tattoo flash art composition, ready to tattoo. ` +
     `High resolution, professional tattoo artist quality.`;
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'pet');
+    gate = await checkCredits(req, res, 'pet');
     if (!gate) return;
     console.log('\n🐾 Pet tattoo generation');
     console.log('   Style   :', style);
@@ -1883,6 +1893,7 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
     res.json({ imageUrl, zone, credits });
 
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /generate-pet-tattoo :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
@@ -1902,8 +1913,9 @@ app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
   const imgPath = req.file.path + '.png';
   fs.renameSync(req.file.path, imgPath);
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'stencil');
+    gate = await checkCredits(req, res, 'stencil');
     if (!gate) return;
     console.log('\n🖊 Stencil via OpenAI gpt-image-1');
     const imageUrl = await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto');
@@ -1913,6 +1925,7 @@ app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
     } catch {}
     res.json({ imageUrl, credits });
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /stencil :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
@@ -1970,8 +1983,9 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
     (details ? `Creative direction: ${details}. ` : '') +
     `White background, professional tattoo flash art composition, high resolution, ready to tattoo.`;
 
+  let gate = null;
   try {
-    const gate = await checkCredits(req, res, 'merge');
+    gate = await checkCredits(req, res, 'merge');
     if (!gate) return;
     console.log(`\n⚡ Merge tattoos — ${tmpFiles.length} designs, style: ${style}`);
 
@@ -1987,6 +2001,7 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
 
     res.json({ imageUrl, credits });
   } catch (err) {
+    await refundCredits(gate);
     console.error('❌ /merge-tattoos :', err.message);
     res.status(500).json({ error: clientError(err) });
   } finally {
