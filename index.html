@@ -926,7 +926,6 @@
     /* ══ VIDEO BG ══════════════════════════════ */
     #video-bg {
       position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-      background: #080808 url('images/hero-frames/0030.jpg') center center / cover no-repeat;
     }
     #video-bg video {
       width: 100%; height: 100%; object-fit: cover; display: block;
@@ -1108,6 +1107,7 @@
   </section>
 
   <!-- Espace de scroll : laisse l'animation du hero se terminer avant le contenu -->
+  <div id="hero-spacer" style="height:62vh; position:relative; z-index:1; pointer-events:none;"></div>
 
   <!-- ══ BENTO GRID ══ -->
   <section id="tools-bar" style="width:100%;padding:56px 5vw;position:relative;z-index:1;background:linear-gradient(to bottom, transparent 0%, rgba(7,7,9,0.55) 18%)">
@@ -1679,7 +1679,6 @@
 
     // ══ HERO BG — SÉQUENCE D'IMAGES PILOTÉE PAR LE SCROLL (fluide partout, mobile inclus) ══
     (function frameScrub(){
-      return;   // ⛔ Désactivé : hero statique (image de fond CSS) → plus de scrub lourd au scroll, 1er swipe = page suivante
       const bg = document.getElementById('video-bg');
       if (!bg) return;
       const TOTAL = 120;   // images/hero-frames/0001.jpg … 0120.jpg
