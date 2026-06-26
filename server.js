@@ -46,7 +46,7 @@ function isBlockedUrl(u){
 // BASE DE DONNÉES (Postgres) — inerte si DATABASE_URL absent
 // ═══════════════════════════════════════════════════
 // Crédits par plan (1 génération = 10 crédits → gros chiffres, même rentabilité)
-const PLAN_CREDITS = { free: 30, pro: 400, studio: 1500 };
+const PLAN_CREDITS = { free: 30, starter: 150, pro: 400, studio: 1500, studioplus: 4000, atelier: 10000 };
 // Coût en crédits par action (minimum 10 par outil)
 const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10 };
 const OWNER_EMAIL = 'alexgalustian4@gmail.com';
@@ -1325,11 +1325,33 @@ if (process.env.STRIPE_SECRET_KEY) {
   console.warn('⚠ STRIPE_SECRET_KEY absent — paiements désactivés');
 }
 
-const STRIPE_PRICES = { pro: process.env.STRIPE_PRICE_PRO, studio: process.env.STRIPE_PRICE_STUDIO };
-// Price ID → nom de plan (pour le webhook)
+// Abonnements : plan → { mensuel, annuel } (Price IDs Stripe — TEST). En LIVE, recréer et remplacer.
+const STRIPE_PRICES = {
+  starter:    { monthly: 'price_1TmiWQKyJgMUdiwM4lwWsajy', annual: 'price_1TmiWQKyJgMUdiwMf7aAVFQ6' },
+  pro:        { monthly: 'price_1TmiWRKyJgMUdiwMu7l4SdwC', annual: 'price_1TmiWRKyJgMUdiwMBRDFsMHv' },
+  studio:     { monthly: 'price_1TmiWSKyJgMUdiwMfM2ZKxze', annual: 'price_1TmiWTKyJgMUdiwMddEHY6ZN' },
+  studioplus: { monthly: 'price_1TmiWUKyJgMUdiwMw9Vu0bV6', annual: 'price_1TmiWVKyJgMUdiwMWsL8Z8Be' },
+  atelier:    { monthly: 'price_1TmiWWKyJgMUdiwMb04hkSma', annual: 'price_1TmiWWKyJgMUdiwMrMEadvBb' },
+};
+// Packs de crédits (paiement unique) : clé → { price, crédits }
+const PACK_PRICES = {
+  mini:     { price: 'price_1TmiWXKyJgMUdiwMvq4tH3Cm', credits: 50 },
+  standard: { price: 'price_1TmiWYKyJgMUdiwMjnWYNQVe', credits: 150 },
+  maxi:     { price: 'price_1TmiWZKyJgMUdiwM92LoVZa1', credits: 500 },
+};
+// Price ID → nom de plan (webhook abonnements)
 const PRICE_TO_PLAN = {};
-if (STRIPE_PRICES.pro)    PRICE_TO_PLAN[STRIPE_PRICES.pro]    = 'pro';
-if (STRIPE_PRICES.studio) PRICE_TO_PLAN[STRIPE_PRICES.studio] = 'studio';
+for (const [plan, pr] of Object.entries(STRIPE_PRICES)) { PRICE_TO_PLAN[pr.monthly] = plan; PRICE_TO_PLAN[pr.annual] = plan; }
+// Price ID → crédits (webhook packs)
+const PRICE_TO_PACK_CREDITS = {};
+for (const p of Object.values(PACK_PRICES)) PRICE_TO_PACK_CREDITS[p.price] = p.credits;
+
+// Ajoute des crédits (achat de pack) sans changer le plan
+async function addCredits(userId, amount) {
+  if (!amount || !db) return;
+  await db.query('UPDATE users SET credits_remaining = credits_remaining + $1 WHERE id=$2', [amount, userId]);
+  console.log(`✓ +${amount} crédits → user #${userId} (pack)`);
+}
 
 function baseUrl(req) {
   if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, '');
@@ -1365,22 +1387,42 @@ app.post('/create-checkout-session', async (req, res) => {
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: 'non_connecté' });
 
-  const plan = (req.body && req.body.plan || '').trim();
-  const priceId = STRIPE_PRICES[plan];
-  if (!priceId) return res.status(400).json({ error: 'plan_invalide' });
+  const plan   = (req.body && req.body.plan   || '').trim();
+  const pack   = (req.body && req.body.pack   || '').trim();
+  const period = (req.body && req.body.period) === 'annual' ? 'annual' : 'monthly';
 
   try {
     const customerId = await getOrCreateCustomer(user);
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
-      client_reference_id: String(user.id),
-      metadata: { user_id: String(user.id), plan },
-      success_url: `${baseUrl(req)}/compte.html?checkout=success`,
-      cancel_url: `${baseUrl(req)}/pricing.html?checkout=cancel`,
-    });
+    let session;
+    if (pack) {
+      // ── Pack de crédits : paiement unique ──
+      const pk = PACK_PRICES[pack];
+      if (!pk) return res.status(400).json({ error: 'plan_invalide' });
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer: customerId,
+        line_items: [{ price: pk.price, quantity: 1 }],
+        allow_promotion_codes: true,
+        client_reference_id: String(user.id),
+        metadata: { user_id: String(user.id), pack, credits: String(pk.credits) },
+        success_url: `${baseUrl(req)}/compte.html?pack=success`,
+        cancel_url: `${baseUrl(req)}/pricing.html?checkout=cancel`,
+      });
+    } else {
+      // ── Abonnement : mensuel ou annuel ──
+      const priceId = STRIPE_PRICES[plan] && STRIPE_PRICES[plan][period];
+      if (!priceId) return res.status(400).json({ error: 'plan_invalide' });
+      session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        allow_promotion_codes: true,
+        client_reference_id: String(user.id),
+        metadata: { user_id: String(user.id), plan, period },
+        success_url: `${baseUrl(req)}/compte.html?checkout=success`,
+        cancel_url: `${baseUrl(req)}/pricing.html?checkout=cancel`,
+      });
+    }
     res.json({ url: session.url });
   } catch (e) {
     console.error('❌ create-checkout-session:', e.message);
@@ -1451,9 +1493,20 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       case 'checkout.session.completed': {
         const s = event.data.object;
         const userId = s.metadata && s.metadata.user_id || s.client_reference_id;
+        // ── Pack de crédits (paiement unique) → ajoute les crédits, ne change pas le plan ──
+        if (s.mode === 'payment') {
+          let credits = s.metadata && parseInt(s.metadata.credits);
+          if (!credits) {                       // sécurité : retrouve via le price acheté
+            const items = await stripe.checkout.sessions.listLineItems(s.id, { limit: 1 });
+            const priceId = items.data[0] && items.data[0].price.id;
+            credits = PRICE_TO_PACK_CREDITS[priceId];
+          }
+          if (userId && credits) await addCredits(Number(userId), credits);
+          break;
+        }
+        // ── Abonnement → applique le plan ──
         let plan = s.metadata && s.metadata.plan;
-        // Sécurité : reconfirmer le plan via le price de l'abonnement
-        if (s.subscription) {
+        if (s.subscription) {                   // sécurité : reconfirme via le price de l'abonnement
           const sub = await stripe.subscriptions.retrieve(s.subscription);
           const priceId = sub.items.data[0] && sub.items.data[0].price.id;
           if (PRICE_TO_PLAN[priceId]) plan = PRICE_TO_PLAN[priceId];

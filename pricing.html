@@ -392,11 +392,10 @@
 
         if(action==='checkout'){
           if(!me){ toast('Connecte-toi d\'abord pour t\'abonner.'); setTimeout(()=>location.href='outil.html',1400); return; }
-          // En mode annuel on envoie la variante "_annual" (ex: pro_annual)
-          const target=btn.dataset.target + (period==='annual' ? '_annual' : '');
+          const target=btn.dataset.target;
           btn.disabled=true; const old=btn.textContent; btn.textContent='Redirection…';
           try{
-            const r=await fetch('/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({plan:target})});
+            const r=await fetch('/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({plan:target, period})});
             if(r.status===404){ toast('Le paiement arrive très bientôt 🔜'); btn.disabled=false; btn.textContent=old; return; }
             const d=await r.json();
             if(d.url){ location.href=d.url; return; }
@@ -410,7 +409,7 @@
           const pack=btn.dataset.target;
           btn.disabled=true; const old=btn.textContent; btn.textContent='Redirection…';
           try{
-            const r=await fetch('/create-pack-session',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({pack})});
+            const r=await fetch('/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({pack})});
             if(r.status===404){ toast('Les packs arrivent très bientôt 🔜'); btn.disabled=false; btn.textContent=old; return; }
             const d=await r.json();
             if(d.url){ location.href=d.url; return; }
