@@ -3604,7 +3604,7 @@
       m4BtnGenerate.disabled = true; hide(m4Result); hide(m4Step2);
       try {
         const fd = new FormData();
-        m4Files.forEach((f, i) => fd.append(`design${i}`, f));
+        for (let i = 0; i < m4Files.length; i++) fd.append(`design${i}`, await resizeImage(m4Files[i]));
         fd.append('style',   m4Style);
         fd.append('details', document.getElementById('m4-details').value.trim());
         fd.append('count',   m4Files.length);
