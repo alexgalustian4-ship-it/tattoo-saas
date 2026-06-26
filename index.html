@@ -1009,7 +1009,15 @@
       #nav { padding: 0 20px; }
       .nav-links { display: none; }
       .tools-grid { grid-template-columns: 1fr; }
-      .style-card { flex-basis: calc((100% - 22px) / 2); }
+      /* Styles : carrousel horizontal qu'on fait défiler du doigt (5 cartes) */
+      .styles-grid {
+        flex-wrap: nowrap; justify-content: flex-start;
+        overflow-x: auto; scroll-snap-type: x mandatory;
+        gap: 14px; padding: 4px 16px 16px; margin: 0 -5vw;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      }
+      .styles-grid::-webkit-scrollbar { display: none; }
+      .style-card { flex: 0 0 66%; scroll-snap-align: center; }
       /* Fonds photo : voile un peu plus fort + cadrage adapté au portrait */
       #styles { padding: 80px 5vw; }
       #cta-final {
