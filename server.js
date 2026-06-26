@@ -2099,6 +2099,21 @@ app.post('/remove-bg', upload.single('image'), async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
+// Gestionnaire d'erreurs global : renvoie toujours du JSON (jamais une page HTML)
+// → erreurs multer (trop de fichiers, fichier trop lourd) en 400 propre, reste en 500 JSON.
+// ─────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const isMulter = err && (err.name === 'MulterError' || err.code === 'LIMIT_FILE_SIZE' || err.code === 'LIMIT_UNEXPECTED_FILE' || err.code === 'LIMIT_FILE_COUNT');
+  if (isMulter) {
+    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Fichier trop volumineux (10 Mo max).' : 'Trop de fichiers (4 photos maximum).';
+    return res.status(400).json({ error: msg });
+  }
+  console.error('❌ Erreur non gérée:', err && err.message);
+  res.status(500).json({ error: 'server_error' });
+});
+
+// ─────────────────────────────────────────────────
 // Démarrage
 // ─────────────────────────────────────────────────
 app.listen(PORT, () => {
