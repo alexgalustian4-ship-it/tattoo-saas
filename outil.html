@@ -3131,6 +3131,7 @@
           const resp = await fetch('/generate', { method: 'POST', body: fd, credentials: 'include' });
           if (resp.status === 401) { hideStatus(status); showAuthModal('signup'); return; }
           const data = await readJson(resp);
+          if (resp.status === 403) { resendVerification(); setError(status, 'Confirme ton email pour débloquer tes 30 crédits — vérifie ta boîte mail (et les spams). Un nouveau lien vient d\'être envoyé.'); return; }
           if (resp.status === 402) { setError(status, 'Crédits épuisés — passe à un plan supérieur pour continuer.'); return; }
           if (!resp.ok) throw new Error(data.error || 'Server error.');
           if (data.credits != null) updateCredits(data.credits);
@@ -3699,7 +3700,7 @@
         .then(r => r.ok ? r.json() : null)
         .then(d => {
           if (d && d.user) {
-            currentUser = { name: d.user.name, email: d.user.email, picture: d.user.avatar, provider: 'google', plan: d.user.plan, credits: d.user.credits };
+            currentUser = { name: d.user.name, email: d.user.email, picture: d.user.avatar, provider: 'google', plan: d.user.plan, credits: d.user.credits, emailVerified: d.user.emailVerified };
             localStorage.setItem('ink_user', JSON.stringify(currentUser));
             updateUserBadge();
             if (localStorage.getItem('pending_checkout')) resumePendingCheckout();   // déjà connecté → paiement direct
@@ -3767,9 +3768,11 @@
     // Renvoie un message à afficher si géré, sinon null. Ouvre la modale de connexion si 401.
     function handleAuthCreditError(status) {
       if (status === 401) { showAuthModal('signup'); return 'Connecte-toi pour utiliser cet outil — 30 crédits offerts.'; }
+      if (status === 403) { resendVerification(); return 'Confirme ton email pour débloquer tes 30 crédits — vérifie ta boîte mail (et les spams). Un nouveau lien vient d\'être envoyé.'; }
       if (status === 402) return 'Crédits épuisés — passe à un plan supérieur pour continuer.';
       return null;
     }
+    async function resendVerification() { try { await fetch('/auth/resend-verification', { method: 'POST', credentials: 'include' }); } catch {} }
 
     // Lit la réponse en JSON de façon robuste. Si le serveur renvoie du HTML
     // (page d'erreur 502 pendant un redéploiement, ou délai dépassé), on jette
@@ -3985,7 +3988,18 @@
           btn.disabled = false; btn.textContent = old;
           return;
         }
-        onAuthSuccess({ name: data.user.name, email: data.user.email, picture: data.user.avatar, provider: 'email', plan: data.user.plan, credits: data.user.credits });
+        const u = data.user;
+        const userObj = { name: u.name, email: u.email, picture: u.avatar, provider: 'email', plan: u.plan, credits: u.credits, emailVerified: u.emailVerified };
+        if (authMode === 'signup' && u.emailVerified === false) {
+          saveUser(userObj);
+          btn.style.display = 'none';
+          err.style.display = 'block'; err.style.color = '#9fe0a8';
+          err.innerHTML = '✉️ We sent a verification link to <b>' + u.email + '</b>.<br>Click it to unlock your 30 free credits. <a href="#" id="resend-verif" style="color:#cfd2dc;text-decoration:underline">Resend</a>';
+          const rs = document.getElementById('resend-verif');
+          if (rs) rs.onclick = async (ev) => { ev.preventDefault(); rs.textContent = 'Sending…'; try { await fetch('/auth/resend-verification', { method: 'POST', credentials: 'include' }); rs.textContent = 'Sent ✓'; } catch { rs.textContent = 'Error'; } };
+        } else {
+          onAuthSuccess(userObj);
+        }
       } catch (e) {
         err.textContent = 'Connexion impossible. Réessaie.';
         err.style.display = 'block';

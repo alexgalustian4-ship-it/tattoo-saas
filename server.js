@@ -96,6 +96,9 @@ async function initDb() {
     // Auth email/mot de passe (ajout rétro-compatible)
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;`);
     await db.query(`ALTER TABLE users ALTER COLUMN google_id DROP NOT NULL;`).catch(() => {});
+    // Vérification email (anti-farming) — comptes existants = vérifiés (grandfathering)
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT true;`);
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT;`);
     console.log('✓ Base de données prête (tables users, generations)');
   } catch (e) {
     console.error('❌ initDb failed:', e.message);
@@ -1116,6 +1119,7 @@ function publicUser(u) {
     credits: isOwner ? '∞' : u.credits_remaining,
     creditsMax: isOwner ? '∞' : (PLAN_CREDITS[u.plan] || PLAN_CREDITS.free),
     unlimited: isOwner,
+    emailVerified: u.email_verified !== false,
     creditsResetAt: u.credits_reset_at,
   };
 }
@@ -1166,6 +1170,11 @@ async function checkCredits(req, res, costType) {
     return { user, isOwner, cost, demo: true, charged: false };
   }
   if (!user) { res.status(401).json({ error: 'login_required' }); return null; }
+  // Email non vérifié → pas de génération (anti-farming). Owner exempté.
+  if (user.email !== OWNER_EMAIL && user.email_verified === false) {
+    res.status(403).json({ error: 'email_not_verified' });
+    return null;
+  }
   user = await applyMonthlyReset(user);
   if (user.email === OWNER_EMAIL) return { user, isOwner: true, cost, charged: false };
   // Débit ATOMIQUE conditionnel : ne réussit QUE si le solde est suffisant.
@@ -1223,6 +1232,76 @@ app.get('/version', (req, res) => {
 });
 
 // Connexion via Google (le front envoie le credential GSI)
+// ── Vérification email (Resend) ──
+const crypto = require('crypto');
+function newVerifyToken() { return crypto.randomBytes(24).toString('hex'); }
+
+async function sendVerificationEmail(email, token, req) {
+  if (!process.env.RESEND_API_KEY) { console.warn('⚠ RESEND_API_KEY absent — email de vérif non envoyé'); return; }
+  const link = `${baseUrl(req)}/verify?token=${encodeURIComponent(token)}`;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:28px;color:#111">
+      <div style="font-weight:800;font-size:20px;letter-spacing:0.04em">INK<span style="color:#888">.</span>STUDIO</div>
+      <h2 style="font-weight:800;margin:22px 0 8px">Confirm your email</h2>
+      <p style="color:#444;line-height:1.6">Confirm your email to activate your account and unlock your <b>30 free credits</b>.</p>
+      <p style="margin:28px 0"><a href="${link}" style="background:#0a0a0e;color:#fff;text-decoration:none;padding:13px 26px;border-radius:8px;font-weight:600;display:inline-block">Confirm my email</a></p>
+      <p style="font-size:12px;color:#888">Or copy this link: <br>${link}</p>
+      <p style="font-size:12px;color:#aaa;margin-top:24px">If you didn't create an account, ignore this email.</p>
+    </div>`;
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'INK.STUDIO <noreply@inkhay.com>', to: email, subject: 'Confirm your email — INK.STUDIO', html }),
+    });
+    if (!r.ok) console.error('❌ Resend:', (await r.text()).slice(0, 200));
+  } catch (e) { console.error('❌ sendVerificationEmail:', e.message); }
+}
+
+function verifyResultPage(msg, ok) {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>INK.STUDIO — Email</title><style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0c;color:#f6f6f9;font-family:Arial,sans-serif;text-align:center;padding:24px}
+    .box{max-width:420px}.logo{font-weight:800;letter-spacing:0.06em;margin-bottom:18px}
+    h1{font-size:1.3rem;font-weight:700;margin:0 0 10px}p{color:#9a9ba3;line-height:1.6}
+    a{display:inline-block;margin-top:22px;background:#fff;color:#0a0a0e;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600}
+    </style></head><body><div class="box"><div class="logo">INK<span style="color:#777">.</span>STUDIO</div>
+    <h1>${ok ? '✅ ' : ''}${msg}</h1>${ok ? '<a href="/outil.html">Open the studio →</a>' : '<a href="/outil.html">Back to the studio</a>'}</div></body></html>`;
+}
+
+// Confirme le token, débloque les 30 crédits gratuits
+app.get('/verify', async (req, res) => {
+  if (!db) return res.status(503).send(verifyResultPage('Service unavailable.', false));
+  const token = (req.query.token || '').toString();
+  if (!token) return res.status(400).send(verifyResultPage('Invalid link.', false));
+  try {
+    const r = await db.query('SELECT id, email_verified FROM users WHERE verify_token=$1', [token]);
+    const u = r.rows[0];
+    if (!u) return res.send(verifyResultPage('Invalid or already-used link.', false));
+    if (!u.email_verified) {
+      await db.query(
+        `UPDATE users SET email_verified=true, verify_token=NULL, credits_remaining = credits_remaining + $1, credits_reset_at = now() + interval '30 days' WHERE id=$2`,
+        [PLAN_CREDITS.free, u.id]
+      );
+    }
+    res.send(verifyResultPage('Email confirmed! Your 30 free credits are unlocked.', true));
+  } catch (e) {
+    console.error('❌ /verify:', e.message);
+    res.status(500).send(verifyResultPage('Something went wrong, try again.', false));
+  }
+});
+
+// Renvoyer l'email de vérification
+app.post('/auth/resend-verification', authLimiter, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'DB indisponible' });
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ error: 'non_connecté' });
+  if (user.email_verified) return res.json({ ok: true, already: true });
+  let token = user.verify_token;
+  if (!token) { token = newVerifyToken(); await db.query('UPDATE users SET verify_token=$1 WHERE id=$2', [token, user.id]); }
+  await sendVerificationEmail(user.email, token, req);
+  res.json({ ok: true });
+});
+
 app.post('/auth/google', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
   const credential = req.body && req.body.credential;
@@ -1236,9 +1315,9 @@ app.post('/auth/google', async (req, res) => {
     }
     // Upsert user
     const r = await db.query(
-      `INSERT INTO users (email, google_id, name, avatar_url, credits_remaining)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (email) DO UPDATE SET google_id=EXCLUDED.google_id, name=EXCLUDED.name, avatar_url=EXCLUDED.avatar_url
+      `INSERT INTO users (email, google_id, name, avatar_url, credits_remaining, email_verified)
+       VALUES ($1,$2,$3,$4,$5,true)
+       ON CONFLICT (email) DO UPDATE SET google_id=EXCLUDED.google_id, name=EXCLUDED.name, avatar_url=EXCLUDED.avatar_url, email_verified=true
        RETURNING *`,
       [p.email, p.sub, p.name || p.email.split('@')[0], p.picture || null, PLAN_CREDITS.free]
     );
@@ -1271,11 +1350,14 @@ app.post('/auth/register', registerLimiter, async (req, res) => {
       return res.json({ user: publicUser(r.rows[0]) });
     }
     const hash = await bcrypt.hash(password, 10);
+    const token = newVerifyToken();
+    // Non vérifié + 0 crédit : les 30 crédits gratuits ne sont débloqués qu'après confirmation de l'email
     const r = await db.query(
-      `INSERT INTO users (email, name, password_hash, credits_remaining) VALUES ($1,$2,$3,$4) RETURNING *`,
-      [email, name, hash, PLAN_CREDITS.free]
+      `INSERT INTO users (email, name, password_hash, credits_remaining, email_verified, verify_token) VALUES ($1,$2,$3,0,false,$4) RETURNING *`,
+      [email, name, hash, token]
     );
     setSession(res, r.rows[0].id);
+    sendVerificationEmail(email, token, req);   // async, ne bloque pas la réponse
     res.json({ user: publicUser(r.rows[0]) });
   } catch (e) {
     console.error('❌ /auth/register:', e.message);
