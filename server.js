@@ -1283,6 +1283,7 @@ app.get('/verify', async (req, res) => {
         [PLAN_CREDITS.free, u.id]
       );
     }
+    setSession(res, u.id);   // connecte l'utilisateur (même si le lien s'ouvre dans un autre navigateur)
     res.send(verifyResultPage('Email confirmed! Your 30 free credits are unlocked.', true));
   } catch (e) {
     console.error('❌ /verify:', e.message);
