@@ -3723,7 +3723,8 @@
         badge.classList.add('visible');
         name.textContent = currentUser.name || currentUser.email.split('@')[0];
         if (currentUser.picture) {
-          avatar.innerHTML = `<img src="${currentUser.picture}" style="width:100%;height:100%;object-fit:cover" />`;
+          const initial = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
+          avatar.innerHTML = `<img src="${currentUser.picture}" referrerpolicy="no-referrer" onerror="this.parentNode.textContent='${initial}'" style="width:100%;height:100%;object-fit:cover" />`;
         } else {
           avatar.textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
         }
