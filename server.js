@@ -1455,7 +1455,16 @@ function baseUrl(req) {
 
 // Récupère (ou crée) le client Stripe lié à l'utilisateur
 async function getOrCreateCustomer(user) {
-  if (user.stripe_customer_id) return user.stripe_customer_id;
+  if (user.stripe_customer_id) {
+    // Vérifie que le customer existe bien dans le MODE courant (test/live).
+    // Un customer créé en TEST n'existe pas en LIVE → on en recrée un.
+    try {
+      const c = await stripe.customers.retrieve(user.stripe_customer_id);
+      if (c && !c.deleted) return user.stripe_customer_id;
+    } catch (e) {
+      console.warn('⚠ customer Stripe introuvable (' + user.stripe_customer_id + '), recréation:', e.message);
+    }
+  }
   const customer = await stripe.customers.create({
     email: user.email,
     name: user.name || undefined,
