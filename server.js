@@ -1410,26 +1410,28 @@ app.post('/auth/logout', (req, res) => { clearSession(res); res.json({ ok: true 
 //   PUBLIC_URL             https://ton-domaine (sinon déduit de la requête)
 // ═══════════════════════════════════════════════════
 let stripe = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); console.log('✓ Stripe activé'); }
+// Préfère la clé LIVE si présente, sinon retombe sur la clé de test.
+const STRIPE_KEY = process.env.STRIPE_LIVE_KEY || process.env.STRIPE_SECRET_KEY;
+if (STRIPE_KEY) {
+  try { stripe = require('stripe')(STRIPE_KEY); console.log('✓ Stripe activé (' + (STRIPE_KEY.includes('live') ? 'LIVE' : 'TEST') + ')'); }
   catch (e) { console.warn('⚠ Stripe init failed:', e.message); }
 } else {
-  console.warn('⚠ STRIPE_SECRET_KEY absent — paiements désactivés');
+  console.warn('⚠ Clé Stripe absente — paiements désactivés');
 }
 
 // Abonnements : plan → { mensuel, annuel } (Price IDs Stripe — TEST). En LIVE, recréer et remplacer.
 const STRIPE_PRICES = {
-  starter:    { monthly: 'price_1TmiWQKyJgMUdiwM4lwWsajy', annual: 'price_1TmiWQKyJgMUdiwMf7aAVFQ6' },
-  pro:        { monthly: 'price_1TmiWRKyJgMUdiwMu7l4SdwC', annual: 'price_1TmiWRKyJgMUdiwMBRDFsMHv' },
-  studio:     { monthly: 'price_1TmiWSKyJgMUdiwMfM2ZKxze', annual: 'price_1TmiWTKyJgMUdiwMddEHY6ZN' },
-  studioplus: { monthly: 'price_1TmiWUKyJgMUdiwMw9Vu0bV6', annual: 'price_1TmiWVKyJgMUdiwMWsL8Z8Be' },
-  atelier:    { monthly: 'price_1TmiWWKyJgMUdiwMb04hkSma', annual: 'price_1TmiWWKyJgMUdiwMrMEadvBb' },
+  starter:    { monthly: 'price_1TmzeTKzwO283mgwFG9fdixk', annual: 'price_1TmzeUKzwO283mgwnT79B03n' },
+  pro:        { monthly: 'price_1TmzeUKzwO283mgw9LkBc1y9', annual: 'price_1TmzeVKzwO283mgw34538nY5' },
+  studio:     { monthly: 'price_1TmzeVKzwO283mgwU9JtaHQB', annual: 'price_1TmzeWKzwO283mgwyhctx8pI' },
+  studioplus: { monthly: 'price_1TmzeWKzwO283mgwTSNEjlVJ', annual: 'price_1TmzeXKzwO283mgwzxE72IQU' },
+  atelier:    { monthly: 'price_1TmzeXKzwO283mgwfi3eMxtA', annual: 'price_1TmzeYKzwO283mgwk5csgrdo' },
 };
 // Packs de crédits (paiement unique) : clé → { price, crédits }
 const PACK_PRICES = {
-  mini:     { price: 'price_1TmiWXKyJgMUdiwMvq4tH3Cm', credits: 50 },
-  standard: { price: 'price_1TmiWYKyJgMUdiwMjnWYNQVe', credits: 150 },
-  maxi:     { price: 'price_1TmiWZKyJgMUdiwM92LoVZa1', credits: 500 },
+  mini:     { price: 'price_1TmzeYKzwO283mgwlal3EFAf', credits: 50 },
+  standard: { price: 'price_1TmzeZKzwO283mgwUA9pRiLA', credits: 150 },
+  maxi:     { price: 'price_1TmzeZKzwO283mgwjkTQ1P7m', credits: 500 },
 };
 // Price ID → nom de plan (webhook abonnements)
 const PRICE_TO_PLAN = {};
@@ -1574,48 +1576,6 @@ app.post('/sync-subscription', async (req, res) => {
   } catch (e) {
     console.error('❌ sync-subscription:', e.message);
     res.status(500).json({ error: 'stripe_error' });
-  }
-});
-
-// ── TEMP: création des prix Stripe LIVE (owner uniquement) — à RETIRER après usage ──
-// Utilise la clé env STRIPE_LIVE_KEY (sk_live_...). Visiter l'URL une seule fois.
-app.get('/admin/create-live-prices', async (req, res) => {
-  if (!db) return res.status(503).json({ error: 'DB indisponible' });
-  const user = await getSessionUser(req);
-  if (!user || user.email !== OWNER_EMAIL) return res.status(403).json({ error: 'forbidden — connecte-toi en owner' });
-  const liveKey = (process.env.STRIPE_LIVE_KEY || '').trim();
-  if (!liveKey) return res.status(400).json({ error: 'STRIPE_LIVE_KEY ABSENTE — Railway n\'a pas (encore) pris la variable. Attends le redéploiement, ou re-vérifie le nom exact STRIPE_LIVE_KEY.' });
-  if (!/^sk_live_/.test(liveKey)) return res.status(400).json({ error: 'STRIPE_LIVE_KEY présente mais ne commence PAS par sk_live_. Début reçu: "' + liveKey.slice(0, 8) + '...". Mets bien la CLÉ SECRÈTE LIVE (sk_live_).' });
-  const liveStripe = require('stripe')(liveKey);
-  const PLANS = [
-    { key: 'starter',    name: 'INK.STUDIO Starter', credits: 150,   monthly: 799,   annual: 7990 },
-    { key: 'pro',        name: 'INK.STUDIO Pro',      credits: 400,   monthly: 1499,  annual: 14990 },
-    { key: 'studio',     name: 'INK.STUDIO Studio',   credits: 1500,  monthly: 3999,  annual: 39990 },
-    { key: 'studioplus', name: 'INK.STUDIO Studio+',  credits: 4000,  monthly: 8999,  annual: 89990 },
-    { key: 'atelier',    name: 'INK.STUDIO Atelier',  credits: 10000, monthly: 19999, annual: 199990 },
-  ];
-  const PACKS = [
-    { key: 'mini', credits: 50, amount: 599 },
-    { key: 'standard', credits: 150, amount: 1499 },
-    { key: 'maxi', credits: 500, amount: 4499 },
-  ];
-  try {
-    const out = {};
-    for (const p of PLANS) {
-      const product = await liveStripe.products.create({ name: p.name, metadata: { plan: p.key, credits: String(p.credits) } });
-      const m = await liveStripe.prices.create({ product: product.id, currency: 'eur', unit_amount: p.monthly, recurring: { interval: 'month' }, nickname: `${p.key} mensuel`, metadata: { plan: p.key, period: 'monthly', credits: String(p.credits) } });
-      const a = await liveStripe.prices.create({ product: product.id, currency: 'eur', unit_amount: p.annual, recurring: { interval: 'year' }, nickname: `${p.key} annuel`, metadata: { plan: p.key, period: 'annual', credits: String(p.credits) } });
-      out[`${p.key}_monthly`] = m.id; out[`${p.key}_annual`] = a.id;
-    }
-    const packProduct = await liveStripe.products.create({ name: 'INK.STUDIO Crédits', metadata: { type: 'pack' } });
-    for (const pk of PACKS) {
-      const price = await liveStripe.prices.create({ product: packProduct.id, currency: 'eur', unit_amount: pk.amount, nickname: `Pack ${pk.credits} crédits`, metadata: { pack: pk.key, credits: String(pk.credits) } });
-      out[`pack_${pk.key}`] = price.id;
-    }
-    res.json({ ok: true, message: 'Copie ce bloc "prices" et envoie-le dans le chat.', prices: out });
-  } catch (e) {
-    console.error('❌ create-live-prices:', e.message);
-    res.status(500).json({ error: e.message });
   }
 });
 
