@@ -1577,6 +1577,47 @@ app.post('/sync-subscription', async (req, res) => {
   }
 });
 
+// ── TEMP: création des prix Stripe LIVE (owner uniquement) — à RETIRER après usage ──
+// Utilise la clé env STRIPE_LIVE_KEY (sk_live_...). Visiter l'URL une seule fois.
+app.get('/admin/create-live-prices', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'DB indisponible' });
+  const user = await getSessionUser(req);
+  if (!user || user.email !== OWNER_EMAIL) return res.status(403).json({ error: 'forbidden — connecte-toi en owner' });
+  const liveKey = process.env.STRIPE_LIVE_KEY;
+  if (!liveKey || !/^sk_live_/.test(liveKey)) return res.status(400).json({ error: 'STRIPE_LIVE_KEY manquante/invalide dans Railway (doit commencer par sk_live_)' });
+  const liveStripe = require('stripe')(liveKey);
+  const PLANS = [
+    { key: 'starter',    name: 'INK.STUDIO Starter', credits: 150,   monthly: 799,   annual: 7990 },
+    { key: 'pro',        name: 'INK.STUDIO Pro',      credits: 400,   monthly: 1499,  annual: 14990 },
+    { key: 'studio',     name: 'INK.STUDIO Studio',   credits: 1500,  monthly: 3999,  annual: 39990 },
+    { key: 'studioplus', name: 'INK.STUDIO Studio+',  credits: 4000,  monthly: 8999,  annual: 89990 },
+    { key: 'atelier',    name: 'INK.STUDIO Atelier',  credits: 10000, monthly: 19999, annual: 199990 },
+  ];
+  const PACKS = [
+    { key: 'mini', credits: 50, amount: 599 },
+    { key: 'standard', credits: 150, amount: 1499 },
+    { key: 'maxi', credits: 500, amount: 4499 },
+  ];
+  try {
+    const out = {};
+    for (const p of PLANS) {
+      const product = await liveStripe.products.create({ name: p.name, metadata: { plan: p.key, credits: String(p.credits) } });
+      const m = await liveStripe.prices.create({ product: product.id, currency: 'eur', unit_amount: p.monthly, recurring: { interval: 'month' }, nickname: `${p.key} mensuel`, metadata: { plan: p.key, period: 'monthly', credits: String(p.credits) } });
+      const a = await liveStripe.prices.create({ product: product.id, currency: 'eur', unit_amount: p.annual, recurring: { interval: 'year' }, nickname: `${p.key} annuel`, metadata: { plan: p.key, period: 'annual', credits: String(p.credits) } });
+      out[`${p.key}_monthly`] = m.id; out[`${p.key}_annual`] = a.id;
+    }
+    const packProduct = await liveStripe.products.create({ name: 'INK.STUDIO Crédits', metadata: { type: 'pack' } });
+    for (const pk of PACKS) {
+      const price = await liveStripe.prices.create({ product: packProduct.id, currency: 'eur', unit_amount: pk.amount, nickname: `Pack ${pk.credits} crédits`, metadata: { pack: pk.key, credits: String(pk.credits) } });
+      out[`pack_${pk.key}`] = price.id;
+    }
+    res.json({ ok: true, message: 'Copie ce bloc "prices" et envoie-le dans le chat.', prices: out });
+  } catch (e) {
+    console.error('❌ create-live-prices:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Webhook Stripe (body brut requis) ──
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!stripe) return res.status(503).send('stripe disabled');
