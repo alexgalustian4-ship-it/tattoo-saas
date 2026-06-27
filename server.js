@@ -1583,8 +1583,9 @@ app.get('/admin/create-live-prices', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB indisponible' });
   const user = await getSessionUser(req);
   if (!user || user.email !== OWNER_EMAIL) return res.status(403).json({ error: 'forbidden — connecte-toi en owner' });
-  const liveKey = process.env.STRIPE_LIVE_KEY;
-  if (!liveKey || !/^sk_live_/.test(liveKey)) return res.status(400).json({ error: 'STRIPE_LIVE_KEY manquante/invalide dans Railway (doit commencer par sk_live_)' });
+  const liveKey = (process.env.STRIPE_LIVE_KEY || '').trim();
+  if (!liveKey) return res.status(400).json({ error: 'STRIPE_LIVE_KEY ABSENTE — Railway n\'a pas (encore) pris la variable. Attends le redéploiement, ou re-vérifie le nom exact STRIPE_LIVE_KEY.' });
+  if (!/^sk_live_/.test(liveKey)) return res.status(400).json({ error: 'STRIPE_LIVE_KEY présente mais ne commence PAS par sk_live_. Début reçu: "' + liveKey.slice(0, 8) + '...". Mets bien la CLÉ SECRÈTE LIVE (sk_live_).' });
   const liveStripe = require('stripe')(liveKey);
   const PLANS = [
     { key: 'starter',    name: 'INK.STUDIO Starter', credits: 150,   monthly: 799,   annual: 7990 },
