@@ -136,19 +136,27 @@ function readPersistedCredentials() {
 }
 
 async function bootstrapHiggsfieldAuth() {
-  // 1) Priorité au fichier persistant (token déjà rafraîchi lors d'un run précédent)
+  // Ordre de priorité :
+  //  - Si les variables d'env contiennent un token DIFFÉRENT du fichier persistant,
+  //    c'est que l'opérateur vient de faire une rotation manuelle (token frais) →
+  //    il GAGNE et on réécrit le fichier persistant. (Corrige le cas où le token du
+  //    volume est expiré/mort : on n'est plus coincé dessus.)
+  //  - Sinon, on charge le fichier persistant (token déjà rafraîchi auparavant).
+  //  - Sinon, on seed depuis les env vars (tout premier démarrage).
   const persisted = readPersistedCredentials();
-  if (persisted) {
+  const envAccess  = process.env.HIGGSFIELD_API_KEY;
+  const envRefresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
+
+  if (envAccess && (!persisted || persisted.access_token !== envAccess)) {
+    writeCredentials(envAccess, envRefresh);
+    console.log('✓ Credentials (re)seedés depuis les env vars (rotation opérateur), prefix =', envAccess.slice(0, 8));
+  } else if (persisted) {
     process.env.HIGGSFIELD_API_KEY = persisted.access_token;
     if (persisted.refresh_token) process.env.HIGGSFIELD_REFRESH_TOKEN = persisted.refresh_token;
     console.log('✓ Credentials chargés depuis le volume persistant, prefix =', persisted.access_token.slice(0, 8));
   } else {
-    // 2) Premier démarrage : on seed depuis les variables d'env
-    const access  = process.env.HIGGSFIELD_API_KEY;
-    const refresh = process.env.HIGGSFIELD_REFRESH_TOKEN || '';
-    if (!access) { console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail'); return; }
-    writeCredentials(access, refresh);
-    console.log('✓ Credentials seedés depuis les variables d\'env. PERSIST_DIR =', PERSIST_DIR, '| prefix =', access.slice(0, 8));
+    console.warn('⚠ HIGGSFIELD_API_KEY not set — generation will fail');
+    return;
   }
 
   // 3) Rafraîchit immédiatement au démarrage via le CLI binaire
@@ -1977,21 +1985,13 @@ app.post('/place-uploaded-design', upload.fields([
       `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
-    const payload = {
-      model:      'gpt_image_2',
-      prompt,
-      images:     [fileToBase64(photoPath), fileToBase64(designPath)],
-      resolution: '2k',
-    };
-
-    const { imageUrl } = await fetchHiggsfield(payload,
-      'La photo a été bloquée par le filtre de contenu du modèle.\n' +
-      'Essaie avec une photo où la zone est bien visible sur un fond neutre.'
-    );
+    // OpenAI en direct (gpt-image-1 edit) : photo du corps + design uploadé.
+    console.log('   Moteur : OpenAI gpt-image-1 (edit photo + design uploadé)');
+    const imageUrl = await openAIEditMulti(prompt, [photoPath, designPath], 'auto');
 
     const credits = await chargeAfter(gate);
     try {
-      if (gate.user) await saveGeneration(gate.user.id, 'on-body', imageUrl, { zone, model: 'gpt_image_2' });
+      if (gate.user) await saveGeneration(gate.user.id, 'on-body', imageUrl, { zone, model: 'gpt-image-1' });
     } catch {}
 
     res.json({ imageUrl, credits });
