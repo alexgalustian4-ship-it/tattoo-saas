@@ -1014,22 +1014,10 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
     const data = await response.json();
     console.log('OpenAI response status:', response.status);
 
-    // Si OpenAI échoue (billing, quota…) → fallback sur nano_banana_2
+    // OpenAI a échoué (billing, quota, modération…) → message propre (pas de fallback)
     if (!response.ok) {
-      console.warn('⚠️ OpenAI failed, falling back to nano_banana_2:', data.error?.message);
-      const b64img = fs.readFileSync(imageFile.path).toString('base64');
-      const fallbackImages = [`data:image/png;base64,${b64img}`];
-      if (fusionFile) fallbackImages.push(`data:image/png;base64,${fs.readFileSync(fusionFile.path).toString('base64')}`);
-      const fallbackPayload = {
-        model: 'gpt_image_2',
-        prompt: `${fullPrompt}`,
-        images: fallbackImages,
-        resolution: '2k',
-      };
-      const { imageUrl } = await fetchHiggsfield(fallbackPayload);
-      const credits = await chargeAfter(gate);
-      try { if (gate.user) await saveGeneration(gate.user.id, 'rework', imageUrl, { prompt }); } catch {}
-      return res.json({ imageUrl, fallback: true, credits });
+      console.warn('⚠️ OpenAI rework failed:', data.error?.message);
+      throw new Error('Le service de génération est temporairement indisponible. Réessaie dans un instant.');
     }
 
     const b64 = data.data?.[0]?.b64_json;
@@ -1833,15 +1821,8 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       imageUrl = await finishImage(img, { grayscale: bw });
       console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
-      // ── Fallback : Higgsfield ──
-      console.log('   Moteur  : Higgsfield (fallback)');
-      const payload = inspPaths.length
-        ? { model: 'gpt_image_2', prompt, images: inspPaths.map(p => fileToBase64(p)), resolution: '2k' }
-        : { model: 'gpt_image_2', prompt };
-      const r = await fetchHiggsfield(payload,
-        'La génération a été bloquée par le filtre du modèle.\n' +
-        'Essaie de reformuler ta description.');
-      imageUrl = r.imageUrl; jobId = r.jobId;
+      // Pas de clé OpenAI configurée → service indisponible (plus de fallback Higgsfield)
+      throw new Error('Le service de génération est temporairement indisponible.');
     }
 
     // Crédits déjà réservés (atomique) ; on sauvegarde l'historique après succès
@@ -2177,52 +2158,6 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
   }
 });
 
-// ─────────────────────────────────────────────────
-// POST /generate-video — ÉTAPE 3 (masquée dans l'UI)
-// Body  : sourceUrl (URL de l'image de prévisualisation corps)
-// Retour: { videoUrl }
-// ─────────────────────────────────────────────────
-app.post('/generate-video', upload.none(), async (req, res) => {
-  const sourceUrl = (req.body.sourceUrl || '').trim();
-
-  if (!sourceUrl) {
-    return res.status(400).json({ error: 'URL source manquante. Génère d\'abord un design à l\'étape 1.' });
-  }
-
-  const prompt =
-    `Slow cinematic 360 degree camera orbit around the tattooed arm and body. ` +
-    `The camera glides in a smooth, continuous circle around the subject, ` +
-    `revealing the tattoo design from every angle with a graceful, fluid arc. ` +
-    `Dramatic directional studio spotlight illuminates every detail of the ink. ` +
-    `Deep pure black background. Perfectly steady orbital camera movement, no shake. ` +
-    `Elegant premium luxury tattoo studio reveal. ` +
-    `Silver and black ink reflections catching the light as the camera rotates.`;
-
-  try {
-    console.log('\n🎬 Génération vidéo — étape 3');
-
-    const imageB64 = await urlToBase64(sourceUrl);
-
-    const payload = {
-      model:  'cinematic_studio_video_3_5',
-      prompt,
-      images: [imageB64],
-    };
-
-    const { imageUrl: videoUrl } = await fetchHiggsfield(
-      payload,
-      'La génération vidéo a été bloquée par le filtre du modèle.',
-      600_000,
-      'generation/video'
-    );
-
-    res.json({ videoUrl });
-
-  } catch (err) {
-    console.error('❌ /generate-video :', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // ─────────────────────────────────────────────────
 // Remove background (remove.bg)
