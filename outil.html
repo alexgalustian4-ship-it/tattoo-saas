@@ -3615,7 +3615,15 @@
         fd.append('style',   m4Style);
         fd.append('details', document.getElementById('m4-details').value.trim());
         fd.append('count',   m4Files.length);
-        const resp = await fetch('/merge-tattoos', { method: 'POST', body: fd });
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), 120000);   // jamais de spinner infini
+        let resp;
+        try {
+          resp = await fetch('/merge-tattoos', { method: 'POST', body: fd, signal: ctrl.signal });
+        } catch (e) {
+          if (e.name === 'AbortError') throw new Error('Trop long (réseau ou serveur). Réessaie avec 2 images, ou utilise inkhay.com (pas www).');
+          throw e;
+        } finally { clearTimeout(to); }
         const data = await readJson(resp);
         { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
         if (!resp.ok) throw new Error(data.error || 'Server error.');
