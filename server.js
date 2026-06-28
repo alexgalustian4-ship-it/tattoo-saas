@@ -893,7 +893,7 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
   if (referenceImagePath) {
     // With reference: use edits endpoint
     const fd = new FormData();
-    fd.append('model', 'gpt-image-1');
+    fd.append('model', IMAGE_MODEL);
     fd.append('prompt', prompt);
     fd.append('n', '1');
     fd.append('size', size);
@@ -936,7 +936,7 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
 
   const fd = new FormData();
-  fd.append('model', 'gpt-image-1');
+  fd.append('model', IMAGE_MODEL);
   fd.append('prompt', prompt);
   fd.append('n', '1');
   fd.append('size', size);
@@ -986,7 +986,7 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
     console.log('   Prompt:', fullPrompt.slice(0, 120));
 
     const fd = new FormData();
-    fd.append('model', 'gpt-image-1');
+    fd.append('model', IMAGE_MODEL);
     fd.append('prompt', fullPrompt);
     fd.append('size', '1024x1024');
     fd.append('quality', 'high');
