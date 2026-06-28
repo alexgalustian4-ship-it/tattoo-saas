@@ -930,8 +930,10 @@ async function generateWithOpenAI(prompt, referenceImagePath = null, size = '102
   }
 }
 
-// Édition gpt-image-1 avec PLUSIEURS images d'entrée (ex: photo du corps + design)
-async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
+// Édition gpt-image-2 avec PLUSIEURS images d'entrée (ex: photo du corps + design).
+// quality: 'high' par défaut ; 'medium' pour les tâches lourdes (merge multi-images) = bien plus rapide.
+// timeoutMs: coupe proprement si OpenAI traîne (évite la requête qui tourne sans fin).
+async function openAIEditMulti(prompt, imagePaths = [], size = 'auto', quality = 'high', timeoutMs = 240_000) {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set.');
 
@@ -940,18 +942,29 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto') {
   fd.append('prompt', prompt);
   fd.append('n', '1');
   fd.append('size', size);
-  fd.append('quality', 'high');
+  fd.append('quality', quality);
   fd.append('moderation', 'low');
   imagePaths.forEach((p, i) => {
     const isPng = p.toLowerCase().endsWith('.png');
     fd.append('image[]', new File([fs.readFileSync(p)], `img${i}.${isPng ? 'png' : 'jpg'}`, { type: isPng ? 'image/png' : 'image/jpeg' }));
   });
 
-  const resp = await fetch('https://api.openai.com/v1/images/edits', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}` },
-    body: fd,
-  });
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  let resp;
+  try {
+    resp = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: fd,
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('La génération a pris trop de temps. Réessaie avec moins d\'images ou une image plus petite.');
+    throw e;
+  } finally {
+    clearTimeout(t);
+  }
   const data = await resp.json();
   if (!resp.ok) throw new Error('OpenAI edits error: ' + JSON.stringify(data).slice(0, 300));
   const b64 = data.data?.[0]?.b64_json;
@@ -2141,7 +2154,8 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
     const mergePrompt =
       `${prompt} Flat 2D tattoo flash design on a pure solid white background (#FFFFFF), ` +
       `no photographic scene, no dark background, centered, clean crisp linework.`;
-    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024');
+    // 'medium' = fusion multi-images bien plus rapide (évite le timeout) ; qualité largement suffisante pour un flash fusionné.
+    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024', 'medium');
 
     const credits = await chargeAfter(gate);
     try {
