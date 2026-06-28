@@ -2153,8 +2153,10 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
     const mergePrompt =
       `${prompt} Flat 2D tattoo flash design on a pure solid white background (#FFFFFF), ` +
       `no photographic scene, no dark background, centered, clean crisp linework.`;
-    // 'medium' = fusion multi-images bien plus rapide (évite le timeout) ; qualité largement suffisante pour un flash fusionné.
-    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, '1024x1024', 'medium');
+    // Merge = tâche la plus lourde (multi-images). 'low' = max de vitesse + timeout court → échoue vite au lieu de traîner.
+    console.time('merge-openai');
+    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, 'auto', 'low', 100_000);
+    console.timeEnd('merge-openai');
 
     const credits = await chargeAfter(gate);
     try {
