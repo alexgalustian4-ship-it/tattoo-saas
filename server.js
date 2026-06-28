@@ -2138,12 +2138,11 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
   };
   const styleDesc = stylePrompts[style] || stylePrompts.seamless;
 
+  // Prompt court & concret : gpt-image-2 raisonne moins → plus rapide + fusion plus nette.
   const prompt =
-    `You are a master tattoo artist. Fuse the ${base64Images.length} tattoo designs provided into a single unique tattoo masterpiece. ` +
-    `The result must be ${styleDesc}. ` +
-    `Incorporate the key visual elements from every design into one cohesive artwork. ` +
-    (details ? `Creative direction: ${details}. ` : '') +
-    `White background, professional tattoo flash art composition, high resolution, ready to tattoo.`;
+    `Combine these ${base64Images.length} tattoo designs into ONE unified ${styleDesc} tattoo. ` +
+    `Keep the single most recognizable element from each design. ` +
+    (details ? `${details}. ` : '');
 
   let gate = null;
   try {
