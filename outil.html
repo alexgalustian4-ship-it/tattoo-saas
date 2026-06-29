@@ -2544,9 +2544,10 @@
         const url = URL.createObjectURL(file);
         let done = false;
         const finish = (result) => { if (done) return; done = true; try { URL.revokeObjectURL(url); } catch {} resolve(result); };
-        const timer = setTimeout(() => finish(file), 8000);   // sécurité : ne JAMAIS bloquer
+        // sécurité : ne JAMAIS bloquer — le timer n'est PAS annulé, finish() est idempotent.
+        // Si toBlob ne rappelle jamais, ce timer garantit quand même la résolution.
+        setTimeout(() => finish(file), 8000);
         img.onload = () => {
-          clearTimeout(timer);
           try {
             const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
             const w = Math.round(img.width * scale);
@@ -2557,7 +2558,7 @@
             canvas.toBlob(blob => finish(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file), 'image/jpeg', 0.88);
           } catch { finish(file); }
         };
-        img.onerror = () => { clearTimeout(timer); finish(file); };   // échec de chargement → on garde le fichier d'origine
+        img.onerror = () => { finish(file); };   // échec de chargement → on garde le fichier d'origine
         img.src = url;
       });
     }
@@ -3607,10 +3608,13 @@
 
     m4BtnGenerate.addEventListener('click', async () => {
       if (m4Files.length < 2) return;
-      setLoading(m4Status, 'Fusing your designs into one masterpiece… (under 90s)');
+      let secs = 0;
+      setLoading(m4Status, 'Fusing your designs… 0s');
+      const tick = setInterval(() => { secs++; setLoading(m4Status, `Fusing your designs… ${secs}s (jusqu'à ~90s)`); }, 1000);
       m4BtnGenerate.disabled = true; hide(m4Result); hide(m4Step2);
       try {
         const fd = new FormData();
+        setLoading(m4Status, 'Préparation des images…');
         for (let i = 0; i < m4Files.length; i++) fd.append(`design${i}`, await resizeImage(m4Files[i]));
         fd.append('style',   m4Style);
         fd.append('details', document.getElementById('m4-details').value.trim());
@@ -3635,9 +3639,11 @@
         m4Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
         saveProject({ type: 'merge', imageUrl: data.imageUrl, params: { style: m4Style } });
       } catch (err) {
+        clearInterval(tick);
         m4Status.textContent = '❌ Error: ' + err.message;
         m4Status.style.color = 'var(--error)';
       } finally {
+        clearInterval(tick);
         m4BtnGenerate.disabled = m4Files.length < 2;
       }
     });
