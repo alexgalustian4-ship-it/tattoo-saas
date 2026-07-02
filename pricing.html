@@ -298,6 +298,41 @@
     </div>
 
     <p class="foot-note">Already a member? <a href="compte.html">Manage your subscription</a> · Secure payment by Stripe.</p>
+
+    <!-- ══ FAQ ══ -->
+    <section class="faq fade-up" style="max-width:660px;margin:72px auto 0;">
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:26px;">Questions, answered</h2>
+      <details class="faq-item">
+        <summary>Do unused credits roll over?</summary>
+        <p>Yes — on paid plans, any credits you don't use stay in your balance and stack with next month's credits. Nothing is ever taken away from you.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Can I cancel anytime?</summary>
+        <p>Absolutely. Manage or cancel your subscription in one click from your account — no emails, no phone calls. You keep the credits you already have.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is the payment secure?</summary>
+        <p>Payments are processed by <strong>Stripe</strong>, the same infrastructure used by Amazon and Shopify. We never see or store your card details.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Do I own the designs I create?</summary>
+        <p>Yes — every design you generate is yours. Download it in high resolution, bring it to your tattoo artist, print the stencil. It's your art.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What's the difference between plans and credit packs?</summary>
+        <p>Plans renew automatically each month with fresh credits at the best rate. Credit packs are a one-time purchase — perfect for topping up whenever you need a few more generations.</p>
+      </details>
+    </section>
+    <style>
+      .faq-item { border:1px solid var(--border); border-radius:14px; background:var(--bg-card); margin-bottom:10px; overflow:hidden; transition:border-color .25s; }
+      .faq-item:hover { border-color:var(--border-m); }
+      .faq-item[open] { border-color:#34343e; }
+      .faq-item summary { cursor:pointer; list-style:none; padding:16px 20px; font-size:0.88rem; font-weight:600; color:var(--text); display:flex; justify-content:space-between; align-items:center; }
+      .faq-item summary::-webkit-details-marker { display:none; }
+      .faq-item summary::after { content:'+'; font-size:1.1rem; color:var(--silver); transition:transform .3s cubic-bezier(0.22,1,0.36,1); }
+      .faq-item[open] summary::after { transform:rotate(45deg); }
+      .faq-item p { padding:0 20px 16px; font-size:0.82rem; color:var(--muted); line-height:1.7; margin:0; }
+    </style>
   </main>
 
   <footer>

@@ -154,6 +154,27 @@
 /* ═══ FOCUS accessibles (clavier) ═══ */
 :focus-visible { outline: 2px solid rgba(207,210,220,0.55); outline-offset: 3px; border-radius: 6px; }
 
+/* ═══ TRANSITIONS ENTRE PAGES (View Transitions API — cross-fade doux) ═══
+   Progressive enhancement : navigateurs non compatibles = navigation classique. */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vtOut 0.28s ease both; }
+::view-transition-new(root) { animation: vtIn 0.38s ease both; }
+@keyframes vtOut { to { opacity: 0; } }
+@keyframes vtIn  { from { opacity: 0; } }
+
+/* ═══ SCROLLBAR custom (signature noir & argent) ═══ */
+* { scrollbar-width: thin; scrollbar-color: #2e2e36 transparent; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #34343e, #232329);
+  border-radius: 8px; border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: #4a4a56; }
+
+/* ═══ SÉLECTION de texte (argent sur noir) ═══ */
+::selection { background: rgba(207,210,220,0.85); color: #0a0a0e; }
+
 /* ═══ ACCESSIBILITÉ — réduit tout si demandé ═══ */
 @media (prefers-reduced-motion: reduce) {
   .rv, .rv-left, .rv-right, .rv-scale { opacity: 1; transform: none; filter: none; transition: none; }
