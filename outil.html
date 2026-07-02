@@ -2411,7 +2411,7 @@
     // const videoResult   = document.getElementById('video-result');
     // const videoResultEl = document.getElementById('video-result-el');
 
-    function show(el) { delete el.dataset.hidden; }
+    function show(el) { if (el) delete el.dataset.hidden; }
 
     function sobelStencil(img) {
       const w = img.naturalWidth || img.width;
@@ -2533,7 +2533,7 @@
       window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
       window.addEventListener('touchend', () => { dragging = false; });
     }
-    function hide(el) { el.dataset.hidden = ''; }
+    function hide(el) { if (el) el.dataset.hidden = ''; }
 
     let _timerInterval = null;
     const AI_PHASES = [
@@ -3573,7 +3573,6 @@
     const m3Result          = document.getElementById('m3-result');
     const m3ResultImg       = document.getElementById('m3-result-img');
     const m3BtnDl           = document.getElementById('m3-btn-dl');
-    const m3Step2           = document.getElementById('m3-step2');
     const m3BodyArea        = document.getElementById('m3-body-area');
     const m3BodyInput       = document.getElementById('m3-body-input');
     const m3BodyPreviewWrap = document.getElementById('m3-body-preview-wrap');
@@ -3613,7 +3612,7 @@
     // Generate
     m3BtnGenerate.addEventListener('click', async () => {
       setLoading(m3Status, 'Generating your pet tattoo design… (under 60s)');
-      m3BtnGenerate.disabled = true; hide(m3Result); hide(m3Step2);
+      m3BtnGenerate.disabled = true; hide(m3Result);
       try {
         const fd = new FormData();
         fd.append('photo',   await resizeImage(m3PhotoInput.files[0]));
@@ -3693,7 +3692,6 @@
     const m4Result        = document.getElementById('m4-result');
     const m4ResultImg     = document.getElementById('m4-result-img');
     const m4BtnDl         = document.getElementById('m4-btn-dl');
-    const m4Step2         = document.getElementById('m4-step2');
     const m4BodyArea      = document.getElementById('m4-body-area');
     const m4BodyInput     = document.getElementById('m4-body-input');
     const m4BodyPreviewWrap = document.getElementById('m4-body-preview-wrap');
@@ -3744,7 +3742,7 @@
       let secs = 0;
       setLoading(m4Status, 'Fusing your designs… 0s');
       const tick = setInterval(() => { secs++; setLoading(m4Status, `Fusing your designs… ${secs}s (jusqu'à ~90s)`); }, 1000);
-      m4BtnGenerate.disabled = true; hide(m4Result); hide(m4Step2);
+      m4BtnGenerate.disabled = true; hide(m4Result);
       try {
         const fd = new FormData();
         setLoading(m4Status, 'Préparation des images…');
