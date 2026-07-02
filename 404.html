@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page not found — INK.STUDIO</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Inter:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="brand.css">
+  <script src="brand.js" defer></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 24px; overflow: hidden; position: relative;
+    }
+    /* grain photo signature */
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+    /* halo argent au centre */
+    .glow {
+      position: fixed; width: 70vmin; height: 70vmin; border-radius: 50%;
+      background: radial-gradient(circle, rgba(207,210,220,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .code {
+      font-family: var(--font-display); font-style: italic;
+      font-size: clamp(6rem, 22vw, 13rem); font-weight: 600; line-height: 1;
+      background: linear-gradient(180deg, #ffffff 0%, #3a3d48 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      user-select: none;
+    }
+    h1 {
+      font-family: var(--font-ui); font-size: clamp(1.1rem, 3vw, 1.5rem);
+      font-weight: 800; letter-spacing: 0.02em; margin: 18px 0 10px;
+    }
+    p { color: var(--text-muted); font-size: 0.9rem; max-width: 420px; line-height: 1.7; }
+    .actions { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-block; padding: 13px 28px; border-radius: 14px;
+      font-family: var(--font-ui); font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .btn.primary { background: #fff; color: #0a0a0e; }
+    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(255,255,255,0.14); }
+    .btn.ghost { border: 1px solid var(--border-m); color: var(--muted); }
+    .btn.ghost:hover { border-color: var(--silver); color: var(--silver); transform: translateY(-2px); }
+    .logo {
+      position: fixed; top: 26px; left: 50%; transform: translateX(-50%);
+      font-family: var(--font-ui); font-weight: 800; letter-spacing: 0.08em;
+      font-size: 0.95rem; color: var(--text); text-decoration: none;
+    }
+    .logo span { color: var(--muted); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <a href="/" class="logo">INK<span>.</span>STUDIO</a>
+  <div class="glow"></div>
+
+  <div class="code rv" style="--rv-delay:0s">404</div>
+  <h1 class="rv" style="--rv-delay:0.12s">This page left no trace.</h1>
+  <p class="rv" style="--rv-delay:0.22s">Like a tattoo that was never inked — it doesn't exist. Let's get you back to the studio.</p>
+  <div class="actions rv" style="--rv-delay:0.32s">
+    <a class="btn primary btn-shine" href="outil.html">Open the studio</a>
+    <a class="btn ghost" href="/">Back home</a>
+  </div>
+</body>
+</html>

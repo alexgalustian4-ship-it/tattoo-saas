@@ -2232,6 +2232,16 @@ app.post('/remove-bg', upload.single('image'), async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────
+// 404 : page brandée pour les navigations, JSON pour les appels API
+// (placé APRÈS toutes les routes et le static — n'attrape que l'inconnu)
+// ─────────────────────────────────────────────────
+app.use((req, res) => {
+  const wantsHtml = req.method === 'GET' && (req.headers.accept || '').includes('text/html');
+  if (wantsHtml) return res.status(404).sendFile(path.join(__dirname, '404.html'));
+  res.status(404).json({ error: 'not_found' });
+});
+
+// ─────────────────────────────────────────────────
 // Gestionnaire d'erreurs global : renvoie toujours du JSON (jamais une page HTML)
 // → erreurs multer (trop de fichiers, fichier trop lourd) en 400 propre, reste en 500 JSON.
 // ─────────────────────────────────────────────────
