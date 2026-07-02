@@ -2611,12 +2611,17 @@
       if (_progInterval)  { clearInterval(_progInterval);  _progInterval = null; }
       if (_phaseInterval) { clearInterval(_phaseInterval); _phaseInterval = null; }
     }
+    // Traduit les erreurs techniques (fetch réseau, etc.) en message lisible pour l'utilisateur
+    function humanMsg(msg) {
+      const m = String(msg || '');
+      if (/failed to fetch|load failed|networkerror|network request failed|network connection was lost|timed? ?out|abort/i.test(m))
+        return 'Connexion interrompue — vérifie ta connexion et réessaie.';
+      return m || 'Une erreur est survenue, réessaie.';
+    }
     function setError(el, msg) {
       _clearLoadingTimers();
       el.className = 'status error'; el.style.display = 'block';
-      el.textContent = msg.includes('Failed to fetch')
-        ? '❌ Server unreachable. Run node server.js in a terminal.'
-        : '❌ ' + msg;
+      el.textContent = '❌ ' + humanMsg(msg);
     }
     function hideStatus(el) {
       // Si une barre de progression IA est active, on la termine à 100% avant de masquer
@@ -2781,7 +2786,7 @@
           a.download = 'tattoo-stencil.png'; a.click();
         };
         show(document.getElementById('stencil-result'));
-      } catch(e) { alert('Stencil error: ' + e.message); }
+      } catch(e) { alert('Stencil : ' + humanMsg(e.message)); }
       finally { btn.disabled = false; btn.textContent = '🖊 Stencil'; }
     });
 
@@ -2927,7 +2932,7 @@
         dlBtn.onclick = () => { const a = document.createElement('a'); a.href = wmUrl; a.download = 'tattoo-watermarked.jpg'; a.click(); };
         show(dlBtn);
         URL.revokeObjectURL(blobUrl);
-      } catch(e) { alert('Watermark error: ' + e.message); }
+      } catch(e) { alert('Watermark : ' + humanMsg(e.message)); }
       finally { btn.disabled = false; btn.textContent = 'Apply'; }
     });
 
@@ -2964,7 +2969,7 @@
         show(document.getElementById('transparent-result'));
         document.getElementById('transparent-result').scrollIntoView({ behavior:'smooth', block:'start' });
         URL.revokeObjectURL(blobUrl);
-      } catch(e) { alert('Erreur: ' + e.message); }
+      } catch(e) { alert('Erreur : ' + humanMsg(e.message)); }
       finally { btn.disabled = false; btn.textContent = '✂️ PNG transparent'; }
     });
 
@@ -3426,7 +3431,7 @@
         } catch (err) {
           processing.style.display = 'none';
           uploadLabel.style.display = 'flex';
-          alert('❌ ' + (err.message || 'Erreur lors de la génération du stencil'));
+          alert('❌ ' + humanMsg(err.message || 'Erreur lors de la génération du stencil'));
         }
       }
 
@@ -3626,7 +3631,7 @@
         m3Result.scrollIntoView({ behavior: 'smooth', block: 'start' });
         saveProject({ type: 'pet', imageUrl: data.imageUrl, params: { sujet: 'Pet tattoo', style: m3Style } });
       } catch (err) {
-        m3Status.textContent = '❌ Error: ' + err.message;
+        m3Status.textContent = '❌ ' + humanMsg(err.message);
         m3Status.style.color = 'var(--error)';
       } finally {
         m3BtnGenerate.disabled = false;
@@ -3669,7 +3674,7 @@
         hideStatus(m3Status2); show(m3BodyResult);
         m3BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        m3Status2.textContent = '❌ Error: ' + err.message;
+        m3Status2.textContent = '❌ ' + humanMsg(err.message);
         m3Status2.style.color = 'var(--error)';
       } finally {
         m3BtnPlaceGo.disabled = false;
@@ -3768,7 +3773,7 @@
         saveProject({ type: 'merge', imageUrl: data.imageUrl, params: { style: m4Style } });
       } catch (err) {
         clearInterval(tick);
-        m4Status.textContent = '❌ Error: ' + err.message;
+        m4Status.textContent = '❌ ' + humanMsg(err.message);
         m4Status.style.color = 'var(--error)';
       } finally {
         clearInterval(tick);
@@ -3811,7 +3816,7 @@
         hideStatus(m4Status2); show(m4BodyResult);
         m4BodyResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        m4Status2.textContent = '❌ Error: ' + err.message;
+        m4Status2.textContent = '❌ ' + humanMsg(err.message);
         m4Status2.style.color = 'var(--error)';
       } finally {
         m4BtnPlaceGo.disabled = false;
@@ -4709,7 +4714,7 @@
         // Save to history
         saveProject({ imageUrl: data.imageUrl, sujet: prompt, style: '', ambiance: 'epique', mot: '', elements: '', zone: '' });
 
-      } catch(e) { alert('Erreur: ' + e.message); }
+      } catch(e) { alert('Erreur : ' + humanMsg(e.message)); }
       finally { btn.disabled = false; btn.textContent = '⚡ Generate rework'; status.style.display = 'none'; }
     });
 
