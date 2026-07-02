@@ -19,7 +19,7 @@
   <!-- CDN des images générées : on ouvre la connexion en avance pour un affichage plus rapide -->
   <link rel="preconnect" href="https://d8j0ntlcm91z4.cloudfront.net" crossorigin>
   <link rel="dns-prefetch" href="https://d8j0ntlcm91z4.cloudfront.net">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
@@ -1118,6 +1118,41 @@
     }
     .ai-example:hover { border-color: var(--silver-dim); color: var(--silver); }
 
+    /* ══ Micro-interactions premium (DA unifiée) ══ */
+    .ai-chat:focus-within {
+      border-color: rgba(207,210,220,0.35);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55),
+                  0 0 0 3px rgba(207,210,220,0.06),
+                  0 0 44px rgba(207,210,220,0.07),
+                  inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .ai-generate { position: relative; overflow: hidden; }
+    .ai-generate::before {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 46%;
+      left: -70%; transform: skewX(-22deg);
+      background: linear-gradient(90deg, transparent, rgba(10,10,14,0.14), transparent);
+      transition: left 0.6s cubic-bezier(0.22,1,0.36,1); pointer-events: none;
+    }
+    .ai-generate:hover:not(:disabled)::before { left: 130%; }
+    .ai-generate:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+    .ai-chip { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, color 0.25s, background 0.25s; }
+    .ai-chip:hover { transform: translateY(-2px); }
+    .ai-chip.active { transform: scale(1.04); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+    .ts-pill { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, color 0.25s, background 0.25s; }
+    .ts-pill:hover { transform: translateY(-2px); }
+
+    /* Transition fluide entre outils (rejoue à chaque affichage de section) */
+    @keyframes sectionIn {
+      from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
+      to   { opacity: 1; transform: none; filter: blur(0); }
+    }
+    #mode1-card, #mode2-card, #mode3-card, #mode4-card, #stencil-studio, #ai-hub, #history-section {
+      animation: sectionIn 0.55s cubic-bezier(0.22,1,0.36,1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #mode1-card, #mode2-card, #mode3-card, #mode4-card, #stencil-studio, #ai-hub, #history-section { animation: none; }
+    }
+
     /* Other tools row (small pills around) */
     .ai-tools-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 34px; }
     .ai-tool-pill {
@@ -1210,6 +1245,9 @@
       }
     }
   </style>
+  <!-- Design system unifié INK.STUDIO (chargé après le CSS de page → tokens prioritaires) -->
+  <link rel="stylesheet" href="brand.css">
+  <script src="brand.js" defer></script>
 </head>
 <body>
 
@@ -1290,14 +1328,14 @@
   </div>
 
   <main>
-    <div class="tool-header">
-      <p class="tool-eyebrow">AI Tattoo Studio</p>
-      <h1 class="tool-title">Design your tattoo<br>with AI</h1>
-      <p class="tool-subtitle">Describe your idea — the AI creates a unique design in seconds.</p>
+    <div class="tool-header" data-stagger="0.12">
+      <p class="tool-eyebrow rv">AI Tattoo Studio</p>
+      <h1 class="tool-title rv">Design your tattoo<br>with AI</h1>
+      <p class="tool-subtitle rv">Describe your idea — the AI creates a unique design in seconds.</p>
     </div>
 
     <!-- ══════════ AI HUB (chat central) ══════════ -->
-    <div class="ai-hub" id="ai-hub">
+    <div class="ai-hub rv-scale" id="ai-hub" style="--rv-delay:0.3s">
       <div class="ai-chat">
         <textarea class="ai-chat-input" id="hub-input" rows="3" placeholder="Describe your tattoo…"></textarea>
         <div class="ai-chat-bar">
@@ -1318,12 +1356,12 @@
       </div>
 
       <!-- Style chips -->
-      <div class="ai-styles" id="hub-styles">
-        <button class="ai-chip active" data-style="realisme"><img src="images/style-realisme.png" alt="">Realism</button>
-        <button class="ai-chip" data-style="concept"><img src="images/style-concept.png" alt="">Concept</button>
-        <button class="ai-chip" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
-        <button class="ai-chip" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
-        <button class="ai-chip" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
+      <div class="ai-styles" id="hub-styles" data-stagger="0.07">
+        <button class="ai-chip active rv" style="--rv-delay:0.45s" data-style="realisme"><img src="images/style-realisme.png" alt="">Realism</button>
+        <button class="ai-chip rv" style="--rv-delay:0.52s" data-style="concept"><img src="images/style-concept.png" alt="">Concept</button>
+        <button class="ai-chip rv" style="--rv-delay:0.59s" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
+        <button class="ai-chip rv" style="--rv-delay:0.66s" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
+        <button class="ai-chip rv" style="--rv-delay:0.73s" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
       </div>
 
       <!-- Status + result -->
@@ -2463,7 +2501,7 @@
     let _progInterval = null, _phaseInterval = null;
 
     function setLoading(el, msg) {
-      el.className = 'status loading'; el.style.display = 'block';
+      el.className = 'status loading generating'; el.style.display = 'block';
       el.innerHTML = `
         <div style="font-size:0.82rem;color:var(--silver);">${msg}</div>
         <div class="ai-progress">
@@ -4844,6 +4882,16 @@
     }
 
     renderHistory();
+
+    // ── Animation "wow" à CHAQUE résultat généré (rejoue à chaque nouveau load) ──
+    document.querySelectorAll('img[id$="result-img"]').forEach(im => {
+      im.addEventListener('load', () => {
+        if (!im.src || im.src.endsWith('#')) return;
+        im.classList.remove('result-in');
+        void im.offsetWidth;               // reflow → l'animation peut rejouer
+        im.classList.add('result-in');
+      });
+    });
   </script>
 
 </body>
