@@ -1141,6 +1141,23 @@
     .ts-pill { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, color 0.25s, background 0.25s; }
     .ts-pill:hover { transform: translateY(-2px); }
 
+    /* ══ Drag & drop premium (état "fichier au-dessus") ══ */
+    .upload-area, .m2-upload-area, #m4-dropzone {
+      transition: border-color 0.25s, background 0.25s, transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
+    }
+    .ai-chat.drag-over { transform: scale(1.008); }
+    .drag-over {
+      border-color: rgba(207,210,220,0.65) !important;
+      background: rgba(207,210,220,0.05) !important;
+      transform: scale(1.015);
+      box-shadow: 0 0 0 3px rgba(207,210,220,0.08), 0 0 50px rgba(207,210,220,0.10) !important;
+    }
+    .drag-over svg { color: var(--silver) !important; }
+
+    /* Aperçus d'upload : apparition en pop */
+    @keyframes thumbIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    .ai-attached > *, #m4-previews > * { animation: thumbIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+
     /* Transition fluide entre outils (rejoue à chaque affichage de section) */
     @keyframes sectionIn {
       from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
@@ -4892,6 +4909,49 @@
         im.classList.add('result-in');
       });
     });
+
+    // ── Drag & drop universel sur TOUTES les zones d'upload ──
+    // Dépose les fichiers dans l'<input file> de la zone puis déclenche 'change'
+    // → réutilise tous les handlers existants, zéro logique dupliquée.
+    (function initDragDrop() {
+      const zones = document.querySelectorAll('.upload-area, .m2-upload-area, #m4-dropzone');
+      zones.forEach(zone => {
+        const input = zone.querySelector('input[type="file"]');
+        if (!input) return;
+        ['dragenter', 'dragover'].forEach(ev =>
+          zone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('drag-over'); }));
+        ['dragleave', 'dragend'].forEach(ev =>
+          zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('drag-over'); }));
+        zone.addEventListener('drop', e => {
+          e.preventDefault(); e.stopPropagation();
+          zone.classList.remove('drag-over');
+          const files = e.dataTransfer && e.dataTransfer.files;
+          if (!files || !files.length) return;
+          try {
+            input.files = files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch (_) {}
+        });
+      });
+      // Bonus : déposer une référence directement sur le chat du hub
+      const hubChat = document.querySelector('.ai-chat');
+      const hubFile = document.getElementById('hub-file');
+      if (hubChat && hubFile) {
+        ['dragenter', 'dragover'].forEach(ev =>
+          hubChat.addEventListener(ev, e => { e.preventDefault(); hubChat.classList.add('drag-over'); }));
+        ['dragleave', 'dragend'].forEach(ev =>
+          hubChat.addEventListener(ev, e => { e.preventDefault(); hubChat.classList.remove('drag-over'); }));
+        hubChat.addEventListener('drop', e => {
+          e.preventDefault(); hubChat.classList.remove('drag-over');
+          const files = e.dataTransfer && e.dataTransfer.files;
+          if (!files || !files.length) return;
+          try {
+            hubFile.files = files;
+            hubFile.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch (_) {}
+        });
+      }
+    })();
   </script>
 
 </body>
