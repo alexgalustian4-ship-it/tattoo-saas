@@ -775,6 +775,42 @@ async function finishImage(dataUrl, { grayscale = true } = {}) {
 }
 
 // ─────────────────────────────────────────────────
+// Filigrane discret "INK.STUDIO" (plan FREE uniquement — jamais payants/owner/démo)
+// ─────────────────────────────────────────────────
+async function applyWatermark(dataUrl) {
+  try {
+    const sharp = require('sharp');
+    const b64 = (dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
+    if (!b64 || !(dataUrl || '').startsWith('data:image')) return dataUrl;
+    const buf  = Buffer.from(b64, 'base64');
+    const meta = await sharp(buf).metadata();
+    const w = meta.width || 1024, h = meta.height || 1024;
+    const fSize = Math.round(Math.max(16, w * 0.022));
+    const pad   = Math.round(w * 0.026);
+    const svg = Buffer.from(
+      `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">` +
+      `<text x="${w - pad}" y="${h - pad}" text-anchor="end" font-family="Arial, Helvetica, sans-serif" ` +
+      `font-size="${fSize}" font-weight="600" letter-spacing="${Math.max(1, fSize * 0.14)}" ` +
+      `fill="rgba(255,255,255,0.34)" stroke="rgba(0,0,0,0.22)" stroke-width="0.6">INK.STUDIO</text></svg>`
+    );
+    const out = await sharp(buf).composite([{ input: svg }]).png().toBuffer();
+    return 'data:image/png;base64,' + out.toString('base64');
+  } catch (e) {
+    console.warn('⚠ watermark failed:', e.message);
+    return dataUrl;
+  }
+}
+
+// Filigrane seulement si l'utilisateur est en plan FREE (ni payant, ni owner, ni démo)
+async function brandIfFree(gate, dataUrl) {
+  const u = gate && gate.user;
+  if (!u) return dataUrl;
+  if (u.email === OWNER_EMAIL) return dataUrl;
+  if ((u.plan || 'free') !== 'free') return dataUrl;
+  return applyWatermark(dataUrl);
+}
+
+// ─────────────────────────────────────────────────
 // Enrichit l'idée de l'utilisateur en un prompt détaillé DANS LE STYLE CHOISI
 // (gpt-4o). Le style provient des recettes officielles (STYLES) — pas de style
 // "maison" imposé. Renvoie null si indisponible → fallback sur le prompt brut.
@@ -1039,8 +1075,9 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
 
     let imageUrl = url;
     if (b64 && !url) {
+      const branded = await brandIfFree(gate, 'data:image/png;base64,' + b64);
       const outPath = path.join(os.tmpdir(), `rework-${Date.now()}.png`);
-      fs.writeFileSync(outPath, Buffer.from(b64, 'base64'));
+      fs.writeFileSync(outPath, Buffer.from(branded.replace(/^data:image\/\w+;base64,/, ''), 'base64'));
       imageUrl = `/rework-result/${path.basename(outPath)}`;
       setTimeout(() => { try { fs.unlinkSync(outPath); } catch {} }, 10 * 60 * 1000);
       app._reworkTmp = app._reworkTmp || {};
@@ -1832,6 +1869,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
         ? await openAIEditMulti(openaiPrompt, inspPaths, size)
         : await generateWithOpenAI(openaiPrompt, null, size);
       imageUrl = await finishImage(img, { grayscale: bw });
+      imageUrl = await brandIfFree(gate, imageUrl);
       console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
       // Pas de clé OpenAI configurée → service indisponible (plus de fallback Higgsfield)
@@ -1916,14 +1954,14 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
       fs.writeFileSync(designPath, designBuf);
     }
 
-    console.log('   Moteur : OpenAI gpt-image-1 (edit photo + design)');
+    console.log('   Moteur : OpenAI (edit photo + design)');
     let imageUrl;
     try {
-      // gpt-image-1 edits avec 2 images : la photo du corps + le design
       imageUrl = await openAIEditMulti(prompt, [photoPath, designPath], 'auto');
     } finally {
       if (designPath && fs.existsSync(designPath)) fs.unlinkSync(designPath);
     }
+    imageUrl = await brandIfFree(gate, imageUrl);
 
     const credits = await chargeAfter(gate);
     try {
@@ -1979,9 +2017,9 @@ app.post('/place-uploaded-design', upload.fields([
       `Photorealistic tattoo result, looks like a real tattoo on real skin, professional tattoo artist quality. ` +
       `Keep every detail of the background, clothing, and surroundings completely unchanged.`;
 
-    // OpenAI en direct (gpt-image-1 edit) : photo du corps + design uploadé.
-    console.log('   Moteur : OpenAI gpt-image-1 (edit photo + design uploadé)');
-    const imageUrl = await openAIEditMulti(prompt, [photoPath, designPath], 'auto');
+    // OpenAI en direct : photo du corps + design uploadé.
+    console.log('   Moteur : OpenAI (edit photo + design uploadé)');
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(prompt, [photoPath, designPath], 'auto'));
 
     const credits = await chargeAfter(gate);
     try {
@@ -2041,11 +2079,11 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
     console.log('   Style   :', style);
     console.log('   Details :', details || 'none');
 
-    // gpt-image-1 edit : design de tatouage inspiré de la photo, fond blanc
+    // edit : design de tatouage inspiré de la photo, fond blanc
     const petPrompt =
       `${prompt} Flat 2D tattoo flash design isolated on a pure solid white background (#FFFFFF), ` +
       `no photographic scene, no dark background. Centered, full design visible, clean crisp linework.`;
-    const imageUrl = await openAIEditMulti(petPrompt, [photoPath], '1024x1024');
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(petPrompt, [photoPath], '1024x1024'));
 
     const credits = await chargeAfter(gate);
     try {
@@ -2079,8 +2117,8 @@ app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
   try {
     gate = await checkCredits(req, res, 'stencil');
     if (!gate) return;
-    console.log('\n🖊 Stencil via OpenAI gpt-image-1');
-    const imageUrl = await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto');
+    console.log('\n🖊 Stencil via OpenAI');
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(STENCIL_PROMPT, [imgPath], 'auto'));
     const credits = await chargeAfter(gate);
     try {
       if (gate.user) await saveGeneration(gate.user.id, 'stencil', imageUrl, {});
@@ -2155,7 +2193,7 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
       `no photographic scene, no dark background, centered, clean crisp linework.`;
     // Merge = tâche la plus lourde (multi-images). 'low' = max de vitesse + timeout court → échoue vite au lieu de traîner.
     console.time('merge-openai');
-    const imageUrl = await openAIEditMulti(mergePrompt, tmpFiles, 'auto', 'low', 100_000);
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(mergePrompt, tmpFiles, 'auto', 'low', 100_000));
     console.timeEnd('merge-openai');
 
     const credits = await chargeAfter(gate);
