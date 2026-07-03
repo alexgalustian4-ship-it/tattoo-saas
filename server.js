@@ -1109,6 +1109,17 @@ app.get('/rework-result/:filename', (req, res) => {
 // ─────────────────────────────────────────────────
 // Middleware
 // ─────────────────────────────────────────────────
+// En-têtes de sécurité standards (posés sur TOUTES les réponses, y compris le static)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');            // pas de sniffing MIME
+  res.setHeader('X-Frame-Options', 'DENY');                       // anti-clickjacking
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), geolocation=(), payment=()'); // micro autorisé (dictée vocale)
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname)));
 app.use(cors({
   origin: (origin, cb) => {
@@ -2191,9 +2202,9 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
     const mergePrompt =
       `${prompt} Flat 2D tattoo flash design on a pure solid white background (#FFFFFF), ` +
       `no photographic scene, no dark background, centered, clean crisp linework.`;
-    // Merge = tâche la plus lourde (multi-images). 'low' = max de vitesse + timeout court → échoue vite au lieu de traîner.
+    // 'medium' = bon équilibre qualité/vitesse pour la fusion multi-images (le bug du spinner était côté front, corrigé).
     console.time('merge-openai');
-    const imageUrl = await brandIfFree(gate, await openAIEditMulti(mergePrompt, tmpFiles, 'auto', 'low', 100_000));
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(mergePrompt, tmpFiles, 'auto', 'medium', 180_000));
     console.timeEnd('merge-openai');
 
     const credits = await chargeAfter(gate);

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /compte.html
+Disallow: /verify
+Disallow: /gens/
+Disallow: /404.html
+Disallow: /boutique.html
+
+Sitemap: https://inkhay.com/sitemap.xml

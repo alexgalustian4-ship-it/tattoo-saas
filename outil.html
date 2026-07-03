@@ -930,6 +930,10 @@
       .nav-links { gap: 16px; }
       /* Mobile : on garde uniquement "Pricing", on masque le superflu */
       .nav-links a:nth-child(1), .nav-links a:nth-child(2) { display: none; }
+      /* Anti-débordement : logo compact + avatar seul (sans le libellé) */
+      .nav-logo { font-size: 0.82rem; letter-spacing: 0.05em; }
+      #user-badge #user-name { display: none; }
+      #user-badge { flex-shrink: 0; }
       main { padding: 78px 14px 40px; }
       .tool-header { margin-bottom: 30px; }
       .tool-title { font-size: 1.5rem; }
