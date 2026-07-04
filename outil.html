@@ -54,7 +54,7 @@
 
     /* ── NAV ─────────────────────────────────── */
     nav {
-      position: fixed; top: 40px; left: 0; right: 0; z-index: 100;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 32px; height: 60px;
       background: rgba(8,8,8,0.96);
@@ -1310,11 +1310,6 @@
 <body>
 
   <!-- ══ BANDEAU OFFRE ══ -->
-  <div class="promo-bar" id="promo-bar">
-    <span>🎁 <strong>30 crédits gratuits</strong> offerts à l'inscription — sans carte bancaire</span>
-    <a href="pricing.html">Voir les offres →</a>
-    <button class="promo-x" aria-label="Fermer" onclick="document.documentElement.classList.add('promo-hidden');try{localStorage.setItem('promo_dismissed','1')}catch(e){}">✕</button>
-  </div>
 
   <nav>
     <a href="index.html" class="nav-logo">INK<span>.</span>STUDIO</a>
