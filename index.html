@@ -577,38 +577,6 @@
     }
 
     /* ══ CTA FINAL ══════════════════════════════ */
-    /* ══ CINE-SCRUB : vidéo Higgsfield pilotée par le scroll (2e moment wow) ══ */
-    #cine-scrub { height: 220vh; position: relative; z-index: 1; background: #000; }
-    #cine-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; }
-    #cine-canvas { width: 100%; height: 100%; display: block; }
-    #cine-caption {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; text-align: center;
-      opacity: 0; transition: opacity 0.6s ease; pointer-events: none;
-      background: radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.6) 100%);
-      padding: 0 24px;
-    }
-    #cine-caption.show { opacity: 1; }
-    .cine-line1 {
-      font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600;
-      font-size: clamp(1.9rem, 5vw, 3.4rem); color: #fff; margin: 0 0 6px;
-      text-shadow: 0 2px 24px rgba(0,0,0,0.8);
-    }
-    .cine-line2 {
-      font-family: 'Syne', sans-serif; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
-      font-size: clamp(0.7rem, 1.6vw, 0.9rem); color: #cfd2dc; margin: 0;
-      text-shadow: 0 1px 12px rgba(0,0,0,0.8);
-    }
-    /* Mobile : image fixe (pas de téléchargement de 100 frames) */
-    #cine-static { display: none; }
-    @media (max-width: 768px), (prefers-reduced-motion: reduce) {
-      #cine-scrub { height: auto; }
-      #cine-sticky { position: relative; height: 58vh; }
-      #cine-canvas { display: none; }
-      #cine-static { display: block; width: 100%; height: 100%; object-fit: cover; }
-      #cine-caption { opacity: 1; }
-    }
-
     #cta-final {
       width: 100%; padding: 120px 5vw; text-align: center;
       border-top: 1px solid var(--border);
@@ -1537,18 +1505,6 @@
 
   <!-- ══ DECO VIDEO ══ -->
   <!-- ══ CTA ══ -->
-  <!-- ══ CINE-SCRUB : l'encre prend vie au scroll (vidéo générée par IA) ══ -->
-  <section id="cine-scrub" aria-label="Tattoo showcase">
-    <div id="cine-sticky">
-      <canvas id="cine-canvas"></canvas>
-      <img id="cine-static" src="images/cta-frames/0050.jpg" alt="Black and grey Greco-Roman tattoo sleeve" loading="lazy" />
-      <div id="cine-caption">
-        <p class="cine-line1">Museum-grade ink.</p>
-        <p class="cine-line2">Designed by you · Rendered on your skin</p>
-      </div>
-    </div>
-  </section>
-
   <section id="cta-final">
     <h2 class="cta-final-title fade-up">Your next tattoo<br>starts here.</h2>
     <p class="cta-final-sub fade-up d1">Describe your idea. See it on your skin. Show it to your artist.</p>
@@ -2225,68 +2181,6 @@
     function startFX() { try { lightFX(); } catch (e) {} try { fxGlow(); } catch (e) {} }
     if (document.readyState === 'complete') setTimeout(startFX, 600);
     else window.addEventListener('load', () => setTimeout(startFX, 600));
-
-    // ══ CINE-SCRUB : vidéo IA pilotée par le scroll (2e moment wow, indépendant du hero) ══
-    (function cineScrub() {
-      const section = document.getElementById('cine-scrub');
-      const canvas  = document.getElementById('cine-canvas');
-      const caption = document.getElementById('cine-caption');
-      if (!section || !canvas) return;
-      if (window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches) return; // mobile → image statique (CSS)
-
-      const TOTAL = 101;                       // images/cta-frames/0001.jpg … 0101.jpg
-      const ctx = canvas.getContext('2d');
-      const bitmaps = new Array(TOTAL + 1);
-      let loaded = 0, started = false, current = 1;
-
-      function draw(n) {
-        const bm = bitmaps[n] || bitmaps[current];
-        if (!bm) return;
-        current = bm === bitmaps[n] ? n : current;
-        const cw = canvas.width, ch = canvas.height;
-        const s = Math.max(cw / bm.width, ch / bm.height);   // cover
-        const w = bm.width * s, h = bm.height * s;
-        ctx.drawImage(bm, (cw - w) / 2, (ch - h) / 2, w, h);
-      }
-
-      function resize() {
-        canvas.width  = canvas.clientWidth  * Math.min(devicePixelRatio, 2);
-        canvas.height = canvas.clientHeight * Math.min(devicePixelRatio, 2);
-        draw(current);
-      }
-      window.addEventListener('resize', resize);
-
-      // Chargement paresseux : seulement quand la section approche (800px avant)
-      const io = new IntersectionObserver((entries) => {
-        if (!entries.some(e => e.isIntersecting)) return;
-        io.disconnect();
-        if (started) return; started = true;
-        resize();
-        for (let i = 1; i <= TOTAL; i++) {
-          fetch('images/cta-frames/' + String(i).padStart(4, '0') + '.jpg')
-            .then(r => r.blob()).then(createImageBitmap)
-            .then(bm => { bitmaps[i] = bm; loaded++; if (i === 1) draw(1); })
-            .catch(() => {});
-        }
-      }, { rootMargin: '800px 0px' });
-      io.observe(section);
-
-      // Scroll → frame (rAF, fluide)
-      let ticking = false;
-      function onScroll() {
-        if (ticking) return; ticking = true;
-        requestAnimationFrame(() => {
-          ticking = false;
-          const rect = section.getBoundingClientRect();
-          const span = section.offsetHeight - innerHeight;
-          if (rect.top > innerHeight || rect.bottom < 0 || span <= 0) return;
-          const p = Math.max(0, Math.min(1, -rect.top / span));
-          draw(1 + Math.round(p * (TOTAL - 1)));
-          caption.classList.toggle('show', p > 0.55);
-        });
-      }
-      window.addEventListener('scroll', onScroll, { passive: true });
-    })();
   </script>
 
 </body>
