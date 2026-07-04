@@ -2301,6 +2301,7 @@
       </div>
 
       <div id="history-tabs" class="hist-tabs" style="display:none;"></div>
+      <div id="history-style-tabs" class="hist-tabs" style="display:none;margin-top:-6px;"></div>
 
       <div id="history-empty" style="display:none; text-align:center; padding:56px 0; color:var(--text-muted); font-size:0.82rem; line-height:1.8;">
         Your generations will appear here.<br>Launch your first design above.
@@ -4895,6 +4896,11 @@
     };
     let _histProjects = [];
     let _histFolder = 'all';
+    let _histStyle  = 'all';   // filtre secondaire : classement par style
+    function selectHistStyle(key) {
+      _histStyle = key;
+      paintHistory();
+    }
 
     function selectHistFolder(key) {
       _histFolder = key;
@@ -4956,7 +4962,27 @@
 
       // Filtrage par dossier sélectionné
       const folder = HIST_FOLDERS.find(f => f.key === _histFolder) || HIST_FOLDERS[0];
-      const shown = folder.types ? projects.filter(p => folder.types.includes(p.type)) : projects;
+      const inFolder = folder.types ? projects.filter(p => folder.types.includes(p.type)) : projects;
+
+      // ── Classement par STYLE (2e rangée de filtres, construite sur le dossier courant) ──
+      const styleTabsEl = document.getElementById('history-style-tabs');
+      const styleCounts = {};
+      inFolder.forEach(p => { const s = p.params?.style; if (s && STYLE_LABELS[s]) styleCounts[s] = (styleCounts[s] || 0) + 1; });
+      const styleKeys = Object.keys(styleCounts);
+      if (styleKeys.length >= 2) {
+        if (!styleCounts[_histStyle] && _histStyle !== 'all') _histStyle = 'all';  // style absent du dossier → reset
+        styleTabsEl.style.display = 'flex';
+        styleTabsEl.innerHTML =
+          `<button class="hist-tab${_histStyle === 'all' ? ' active' : ''}" onclick="selectHistStyle('all')">All styles<span class="hist-tab-count">${inFolder.length}</span></button>` +
+          styleKeys.map(s =>
+            `<button class="hist-tab${_histStyle === s ? ' active' : ''}" onclick="selectHistStyle('${s}')">${STYLE_LABELS[s]}<span class="hist-tab-count">${styleCounts[s]}</span></button>`
+          ).join('');
+      } else {
+        styleTabsEl.style.display = 'none';
+        _histStyle = 'all';
+      }
+
+      const shown = _histStyle === 'all' ? inFolder : inFolder.filter(p => p.params?.style === _histStyle);
 
       if (shown.length === 0) {
         grid.style.display  = 'none';
