@@ -1296,14 +1296,47 @@ function newVerifyToken() { return crypto.randomBytes(24).toString('hex'); }
 async function sendVerificationEmail(email, token, req) {
   if (!process.env.RESEND_API_KEY) { console.warn('⚠ RESEND_API_KEY absent — email de vérif non envoyé'); return; }
   const link = `${baseUrl(req)}/verify?token=${encodeURIComponent(token)}`;
-  const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:28px;color:#111">
-      <div style="font-weight:800;font-size:20px;letter-spacing:0.04em">INK<span style="color:#888">.</span>STUDIO</div>
-      <h2 style="font-weight:800;margin:22px 0 8px">Confirm your email</h2>
-      <p style="color:#444;line-height:1.6">Confirm your email to activate your account and unlock your <b>30 free credits</b>.</p>
-      <p style="margin:28px 0"><a href="${link}" style="background:#0a0a0e;color:#fff;text-decoration:none;padding:13px 26px;border-radius:8px;font-weight:600;display:inline-block">Confirm my email</a></p>
-      <p style="font-size:12px;color:#888">Or copy this link: <br>${link}</p>
-      <p style="font-size:12px;color:#aaa;margin-top:24px">If you didn't create an account, ignore this email.</p>
-    </div>`;
+  // Template premium DA noir & argent — tables + styles inline (compatibilité Gmail/Outlook/Apple Mail)
+  const html = `<!doctype html><html><body style="margin:0;padding:0;background-color:#0a0a0c;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0c;padding:36px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <!-- Wordmark -->
+        <tr><td align="center" style="padding-bottom:26px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:19px;letter-spacing:3px;color:#f6f6f9;">INK<span style="color:#7a7e8c;">.</span>STUDIO</div>
+        </td></tr>
+        <!-- Carte -->
+        <tr><td style="background-color:#111114;border:1px solid #232329;border-radius:18px;padding:42px 36px;" align="center">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:30px;color:#ffffff;line-height:1.25;padding-bottom:6px;">Welcome to the studio.</div>
+          <div style="width:52px;height:1px;background-color:#3a3d48;margin:16px auto 20px;"></div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#b8bac4;line-height:1.75;padding-bottom:8px;">
+            One last step — confirm your email to activate your account<br>and unlock your <span style="color:#ffffff;font-weight:bold;">30 free credits</span>.
+          </div>
+          <!-- Bouton -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px auto 6px;"><tr>
+            <td style="background-color:#ffffff;border-radius:12px;">
+              <a href="${link}" style="display:inline-block;padding:15px 38px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#0a0a0e;text-decoration:none;">Confirm my email</a>
+            </td>
+          </tr></table>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6a6e7e;padding-top:18px;">✦ &nbsp;Your first design is 60 seconds away</div>
+        </td></tr>
+        <!-- Lien de secours -->
+        <tr><td align="center" style="padding:22px 12px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#55565e;line-height:1.7;">
+            Button not working? Copy this link:<br>
+            <a href="${link}" style="color:#8a8e9c;word-break:break-all;">${link}</a>
+          </div>
+        </td></tr>
+        <!-- Footer -->
+        <tr><td align="center" style="padding:26px 12px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#44454c;line-height:1.8;">
+            If you didn't create an account, you can safely ignore this email.<br>
+            © 2026 INK.STUDIO — <a href="https://inkhay.com" style="color:#6a6e7e;text-decoration:none;">inkhay.com</a>
+          </div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table></body></html>`;
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
