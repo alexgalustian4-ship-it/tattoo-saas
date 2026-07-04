@@ -1323,7 +1323,7 @@
       <a href="index.html#how">How it works</a>
       <a href="pricing.html">Pricing</a>
     </div>
-    <a id="credit-pill" href="pricing.html" title="Crédits restants — cliquez pour recharger">
+    <a id="credit-pill" href="pricing.html" title="Credits left — click to top up">
       <span class="cp-ico">◆</span><span id="credit-pill-num">—</span>
     </a>
     <div id="user-badge" class="visible" onclick="handleBadgeClick()">
@@ -1342,12 +1342,12 @@
           <p id="acc-plan" style="font-weight:600;color:#fff;font-size:0.85rem;margin:0;text-transform:capitalize"></p>
         </div>
         <div style="text-align:right">
-          <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 3px">Crédits</p>
+          <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 3px">Credits</p>
           <p id="acc-credits" style="font-weight:600;color:#fff;font-size:0.85rem;margin:0"></p>
         </div>
       </div>
       <button onclick="upgradeFromMenu()" style="width:100%;padding:12px;background:#fff;color:#0a0a0e;border:none;font-weight:600;font-size:0.8rem;cursor:pointer">Upgrade plan</button>
-      <a href="compte.html" style="display:block;width:100%;padding:11px;background:transparent;color:var(--text-muted);border:none;border-top:1px solid var(--border);font-size:0.8rem;cursor:pointer;text-align:center;text-decoration:none">Mon compte</a>
+      <a href="compte.html" style="display:block;width:100%;padding:11px;background:transparent;color:var(--text-muted);border:none;border-top:1px solid var(--border);font-size:0.8rem;cursor:pointer;text-align:center;text-decoration:none">My account</a>
       <button onclick="logoutUser()" style="width:100%;padding:11px;background:transparent;color:var(--text-muted);border:none;border-top:1px solid var(--border);font-size:0.8rem;cursor:pointer">Log out</button>
     </div>
   </nav>
@@ -1364,6 +1364,11 @@
       <p class="modal-logo">INK.STUDIO</p>
       <h2 class="modal-title" id="auth-title">Unlock unlimited downloads</h2>
       <p class="modal-sub" id="auth-sub">Create a free account to download all your designs without limits.</p>
+      <div id="auth-benefits" style="display:none;text-align:left;margin:0 0 18px;padding:14px 16px;background:rgba(207,210,220,0.04);border:1px solid #222;border-radius:12px">
+        <p style="margin:0 0 8px;font-size:0.78rem;color:#c9cad2"><span style="color:#34d399">✓</span>&nbsp; 30 free credits — no card required</p>
+        <p style="margin:0 0 8px;font-size:0.78rem;color:#c9cad2"><span style="color:#34d399">✓</span>&nbsp; See your tattoo on your own skin</p>
+        <p style="margin:0;font-size:0.78rem;color:#c9cad2"><span style="color:#34d399">✓</span>&nbsp; Your designs saved forever</p>
+      </div>
 
       <!-- Google -->
       <button class="btn-google" id="btn-google-signin">
@@ -3292,8 +3297,8 @@
           const resp = await fetch('/generate', { method: 'POST', body: fd, credentials: 'include' });
           if (resp.status === 401) { hideStatus(status); showAuthModal('signup'); return; }
           const data = await readJson(resp);
-          if (resp.status === 403) { resendVerification(); setError(status, 'Confirme ton email pour débloquer tes 30 crédits — vérifie ta boîte mail (et les spams). Un nouveau lien vient d\'être envoyé.'); return; }
-          if (resp.status === 402) { setError(status, 'Crédits épuisés — passe à un plan supérieur pour continuer.'); return; }
+          if (resp.status === 403) { resendVerification(); setError(status, 'Confirm your email to unlock your 30 credits — check your inbox (and spam). A new link was just sent.'); return; }
+          if (resp.status === 402) { setError(status, 'Out of credits — upgrade your plan to continue.'); return; }
           if (!resp.ok) throw new Error(data.error || 'Server error.');
           if (data.credits != null) updateCredits(data.credits);
           designImgUrl = data.imageUrl; designJobId = data.jobId;
@@ -3768,11 +3773,11 @@
       if (m4Files.length < 2) return;
       let secs = 0;
       setLoading(m4Status, 'Fusing your designs… 0s');
-      const tick = setInterval(() => { secs++; setLoading(m4Status, `Fusing your designs… ${secs}s (jusqu'à ~90s)`); }, 1000);
+      const tick = setInterval(() => { secs++; setLoading(m4Status, `Fusing your designs… ${secs}s (up to ~90s)`); }, 1000);
       m4BtnGenerate.disabled = true; hide(m4Result);
       try {
         const fd = new FormData();
-        setLoading(m4Status, 'Préparation des images…');
+        setLoading(m4Status, 'Preparing your images…');
         for (let i = 0; i < m4Files.length; i++) fd.append(`design${i}`, await resizeImage(m4Files[i]));
         fd.append('style',   m4Style);
         fd.append('details', document.getElementById('m4-details').value.trim());
@@ -3783,7 +3788,7 @@
         try {
           resp = await fetch('/merge-tattoos', { method: 'POST', body: fd, signal: ctrl.signal });
         } catch (e) {
-          if (e.name === 'AbortError') throw new Error('Trop long (réseau ou serveur). Réessaie avec 2 images, ou utilise inkhay.com (pas www).');
+          if (e.name === 'AbortError') throw new Error('Taking too long (network or server). Try again with 2 images.');
           throw e;
         } finally { clearTimeout(to); }
         const data = await readJson(resp);
@@ -3940,8 +3945,8 @@
         pill.classList.toggle('empty', n <= 0);
         pill.classList.toggle('low', n > 0 && n <= 10);
         pill.title = n <= 0
-          ? 'Plus de crédits — cliquez pour recharger'
-          : `${n} crédit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} — cliquez pour recharger`;
+          ? 'Out of credits — click to top up'
+          : `${n} credit${n > 1 ? 's' : ''} left — click to top up`;
       } else {
         pill.classList.remove('visible', 'low', 'empty');
       }
@@ -3950,9 +3955,9 @@
     // Réponses d'erreur communes des outils (connexion requise / crédits épuisés).
     // Renvoie un message à afficher si géré, sinon null. Ouvre la modale de connexion si 401.
     function handleAuthCreditError(status) {
-      if (status === 401) { showAuthModal('signup'); return 'Connecte-toi pour utiliser cet outil — 30 crédits offerts.'; }
-      if (status === 403) { resendVerification(); return 'Confirme ton email pour débloquer tes 30 crédits — vérifie ta boîte mail (et les spams). Un nouveau lien vient d\'être envoyé.'; }
-      if (status === 402) return 'Crédits épuisés — passe à un plan supérieur pour continuer.';
+      if (status === 401) { showAuthModal('signup'); return 'Sign in to use this tool — 30 free credits included.'; }
+      if (status === 403) { resendVerification(); return 'Confirm your email to unlock your 30 credits — check your inbox (and spam). A new link was just sent.'; }
+      if (status === 402) return 'Out of credits — upgrade your plan to continue.';
       return null;
     }
     async function resendVerification() { try { await fetch('/auth/resend-verification', { method: 'POST', credentials: 'include' }); } catch {} }
@@ -3964,7 +3969,7 @@
       const txt = await resp.text();
       try { return JSON.parse(txt); }
       catch {
-        throw new Error('Le serveur est momentanément occupé (ou en cours de mise à jour). Réessaie dans quelques secondes.');
+        throw new Error('The server is briefly busy (or updating). Try again in a few seconds.');
       }
     }
 
@@ -4061,17 +4066,20 @@
       err.style.display = 'none';
       document.getElementById('auth-email').value = '';
       document.getElementById('auth-password').value = '';
+      const benefits = document.getElementById('auth-benefits');
       if (authMode === 'signup') {
-        title.textContent    = '🎁 30 crédits offerts';
-        sub.textContent      = 'Crée ton compte gratuit pour générer — 30 crédits gratuits offerts, sans carte bancaire, sans paiement.';
-        submit.textContent   = 'Créer mon compte gratuit';
+        title.textContent    = 'Get your 30 free credits';
+        sub.textContent      = 'Create your free account and start designing in seconds.';
+        submit.textContent   = 'Create my free account';
         nameEl.style.display = 'block';
-        toggleTxt.innerHTML  = 'Déjà un compte ? <a id="auth-toggle-link">Se connecter</a>';
+        if (benefits) benefits.style.display = 'block';
+        toggleTxt.innerHTML  = 'Already have an account? <a id="auth-toggle-link">Sign in</a>';
       } else {
         title.textContent    = 'Welcome back';
         sub.textContent      = 'Sign in to access your account and download your designs.';
         submit.textContent   = 'Sign in';
         nameEl.style.display = 'none';
+        if (benefits) benefits.style.display = 'none';
         toggleTxt.innerHTML  = 'No account yet? <a id="auth-toggle-link">Create one</a>';
       }
       document.getElementById('auth-toggle-link').addEventListener('click', () => {
@@ -5083,7 +5091,7 @@
         }
         if (navigator.clipboard && window.ClipboardItem) {
           await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
-          inkToast('✦ Image copiée — colle-la où tu veux !');
+          inkToast('✦ Image copied — paste it anywhere!');
           return;
         }
         // Dernier recours : téléchargement
@@ -5092,7 +5100,7 @@
         a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
       } catch (e) {
         if (e && e.name === 'AbortError') return;   // l'utilisateur a fermé le menu de partage
-        inkToast('Partage impossible — utilise Download.');
+        inkToast('Sharing unavailable — use Download instead.');
       }
     }
 

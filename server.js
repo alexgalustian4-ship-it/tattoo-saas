@@ -687,12 +687,12 @@ function sleep(ms) {
 function clientError(err) {
   const msg = err.message || '';
   if (msg === 'NSFW_BLOCKED' || /nsfw|safety system|content[_ ]?policy|moderation/i.test(msg)) {
-    return 'Ta description a été bloquée par le filtre de contenu de l\'IA. ' +
-           'Reformule en évitant : nudité, corps dénudés, figures torse nu, violence, armes réalistes, sang ou symboles trop sensibles. ' +
-           'Décris plutôt une figure habillée, en armure ou en drapé couvrant.';
+    return 'Your description was blocked by the AI content filter. ' +
+           'Rephrase it avoiding: nudity, bare bodies, shirtless figures, violence, realistic weapons, blood or highly sensitive symbols. ' +
+           'Describe a clothed figure instead — armor or covering drapery works great.';
   }
   if (/timeout/i.test(msg)) {
-    return 'La génération a pris trop de temps (serveur Higgsfield surchargé). Réessaie dans un instant.';
+    return 'Generation took too long. Please try again in a moment.';
   }
   return msg || 'Generation failed. Please try again in a moment.';
 }
@@ -996,7 +996,7 @@ async function openAIEditMulti(prompt, imagePaths = [], size = 'auto', quality =
       signal: ctrl.signal,
     });
   } catch (e) {
-    if (e.name === 'AbortError') throw new Error('La génération a pris trop de temps. Réessaie avec moins d\'images ou une image plus petite.');
+    if (e.name === 'AbortError') throw new Error('Generation took too long. Try again with fewer or smaller images.');
     throw e;
   } finally {
     clearTimeout(t);
@@ -1066,7 +1066,7 @@ app.post('/rework', genLimiter, upload.fields([{ name: 'image' }, { name: 'mask'
     // OpenAI a échoué (billing, quota, modération…) → message propre (pas de fallback)
     if (!response.ok) {
       console.warn('⚠️ OpenAI rework failed:', data.error?.message);
-      throw new Error('Le service de génération est temporairement indisponible. Réessaie dans un instant.');
+      throw new Error('The generation service is temporarily unavailable. Try again in a moment.');
     }
 
     const b64 = data.data?.[0]?.b64_json;
@@ -1349,13 +1349,32 @@ async function sendVerificationEmail(email, token, req) {
 
 function verifyResultPage(msg, ok) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>INK.STUDIO — Email</title><style>
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0c;color:#f6f6f9;font-family:Arial,sans-serif;text-align:center;padding:24px}
-    .box{max-width:420px}.logo{font-weight:800;letter-spacing:0.06em;margin-bottom:18px}
-    h1{font-size:1.3rem;font-weight:700;margin:0 0 10px}p{color:#9a9ba3;line-height:1.6}
-    a{display:inline-block;margin-top:22px;background:#fff;color:#0a0a0e;text-decoration:none;padding:12px 26px;border-radius:8px;font-weight:600}
-    </style></head><body><div class="box"><div class="logo">INK<span style="color:#777">.</span>STUDIO</div>
-    <h1>${ok ? '✅ ' : ''}${msg}</h1>${ok ? '<a href="/outil.html">Open the studio →</a>' : '<a href="/outil.html">Back to the studio</a>'}</div></body></html>`;
+    <title>INK.STUDIO — Email</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Inter:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+    body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080808;color:#f6f6f9;font-family:Inter,Arial,sans-serif;text-align:center;padding:24px;overflow:hidden}
+    .glow{position:fixed;width:70vmin;height:70vmin;border-radius:50%;background:radial-gradient(circle,rgba(207,210,220,0.06) 0%,transparent 65%);pointer-events:none}
+    .logo{font-family:Syne,sans-serif;font-weight:800;letter-spacing:0.12em;font-size:0.95rem;margin-bottom:34px}
+    .logo span{color:#7a7e8c}
+    .box{max-width:460px;background:linear-gradient(180deg,#121216,#0c0c10);border:1px solid #232329;border-radius:22px;padding:44px 38px;box-shadow:0 40px 100px rgba(0,0,0,.55);animation:in .7s cubic-bezier(0.22,1,0.36,1) both}
+    @keyframes in{from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+    h1{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:600;font-size:1.7rem;margin:0 0 12px;line-height:1.3}
+    .sub{color:#9a9daa;line-height:1.7;font-size:.9rem;margin:0}
+    .sep{width:52px;height:1px;background:#3a3d48;margin:18px auto}
+    a.btn{display:inline-block;margin-top:26px;background:#fff;color:#0a0a0e;text-decoration:none;padding:14px 34px;border-radius:13px;font-family:Syne,sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;transition:transform .3s cubic-bezier(0.34,1.56,0.64,1),box-shadow .3s}
+    a.btn:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(255,255,255,.14)}
+    </style></head><body>
+    <div class="glow"></div>
+    <div class="logo">INK<span>.</span>STUDIO</div>
+    <div class="box">
+      <h1>${ok ? msg : msg}</h1>
+      <div class="sep"></div>
+      <p class="sub">${ok
+        ? 'Your 30 free credits are now in your account.<br>Your first design is 60 seconds away.'
+        : 'Something went wrong with this link — request a new one from the studio.'}</p>
+      <a class="btn" href="/outil.html">${ok ? 'Start creating →' : 'Back to the studio'}</a>
+    </div></body></html>`;
 }
 
 // Confirme le token, débloque les 30 crédits gratuits
@@ -1846,7 +1865,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
 
   if (!sujet) {
     inspFiles.forEach(f => { try { if (fs.existsSync(f.path)) fs.unlinkSync(f.path); } catch {} });
-    return res.status(400).json({ error: 'Le sujet est vide.' });
+    return res.status(400).json({ error: 'Please describe your tattoo first.' });
   }
 
   // Free prompt: use the user's text directly, just add technical requirements
@@ -1917,7 +1936,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       console.log(bw ? '   ⚫ Rendu N&B' : '   🎨 Rendu couleur');
     } else {
       // Pas de clé OpenAI configurée → service indisponible (plus de fallback Higgsfield)
-      throw new Error('Le service de génération est temporairement indisponible.');
+      throw new Error('The generation service is temporarily unavailable.');
     }
 
     // Crédits déjà réservés (atomique) ; on sauvegarde l'historique après succès
@@ -1952,9 +1971,9 @@ app.post('/generate-on-body', genLimiter, upload.single('photo'), async (req, re
   const zone      = (req.body.zone      || '').trim();
   const modelKey  = BODY_MODELS[req.body.model] ? req.body.model : DEFAULT_BODY_MODEL;
 
-  if (!req.file)    return res.status(400).json({ error: 'Aucune photo reçue.' });
-  if (!designUrl)   return res.status(400).json({ error: 'URL du design manquante. Génère d\'abord un design à l\'étape 1.' });
-  if (!ZONE_PROMPTS[zone]) return res.status(400).json({ error: 'Zone corporelle invalide.' });
+  if (!req.file)    return res.status(400).json({ error: 'No photo received.' });
+  if (!designUrl)   return res.status(400).json({ error: 'Missing design URL. Generate a design first.' });
+  if (!ZONE_PROMPTS[zone]) return res.status(400).json({ error: 'Invalid body zone.' });
 
   const photoPath = req.file.path + '.jpg';
   fs.renameSync(req.file.path, photoPath);
@@ -2035,9 +2054,9 @@ app.post('/place-uploaded-design', upload.fields([
 ]), async (req, res) => {
   const zone = (req.body.zone || '').trim();
 
-  if (!req.files?.design?.[0]) return res.status(400).json({ error: 'Aucun design reçu.' });
-  if (!req.files?.photo?.[0])  return res.status(400).json({ error: 'Aucune photo reçue.' });
-  if (!ZONE_PROMPTS[zone])     return res.status(400).json({ error: 'Zone corporelle invalide.' });
+  if (!req.files?.design?.[0]) return res.status(400).json({ error: 'No design received.' });
+  if (!req.files?.photo?.[0])  return res.status(400).json({ error: 'No photo received.' });
+  if (!ZONE_PROMPTS[zone])     return res.status(400).json({ error: 'Invalid body zone.' });
 
   const designPath = req.files.design[0].path + '.jpg';
   const photoPath  = req.files.photo[0].path  + '.jpg';
@@ -2151,7 +2170,7 @@ app.post('/generate-pet-tattoo', genLimiter, upload.single('photo'), async (req,
 // Retour: { imageUrl }
 // ─────────────────────────────────────────────────
 app.post('/stencil', genLimiter, upload.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Aucune image reçue.' });
+  if (!req.file) return res.status(400).json({ error: 'No image received.' });
   if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY non configurée.' });
 
   const imgPath = req.file.path + '.png';
@@ -2331,7 +2350,7 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   const isMulter = err && (err.name === 'MulterError' || err.code === 'LIMIT_FILE_SIZE' || err.code === 'LIMIT_UNEXPECTED_FILE' || err.code === 'LIMIT_FILE_COUNT');
   if (isMulter) {
-    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Fichier trop volumineux (10 Mo max).' : 'Trop de fichiers (4 photos maximum).';
+    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (10 MB max).' : 'Too many files (4 photos max).';
     return res.status(400).json({ error: msg });
   }
   console.error('❌ Erreur non gérée:', err && err.message);

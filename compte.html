@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -135,21 +135,21 @@
   <main>
     <!-- INVITÉ -->
     <div id="guest" hidden>
-      <div class="eyebrow">Mon compte</div>
-      <h1>Connecte-toi</h1>
-      <p>Accède à ton profil, tes crédits et ton abonnement.</p>
-      <a href="outil.html" class="btn primary">Se connecter</a>
+      <div class="eyebrow">My account</div>
+      <h1>Sign in</h1>
+      <p>Access your profile, credits and subscription.</p>
+      <a href="outil.html" class="btn primary">Sign in</a>
     </div>
 
     <!-- CONNECTÉ -->
     <div id="account" hidden>
       <div class="page-head fade-up">
-        <div class="eyebrow">Mon compte</div>
+        <div class="eyebrow">My account</div>
         <h1 id="hello">Bonjour</h1>
       </div>
 
       <div class="card card-lift fade-up d1">
-        <div class="card-title">Profil</div>
+        <div class="card-title">Profile</div>
         <div class="identity">
           <img id="avatar" class="avatar" hidden alt="" />
           <div id="avatar-fallback" class="avatar-fallback" hidden></div>
@@ -161,42 +161,42 @@
       </div>
 
       <div class="card card-lift fade-up d2">
-        <div class="card-title">Abonnement</div>
+        <div class="card-title">Subscription</div>
         <div class="sub-row">
           <div>
-            <div class="plan-pill"><span id="plan-name">Free</span><span class="tag" id="plan-tag">Actif</span></div>
+            <div class="plan-pill"><span id="plan-name">Free</span><span class="tag" id="plan-tag">Active</span></div>
             <div class="renew" id="renew"></div>
           </div>
           <div class="actions">
-            <a href="pricing.html" class="btn primary" id="upgrade-btn">Améliorer mon plan</a>
-            <button class="btn" id="manage-btn" hidden>Gérer l'abonnement</button>
+            <a href="pricing.html" class="btn primary" id="upgrade-btn">Upgrade my plan</a>
+            <button class="btn" id="manage-btn" hidden>Manage subscription</button>
           </div>
         </div>
       </div>
 
       <div class="card card-lift fade-up d2">
-        <div class="card-title">Crédits</div>
+        <div class="card-title">Credits</div>
         <div class="credits-head">
           <div class="credits-num"><span id="c-used">0</span><span> / <span id="c-max">30</span></span></div>
-          <div class="credits-label">crédits restants ce mois</div>
+          <div class="credits-label">credits remaining this month</div>
         </div>
         <div class="bar"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
       </div>
 
       <div class="card card-lift fade-up d3" id="gallery-card">
-        <div class="card-title">Mes créations</div>
+        <div class="card-title">My creations</div>
         <div class="gallery" id="gallery"></div>
         <div class="g-empty" id="gallery-empty" hidden>
-          Aucune création pour l'instant — <a href="outil.html" style="color:var(--silver)">génère ton premier design →</a>
+          No creations yet — <a href="outil.html" style="color:var(--silver)">generate your first design →</a>
         </div>
       </div>
 
       <div class="card fade-up d3">
-        <div class="card-title">Raccourcis</div>
+        <div class="card-title">Quick links</div>
         <div class="links-row">
-          <a href="outil.html">Ouvrir le studio</a>
-          <a href="outil.html#history-section">Mes projets</a>
-          <a href="#" id="logout-btn" class="">Se déconnecter</a>
+          <a href="outil.html">Open the studio</a>
+          <a href="outil.html#history-section">My projects</a>
+          <a href="#" id="logout-btn" class="">Log out</a>
         </div>
       </div>
     </div>
@@ -257,7 +257,7 @@
       document.getElementById('account').hidden=false;
       observeFades();
       const first=(me.name||me.email||'').trim().split(' ')[0]||'';
-      document.getElementById('hello').textContent = 'Bonjour, '+first;
+      document.getElementById('hello').textContent = 'Hello, '+first;
       document.getElementById('u-name').textContent = me.name||'—';
       document.getElementById('u-email').textContent = me.email||'—';
 
@@ -268,12 +268,12 @@
       // plan
       document.getElementById('plan-name').textContent = PLAN_LABEL[me.plan]||'Free';
       const tag=document.getElementById('plan-tag');
-      if(me.plan==='free'){ tag.textContent='Gratuit'; tag.style.background='#2a2a30'; tag.style.color='#b0b4c2'; }
-      else { tag.textContent='Actif'; }
+      if(me.plan==='free'){ tag.textContent='Free'; tag.style.background='#2a2a30'; tag.style.color='#b0b4c2'; }
+      else { tag.textContent='Active'; }
 
       // bouton gérer (uniquement abonnés payants)
       if(me.plan!=='free'){
-        document.getElementById('upgrade-btn').textContent='Changer de plan';
+        document.getElementById('upgrade-btn').textContent='Change plan';
         const mb=document.getElementById('manage-btn'); mb.hidden=false;
         mb.addEventListener('click', manageSub);
       }
@@ -297,7 +297,7 @@
       // renouvellement
       if(me.creditsResetAt){
         const dt=new Date(me.creditsResetAt);
-        if(!isNaN(dt)) document.getElementById('renew').textContent='Crédits renouvelés le '+dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+        if(!isNaN(dt)) document.getElementById('renew').textContent='Credits renew on '+dt.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
       }
     }
 
@@ -322,11 +322,11 @@
     async function manageSub(){
       try{
         const r=await fetch('/create-portal-session',{method:'POST',credentials:'include'});
-        if(r.status===404){ toast('Gestion d\'abonnement bientôt disponible 🔜'); return; }
+        if(r.status===404){ toast('Subscription management coming soon 🔜'); return; }
         const d=await r.json();
         if(d.url){ location.href=d.url; return; }
-        toast(d.error||'Erreur.');
-      }catch(e){ toast('Connexion impossible.'); }
+        toast(d.error||'Error.');
+      }catch(e){ toast('Connection failed.'); }
     }
 
     document.getElementById('logout-btn').addEventListener('click', async e=>{
