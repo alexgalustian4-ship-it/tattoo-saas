@@ -1379,6 +1379,9 @@
       <input class="auth-input" id="auth-password" type="password" placeholder="Password" autocomplete="current-password" />
       <input class="auth-input" id="auth-name" type="text" placeholder="Your name" style="display:none" autocomplete="name" />
       <button class="btn-auth-submit" id="auth-submit">Create my free account</button>
+      <p id="auth-forgot" style="display:none;text-align:right;margin:-4px 0 10px">
+        <a id="auth-forgot-link" style="font-size:0.74rem;color:var(--text-muted);cursor:pointer;text-decoration:underline">Forgot password?</a>
+      </p>
       <p class="auth-toggle" id="auth-toggle-text">
         Already have an account? <a id="auth-toggle-link">Sign in</a>
       </p>
@@ -4063,12 +4066,14 @@
       document.getElementById('auth-email').value = '';
       document.getElementById('auth-password').value = '';
       const benefits = document.getElementById('auth-benefits');
+      const forgotEl = document.getElementById('auth-forgot');
       if (authMode === 'signup') {
         title.textContent    = 'Get your 30 free credits';
         sub.textContent      = 'Create your free account and start designing in seconds.';
         submit.textContent   = 'Create my free account';
         nameEl.style.display = 'block';
         if (benefits) benefits.style.display = 'block';
+        if (forgotEl) forgotEl.style.display = 'none';
         toggleTxt.innerHTML  = 'Already have an account? <a id="auth-toggle-link">Sign in</a>';
       } else {
         title.textContent    = 'Welcome back';
@@ -4076,6 +4081,7 @@
         submit.textContent   = 'Sign in';
         nameEl.style.display = 'none';
         if (benefits) benefits.style.display = 'none';
+        if (forgotEl) forgotEl.style.display = 'block';
         toggleTxt.innerHTML  = 'No account yet? <a id="auth-toggle-link">Create one</a>';
       }
       document.getElementById('auth-toggle-link').addEventListener('click', () => {
@@ -4083,6 +4089,34 @@
       });
       overlay.classList.add('open');
     }
+
+    // ── Mot de passe oublié : envoie le lien de reset (réponse toujours neutre) ──
+    (function initForgotPassword() {
+      const link = document.getElementById('auth-forgot-link');
+      if (!link) return;
+      link.addEventListener('click', async () => {
+        const email = (document.getElementById('auth-email').value || '').trim();
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+          const err = document.getElementById('auth-error');
+          err.textContent = 'Enter your email above first, then click "Forgot password?".';
+          err.style.display = 'block';
+          return;
+        }
+        link.textContent = 'Sending…';
+        try {
+          await fetch('/auth/forgot-password', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', body: JSON.stringify({ email }),
+          });
+        } catch (_) {}
+        link.textContent = 'Forgot password?';
+        const err = document.getElementById('auth-error');
+        err.textContent = '✉️ If an account exists for this email, a reset link has been sent — check your inbox.';
+        err.style.display = 'block';
+        err.style.color = 'var(--green)';
+        setTimeout(() => { err.style.color = ''; }, 6000);
+      });
+    })();
 
     function closeAuthModal() {
       document.getElementById('auth-overlay').classList.remove('open');

@@ -99,6 +99,9 @@ async function initDb() {
     // Vérification email (anti-farming) — comptes existants = vérifiés (grandfathering)
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT true;`);
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT;`);
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT;`);
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMPTZ;`);
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INT NOT NULL DEFAULT 0;`);
     console.log('✓ Base de données prête (tables users, generations)');
   } catch (e) {
     console.error('❌ initDb failed:', e.message);
@@ -1144,8 +1147,9 @@ const GOOGLE_CLIENT_ID = '1055204918844-a5kshvsbciibcak84plhf007trpc0k59.apps.go
 const SESSION_SECRET = process.env.SESSION_SECRET || 'ink-studio-dev-secret-change-me';
 const SESSION_COOKIE = 'ink_sid';
 
-function setSession(res, userId) {
-  const token = jwt.sign({ uid: userId }, SESSION_SECRET, { expiresIn: '30d' });
+function setSession(res, userId, sessionVersion = 0) {
+  // v = version de session : incrémentée au reset de mot de passe → toutes les anciennes sessions meurent.
+  const token = jwt.sign({ uid: userId, v: sessionVersion || 0 }, SESSION_SECRET, { expiresIn: '30d' });
   res.setHeader('Set-Cookie',
     `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 3600}`);
 }
@@ -1162,9 +1166,12 @@ async function getSessionUser(req) {
   const tok = getCookie(req, SESSION_COOKIE);
   if (!tok) return null;
   try {
-    const { uid } = jwt.verify(tok, SESSION_SECRET);
-    const r = await db.query('SELECT * FROM users WHERE id=$1', [uid]);
-    return r.rows[0] || null;
+    const payload = jwt.verify(tok, SESSION_SECRET);
+    const r = await db.query('SELECT * FROM users WHERE id=$1', [payload.uid]);
+    const u = r.rows[0] || null;
+    // Session invalidée si le mot de passe a été réinitialisé depuis (version différente)
+    if (u && (payload.v || 0) !== (u.session_version || 0)) return null;
+    return u;
   } catch { return null; }
 }
 function publicUser(u) {
@@ -1383,7 +1390,7 @@ app.get('/verify', async (req, res) => {
   const token = (req.query.token || '').toString();
   if (!token) return res.status(400).send(verifyResultPage('Invalid link.', false));
   try {
-    const r = await db.query('SELECT id, email_verified FROM users WHERE verify_token=$1', [token]);
+    const r = await db.query('SELECT id, email, name, email_verified, session_version FROM users WHERE verify_token=$1', [token]);
     const u = r.rows[0];
     if (!u) return res.send(verifyResultPage('Invalid or already-used link.', false));
     if (!u.email_verified) {
@@ -1391,8 +1398,9 @@ app.get('/verify', async (req, res) => {
         `UPDATE users SET email_verified=true, verify_token=NULL, credits_remaining = credits_remaining + $1, credits_reset_at = now() + interval '30 days' WHERE id=$2`,
         [PLAN_CREDITS.free, u.id]
       );
+      sendWelcomeEmail(u.email, u.name, req).catch(() => {});   // bienvenue (non bloquant)
     }
-    setSession(res, u.id);   // connecte l'utilisateur (même si le lien s'ouvre dans un autre navigateur)
+    setSession(res, u.id, u.session_version);   // connecte l'utilisateur (même si le lien s'ouvre dans un autre navigateur)
     res.send(verifyResultPage('Email confirmed! Your 30 free credits are unlocked.', true));
   } catch (e) {
     console.error('❌ /verify:', e.message);
@@ -1410,6 +1418,166 @@ app.post('/auth/resend-verification', authLimiter, async (req, res) => {
   if (!token) { token = newVerifyToken(); await db.query('UPDATE users SET verify_token=$1 WHERE id=$2', [token, user.id]); }
   await sendVerificationEmail(user.email, token, req);
   res.json({ ok: true });
+});
+
+// ─────────────────────────────────────────────────
+// Mot de passe oublié — flux sécurisé
+// (jeton crypto 30 min usage unique · réponse neutre · rate-limité · sessions invalidées)
+// ─────────────────────────────────────────────────
+function emailShell(title, bodyHtml) {
+  // Coque commune des emails transactionnels (DA noir & argent, tables inline)
+  return `<!doctype html><html><body style="margin:0;padding:0;background-color:#0a0a0c;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0c;padding:36px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td align="center" style="padding-bottom:26px;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:19px;letter-spacing:3px;color:#f6f6f9;">INK<span style="color:#7a7e8c;">.</span>STUDIO</div>
+        </td></tr>
+        <tr><td style="background-color:#111114;border:1px solid #232329;border-radius:18px;padding:42px 36px;" align="center">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:28px;color:#ffffff;line-height:1.25;padding-bottom:6px;">${title}</div>
+          <div style="width:52px;height:1px;background-color:#3a3d48;margin:16px auto 20px;"></div>
+          ${bodyHtml}
+        </td></tr>
+        <tr><td align="center" style="padding:26px 12px 0;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#44454c;line-height:1.8;">
+            © 2026 INK.STUDIO — <a href="https://inkhay.com" style="color:#6a6e7e;text-decoration:none;">inkhay.com</a>
+          </div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table></body></html>`;
+}
+
+async function sendResendEmail(to, subject, html) {
+  if (!process.env.RESEND_API_KEY) { console.warn('⚠ RESEND_API_KEY absent — email non envoyé'); return; }
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'INK.STUDIO <noreply@inkhay.com>', to, subject, html }),
+  });
+  if (!r.ok) console.error('❌ Resend:', (await r.text()).slice(0, 200));
+}
+
+async function sendResetEmail(email, token, req) {
+  const link = `${baseUrl(req)}/reset-password?token=${encodeURIComponent(token)}`;
+  const body = `
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#b8bac4;line-height:1.75;padding-bottom:8px;">
+      Someone (hopefully you) asked to reset the password for this account.<br>This link expires in <span style="color:#ffffff;font-weight:bold;">30 minutes</span> and works once.
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px auto 6px;"><tr>
+      <td style="background-color:#ffffff;border-radius:12px;">
+        <a href="${link}" style="display:inline-block;padding:15px 38px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#0a0a0e;text-decoration:none;">Reset my password</a>
+      </td>
+    </tr></table>
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#6a6e7e;padding-top:18px;">Didn't ask for this? You can safely ignore this email — your password stays unchanged.</div>`;
+  await sendResendEmail(email, 'Reset your password — INK.STUDIO', emailShell('Reset your password.', body));
+}
+
+async function sendWelcomeEmail(email, name, req) {
+  const first = (name || '').trim().split(' ')[0] || 'artist';
+  const body = `
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#b8bac4;line-height:1.85;padding-bottom:8px;text-align:left;">
+      Welcome, <span style="color:#fff;font-weight:bold;">${first}</span> — your 30 free credits are live. Here's the 3-step ritual:<br><br>
+      <span style="color:#cfd2dc;">1.</span>&nbsp; <span style="color:#fff;font-weight:bold;">Describe</span> your tattoo idea in a few words<br>
+      <span style="color:#cfd2dc;">2.</span>&nbsp; <span style="color:#fff;font-weight:bold;">Generate</span> a museum-grade design in under a minute<br>
+      <span style="color:#cfd2dc;">3.</span>&nbsp; <span style="color:#fff;font-weight:bold;">See it on your skin</span> before you ever commit
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px auto 6px;"><tr>
+      <td style="background-color:#ffffff;border-radius:12px;">
+        <a href="${baseUrl(req)}/outil.html" style="display:inline-block;padding:15px 38px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#0a0a0e;text-decoration:none;">Create my first design</a>
+      </td>
+    </tr></table>`;
+  await sendResendEmail(email, 'Welcome to the studio — INK.STUDIO', emailShell('Welcome to the studio.', body));
+}
+
+// Demande de réinitialisation — réponse TOUJOURS neutre (pas d'énumération de comptes)
+app.post('/auth/forgot-password', authLimiter, async (req, res) => {
+  const neutral = { ok: true, message: 'If an account exists for this email, a reset link has been sent.' };
+  if (!db) return res.json(neutral);
+  const email = (req.body && req.body.email || '').trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.json(neutral);
+  try {
+    const r = await db.query('SELECT id FROM users WHERE email=$1', [email]);
+    if (r.rows[0]) {
+      const token = crypto.randomBytes(32).toString('hex');   // 64 hex chars — indevinable
+      await db.query(`UPDATE users SET reset_token=$1, reset_expires = now() + interval '30 minutes' WHERE id=$2`, [token, r.rows[0].id]);
+      sendResetEmail(email, token, req).catch(e => console.error('❌ sendResetEmail:', e.message));
+    }
+  } catch (e) { console.error('❌ forgot-password:', e.message); }
+  res.json(neutral);   // même réponse que le compte existe ou non
+});
+
+// Page de réinitialisation (formulaire, même DA que /verify)
+app.get('/reset-password', async (req, res) => {
+  const token = (req.query.token || '').toString();
+  let valid = false;
+  if (db && token) {
+    try {
+      const r = await db.query('SELECT id FROM users WHERE reset_token=$1 AND reset_expires > now()', [token]);
+      valid = !!r.rows[0];
+    } catch {}
+  }
+  if (!valid) return res.status(400).send(verifyResultPage('This reset link is invalid or has expired.', false));
+  res.send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>INK.STUDIO — New password</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Inter:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+    body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080808;color:#f6f6f9;font-family:Inter,Arial,sans-serif;text-align:center;padding:24px}
+    .logo{font-family:Syne,sans-serif;font-weight:800;letter-spacing:.12em;font-size:.95rem;margin-bottom:34px}.logo span{color:#7a7e8c}
+    .box{max-width:420px;width:100%;background:linear-gradient(180deg,#121216,#0c0c10);border:1px solid #232329;border-radius:22px;padding:40px 34px;box-shadow:0 40px 100px rgba(0,0,0,.55)}
+    h1{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:600;font-size:1.6rem;margin:0 0 18px}
+    input{width:100%;box-sizing:border-box;background:#0c0c0e;border:1px solid #26262e;border-radius:12px;padding:14px 16px;color:#fff;font-size:.9rem;margin-bottom:12px;outline:none}
+    input:focus{border-color:rgba(207,210,220,.45)}
+    button{width:100%;padding:14px;border:none;border-radius:13px;background:#fff;color:#0a0a0e;font-family:Syne,sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+    #msg{font-size:.8rem;margin-top:14px;color:#f87171;min-height:1.2em}
+    #msg.ok{color:#34d399}
+    </style></head><body>
+    <div class="logo">INK<span>.</span>STUDIO</div>
+    <div class="box">
+      <h1>Choose a new password.</h1>
+      <input type="password" id="pw1" placeholder="New password (6+ characters)" autocomplete="new-password">
+      <input type="password" id="pw2" placeholder="Confirm new password" autocomplete="new-password">
+      <button id="go">Save my new password</button>
+      <p id="msg"></p>
+    </div>
+    <script>
+      document.getElementById('go').addEventListener('click', async () => {
+        const p1 = document.getElementById('pw1').value, p2 = document.getElementById('pw2').value, msg = document.getElementById('msg');
+        msg.className = '';
+        if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+        if (p1 !== p2)     { msg.textContent = 'Passwords do not match.'; return; }
+        try {
+          const r = await fetch('/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: ${JSON.stringify(token)}, password: p1 }) });
+          const d = await r.json();
+          if (r.ok) { msg.className = 'ok'; msg.textContent = 'Password updated — redirecting…'; setTimeout(() => location.href = '/outil.html', 1400); }
+          else msg.textContent = d.error || 'This link has expired — request a new one.';
+        } catch { msg.textContent = 'Connection error — try again.'; }
+      });
+    </script></body></html>`);
+});
+
+// Application du nouveau mot de passe
+app.post('/auth/reset-password', authLimiter, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Service unavailable.' });
+  const token    = (req.body && req.body.token || '').toString();
+  const password = req.body && req.body.password || '';
+  if (!token || password.length < 6) return res.status(400).json({ error: 'Invalid request.' });
+  try {
+    const r = await db.query('SELECT id, session_version FROM users WHERE reset_token=$1 AND reset_expires > now()', [token]);
+    const u = r.rows[0];
+    if (!u) return res.status(400).json({ error: 'This link is invalid or has expired.' });
+    const hash = await bcrypt.hash(password, 10);
+    // Usage unique + invalidation de TOUTES les sessions existantes (version +1)
+    await db.query(
+      `UPDATE users SET password_hash=$1, reset_token=NULL, reset_expires=NULL, session_version = COALESCE(session_version,0) + 1 WHERE id=$2`,
+      [hash, u.id]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('❌ reset-password:', e.message);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
 });
 
 app.post('/auth/google', async (req, res) => {
@@ -1432,7 +1600,7 @@ app.post('/auth/google', async (req, res) => {
       [p.email, p.sub, p.name || p.email.split('@')[0], p.picture || null, PLAN_CREDITS.free]
     );
     const user = r.rows[0];
-    setSession(res, user.id);
+    setSession(res, user.id, user.session_version);
     res.json({ user: publicUser(user) });
   } catch (e) {
     console.error('❌ /auth/google:', e.message);
@@ -1456,7 +1624,7 @@ app.post('/auth/register', registerLimiter, async (req, res) => {
       // Compte créé via Google → on attache un mot de passe
       const hash = await bcrypt.hash(password, 10);
       const r = await db.query('UPDATE users SET password_hash=$1, name=COALESCE(name,$2) WHERE id=$3 RETURNING *', [hash, name, existing.rows[0].id]);
-      setSession(res, r.rows[0].id);
+      setSession(res, r.rows[0].id, r.rows[0].session_version);
       return res.json({ user: publicUser(r.rows[0]) });
     }
     const hash = await bcrypt.hash(password, 10);
@@ -1466,7 +1634,7 @@ app.post('/auth/register', registerLimiter, async (req, res) => {
       `INSERT INTO users (email, name, password_hash, credits_remaining, email_verified, verify_token) VALUES ($1,$2,$3,0,false,$4) RETURNING *`,
       [email, name, hash, token]
     );
-    setSession(res, r.rows[0].id);
+    setSession(res, r.rows[0].id, r.rows[0].session_version);
     sendVerificationEmail(email, token, req);   // async, ne bloque pas la réponse
     res.json({ user: publicUser(r.rows[0]) });
   } catch (e) {
@@ -1490,7 +1658,7 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     }
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'mdp_incorrect' });
-    setSession(res, user.id);
+    setSession(res, user.id, user.session_version);
     res.json({ user: publicUser(user) });
   } catch (e) {
     console.error('❌ /auth/login:', e.message);
