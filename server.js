@@ -1840,6 +1840,28 @@ app.post('/create-portal-session', async (req, res) => {
   }
 });
 
+// ── ADMIN (owner uniquement) : créer un code promo Stripe ──
+// Usage : /admin/create-promo?code=SARA20&percent=20&duration=once   (duration: once | forever)
+// Pratique pour créer un code par influenceur sans ouvrir le dashboard Stripe.
+app.get('/admin/create-promo', async (req, res) => {
+  if (!stripe || !db) return res.status(503).json({ error: 'stripe_indisponible' });
+  const user = await getSessionUser(req);
+  if (!user || user.email !== OWNER_EMAIL) return res.status(403).json({ error: 'forbidden' });
+  const code     = (req.query.code || '').toString().trim().toUpperCase();
+  const percent  = parseInt(req.query.percent || '0', 10);
+  const duration = (req.query.duration || 'once').toString() === 'forever' ? 'forever' : 'once';
+  if (!/^[A-Z0-9]{3,20}$/.test(code)) return res.status(400).json({ error: 'code invalide (3-20 lettres/chiffres, ex: SARA20)' });
+  if (!(percent >= 1 && percent <= 90))  return res.status(400).json({ error: 'percent invalide (1-90)' });
+  try {
+    const coupon = await stripe.coupons.create({ percent_off: percent, duration, name: `${code} (-${percent}%)` });
+    const promo  = await stripe.promotionCodes.create({ coupon: coupon.id, code });
+    res.json({ ok: true, code: promo.code, percent, duration, message: `Code ${promo.code} actif — les clients peuvent le taper au paiement.` });
+  } catch (e) {
+    console.error('❌ create-promo:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Synchronisation de l'abonnement (fallback fiable, ne dépend pas du webhook) ──
 // Interroge Stripe directement et applique le plan correspondant à l'abonnement actif.
 app.post('/sync-subscription', async (req, res) => {
