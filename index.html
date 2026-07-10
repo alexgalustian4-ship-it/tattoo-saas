@@ -837,6 +837,18 @@
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em;
       text-transform: uppercase; color: var(--silver); margin-bottom: 18px;
     }
+    /* Badge "NEW" — halo argent qui respire doucement */
+    .new-tag {
+      display: inline-block; padding: 3px 9px; margin-right: 8px; border-radius: 20px;
+      background: rgba(207,210,220,0.12); border: 1px solid rgba(207,210,220,0.35);
+      color: #fff; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.16em;
+      animation: newPulse 2.6s ease-in-out infinite; vertical-align: 1px;
+    }
+    @keyframes newPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(207,210,220,0.12); }
+      50%      { box-shadow: 0 0 14px 2px rgba(207,210,220,0.16); }
+    }
+    @media (prefers-reduced-motion: reduce) { .new-tag { animation: none; } }
     .ss-text h2 {
       font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 3vw, 2.4rem);
       font-weight: 800; line-height: 1.15; color: #fff; margin-bottom: 20px;
@@ -1288,6 +1300,53 @@
         <a href="outil.html?mode=body" class="ss-cta">Try for free →</a>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ══ LETTERING SHOWCASE (5) ══ -->
+  <section id="lettering-showcase" class="showcase">
+    <div class="ss-inner">
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-figure" style="background:#fff">
+          <img loading="lazy" src="images/lettering-demo.jpg" alt="Tattoo lettering — fine script name and date" style="object-fit:cover" />
+          <div class="ss-badges"><span class="ss-badge after">✒ Lettering</span></div>
+        </div>
+      </div>
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow"><span class="new-tag">New</span>Lettering Studio</p>
+        <h2>A name.<br>A date.<br>Letter-perfect.</h2>
+        <p>Names, dates, quotes — rendered in flawless tattoo script. Five lettering styles, from fine script to Old English. Every letter exactly right.</p>
+        <a href="outil.html?mode=lettering" class="ss-cta">Try Lettering →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ COVER-UP SHOWCASE (6) — slider avant/après ══ -->
+  <section id="coverup-showcase">
+    <div class="ss-inner reverse">
+      <div class="ss-slider-wrap fade-up">
+        <div class="ss-slider" id="cu-slider">
+          <img loading="lazy" src="images/coverup-after.jpg" alt="Cover-up tattoo result" style="object-fit:cover" />
+          <div class="ss-after-layer" id="cu-after-layer">
+            <img loading="lazy" src="images/coverup-before.jpg" alt="Old faded tattoo before cover-up" style="object-fit:cover" />
+          </div>
+          <div class="ss-line" id="cu-line"></div>
+          <div class="ss-knob" id="cu-knob">
+            <svg viewBox="0 0 24 24"><rect x="6" y="5" width="3" height="14" rx="1"/><rect x="15" y="5" width="3" height="14" rx="1"/></svg>
+          </div>
+          <div class="ss-badges">
+            <span class="ss-badge after">Cover-up</span>
+            <span class="ss-badge">Before</span>
+          </div>
+        </div>
+        <p class="ss-caption">Drag to compare</p>
+      </div>
+      <div class="ss-text fade-up d2">
+        <p class="ss-eyebrow"><span class="new-tag">New</span>Cover-Up Studio</p>
+        <h2>That old tattoo?<br>Gone.<br>Beautifully.</h2>
+        <p>Upload a photo of the tattoo you regret — AI designs a cover-up that hides it completely under a piece you'll actually love. See it before you commit.</p>
+        <a href="outil.html?mode=coverup" class="ss-cta">Try Cover-up →</a>
+      </div>
     </div>
   </section>
   </div><!-- /showcase-grid -->
@@ -1999,6 +2058,29 @@
         line.style.left = knob.style.left = (pct * 100).toFixed(1) + '%';
       }
       // Start at 50%
+      setPos(slider.getBoundingClientRect().left + slider.offsetWidth / 2);
+      slider.onmousedown = e => { dragging = true; setPos(e.clientX); e.preventDefault(); };
+      slider.ontouchstart = e => { dragging = true; setPos(e.touches[0].clientX); };
+      window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+      window.addEventListener('mouseup', () => { dragging = false; });
+      window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+      window.addEventListener('touchend', () => { dragging = false; });
+    })();
+
+    // Cover-up slider (before/after)
+    (function() {
+      const slider = document.getElementById('cu-slider');
+      const layer  = document.getElementById('cu-after-layer');
+      const line   = document.getElementById('cu-line');
+      const knob   = document.getElementById('cu-knob');
+      if (!slider) return;
+      let dragging = false;
+      function setPos(x) {
+        const rect = slider.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+        layer.style.clipPath = `inset(0 ${(100 - pct * 100).toFixed(1)}% 0 0)`;
+        line.style.left = knob.style.left = (pct * 100).toFixed(1) + '%';
+      }
       setPos(slider.getBoundingClientRect().left + slider.offsetWidth / 2);
       slider.onmousedown = e => { dragging = true; setPos(e.clientX); e.preventDefault(); };
       slider.ontouchstart = e => { dragging = true; setPos(e.touches[0].clientX); };
