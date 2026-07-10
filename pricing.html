@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +16,7 @@
   <meta name="twitter:image" content="https://inkhay.com/images/hero-frames/0030.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600;1,700&family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#080808; --bg-card:#0f0f0f; --silver:#cfd2dc; --dim:#cdced5;
@@ -64,7 +64,7 @@
     .head { text-align:center; max-width:560px; margin:0 auto 34px; }
     .eyebrow { font-size:0.68rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:18px; display:flex; align-items:center; justify-content:center; gap:10px; }
     .eyebrow::before, .eyebrow::after { content:''; display:block; width:28px; height:1px; background:var(--dim); }
-    h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,3.2rem); font-weight:800; line-height:1.12; letter-spacing:-0.02em; margin-bottom:16px; }
+    h1 { font-family:'Cormorant Garamond',Georgia,serif; font-style:italic; font-size:clamp(2.4rem,5.5vw,3.8rem); font-weight:700; line-height:1.08; letter-spacing:0; margin-bottom:16px; }
     .head p { font-size:0.92rem; color:var(--muted); line-height:1.8; }
 
     /* toggle mensuel / annuel */
@@ -106,7 +106,7 @@
     .packs-sep p { font-size:0.82rem; color:var(--muted); line-height:1.6; }
     .packs { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; max-width:760px; margin:28px auto 0; }
     .pack { flex:0 0 222px; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px 22px; text-align:center; transition:border-color .3s, transform .35s cubic-bezier(0.22,1,0.36,1); }
-    .pack:hover { border-color:var(--border-m); transform:translateY(-3px); }
+    .pack:hover { border-color:var(--border-m); transform:translateY(-4px); box-shadow:0 24px 60px rgba(0,0,0,0.5); }
     .pack-name { font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700; letter-spacing:0.04em; margin-bottom:10px; }
     .pack-cr { font-size:1.5rem; font-family:'Syne',sans-serif; font-weight:800; color:#fff; }
     .pack-cr span { font-size:0.72rem; font-weight:500; color:var(--muted); }
@@ -153,6 +153,8 @@
   <script src="brand.js" defer></script>
   <!-- Cloudflare Web Analytics -->
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "448de1e0614f4216a84565d0c1b898d7"}'></script>
+  <meta name="theme-color" content="#080808" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </head>
 <body>
   <div id="cursor-dot"></div>
@@ -303,7 +305,7 @@
 
     <!-- ══ FAQ ══ -->
     <section class="faq fade-up" style="max-width:660px;margin:72px auto 0;">
-      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:26px;">Questions, answered</h2>
+      <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:2rem;font-weight:700;text-align:center;margin-bottom:26px;">Questions, answered</h2>
       <details class="faq-item">
         <summary>Do unused credits roll over?</summary>
         <p>Yes — on paid plans, any credits you don't use stay in your balance and stack with next month's credits. Nothing is ever taken away from you.</p>
