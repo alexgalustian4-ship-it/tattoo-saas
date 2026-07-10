@@ -1187,6 +1187,7 @@
     }
     .share-fab:hover { transform: scale(1.1); background: rgba(20,20,26,0.9); border-color: rgba(207,210,220,0.55); }
     .share-fab svg { width: 17px; height: 17px; }
+    .print-fab { top: 54px; }   /* même style que share-fab, positionné dessous */
 
     /* Toast (confirmations) */
     #ink-toast {
@@ -1202,11 +1203,11 @@
       from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
       to   { opacity: 1; transform: none; filter: blur(0); }
     }
-    #mode1-card, #mode2-card, #mode3-card, #mode4-card, #stencil-studio, #ai-hub, #history-section {
+    #mode1-card, #mode2-card, #mode3-card, #mode4-card, #mode6-card, #mode7-card, #stencil-studio, #ai-hub, #history-section {
       animation: sectionIn 0.55s cubic-bezier(0.22,1,0.36,1);
     }
     @media (prefers-reduced-motion: reduce) {
-      #mode1-card, #mode2-card, #mode3-card, #mode4-card, #stencil-studio, #ai-hub, #history-section { animation: none; }
+      #mode1-card, #mode2-card, #mode3-card, #mode4-card, #mode6-card, #mode7-card, #stencil-studio, #ai-hub, #history-section { animation: none; }
     }
 
     /* Other tools row (small pills around) */
@@ -1440,6 +1441,14 @@
       <!-- Other tools -->
       <p class="ai-tools-label">Or use another tool</p>
       <div class="ai-tools-row">
+        <button class="ai-tool-pill" onclick="activateMode6()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          Lettering
+        </button>
+        <button class="ai-tool-pill" onclick="activateMode7()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z"/></svg>
+          Cover-up
+        </button>
         <button class="ai-tool-pill" onclick="activateMode5()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
           Instant stencil
@@ -1538,6 +1547,8 @@
     <!-- Barre de switch d'outils (visible quand un outil est ouvert) -->
     <div class="tool-switcher" id="tool-switcher" data-hidden>
       <button class="ts-pill" data-go="hub">✦ Generate</button>
+      <button class="ts-pill" data-go="6">Lettering</button>
+      <button class="ts-pill" data-go="7">Cover-up</button>
       <button class="ts-pill" data-go="5">Stencil</button>
       <button class="ts-pill" data-go="4">Merge</button>
       <button class="ts-pill" data-go="3" style="display:none">Photo → Tattoo</button>
@@ -2068,6 +2079,106 @@
             <img id="m4-body-result-img" src="" alt="Result" />
           </div>
           <a id="m4-body-btn-dl" class="btn btn-secondary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;">↓ Download</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE 6 — LETTERING STUDIO ══════════ -->
+    <div data-hidden class="card" id="mode6-card">
+      <div class="m2-card-header">
+        <div class="m2-card-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </div>
+        <div class="m2-card-header-text">
+          <h3>Lettering Studio</h3>
+          <p>Names, dates, quotes — letter-perfect tattoo script</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Your text <span>(name, date, quote — 80 characters max)</span></label>
+        <input type="text" id="m6-text" maxlength="80" placeholder="e.g. Amara · 14.02.2019 · Memento Mori" style="width:100%;box-sizing:border-box;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:0.95rem;outline:none" />
+      </div>
+
+      <div class="field">
+        <label>Lettering style</label>
+        <div class="zone-grid">
+          <button class="zone-btn selected" data-m6font="finescript">Fine script</button>
+          <button class="zone-btn" data-m6font="chicano">Chicano</button>
+          <button class="zone-btn" data-m6font="gothic">Gothic</button>
+          <button class="zone-btn" data-m6font="oldenglish">Old English</button>
+          <button class="zone-btn" data-m6font="minimal">Minimal</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Details <span>(optional)</span></label>
+        <input type="text" id="m6-details" placeholder="e.g. with a small rose, underline flourish…" style="width:100%;box-sizing:border-box;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:0.9rem;outline:none" />
+      </div>
+
+      <button class="btn btn-primary" id="m6-btn-generate" disabled>✒️ Generate my lettering <span style="opacity:.65;font-weight:500">· 10 credits</span></button>
+      <div class="status" id="m6-status"></div>
+      <div data-hidden id="m6-result" style="margin-top:16px">
+        <div class="result-img-wrap">
+          <img id="m6-result-img" src="" alt="Tattoo lettering" />
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button class="btn btn-secondary" id="m6-btn-dl" style="flex:1">↓ Download</button>
+          <button class="btn btn-secondary" id="m6-btn-regen" style="flex:1">↻ Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE 7 — COVER-UP STUDIO ══════════ -->
+    <div data-hidden class="card" id="mode7-card">
+      <div class="m2-card-header">
+        <div class="m2-card-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z"/></svg>
+        </div>
+        <div class="m2-card-header-text">
+          <h3>Cover-Up Studio</h3>
+          <p>Hide an old tattoo under a new masterpiece</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Photo of your current tattoo <span>(the one to cover)</span></label>
+        <div class="upload-area" id="m7-photo-area">
+          <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Tap to upload</strong> a clear photo of the tattoo<br>you want covered</p>
+          <input type="file" id="m7-photo-input" accept="image/*" />
+        </div>
+        <div data-hidden id="m7-photo-preview-wrap" style="margin-top:10px">
+          <div class="result-img-wrap"><img id="m7-photo-preview-img" src="" alt="Your tattoo" /></div>
+          <button class="result-change" id="m7-btn-remove-photo">Change photo</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cover-up style <span>(dense styles hide best)</span></label>
+        <div class="zone-grid">
+          <button class="zone-btn selected" data-m7style="blackgrey">Black & Grey</button>
+          <button class="zone-btn" data-m7style="baroque">Baroque</button>
+          <button class="zone-btn" data-m7style="floral">Dark floral</button>
+          <button class="zone-btn" data-m7style="japanese">Japanese</button>
+          <button class="zone-btn" data-m7style="geometric">Blackwork</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>What would you love instead? <span>(optional)</span></label>
+        <input type="text" id="m7-details" placeholder="e.g. a lion, a phoenix rising, roses and a clock…" style="width:100%;box-sizing:border-box;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:0.9rem;outline:none" />
+      </div>
+
+      <button class="btn btn-primary" id="m7-btn-generate" disabled>🩹 Design my cover-up <span style="opacity:.65;font-weight:500">· 15 credits</span></button>
+      <div class="status" id="m7-status"></div>
+      <div data-hidden id="m7-result" style="margin-top:16px">
+        <div class="result-img-wrap">
+          <img id="m7-result-img" src="" alt="Cover-up result" />
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button class="btn btn-secondary" id="m7-btn-dl" style="flex:1">↓ Download</button>
+          <button class="btn btn-secondary" id="m7-btn-regen" style="flex:1">↻ Try another</button>
         </div>
       </div>
     </div>
@@ -3149,21 +3260,137 @@
     }
     document.getElementById('btn-mode5').addEventListener('click', activateMode5);
 
+    const mode6Card = document.getElementById('mode6-card');
+    const mode7Card = document.getElementById('mode7-card');
+    function activateMode6() {
+      hide(modeSelector); hide(toolHeader); hide(aiHub);
+      show(mode6Card); show(modeBack); showSwitcher('6');
+    }
+    function activateMode7() {
+      hide(modeSelector); hide(toolHeader); hide(aiHub);
+      show(mode7Card); show(modeBack); showSwitcher('7');
+    }
+
     // Switcher pills : changer d'outil sans repasser par le menu
     toolSwitcher.querySelectorAll('.ts-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         const go = pill.dataset.go;
         // on remet tout à zéro comme "Change mode" puis on ouvre le bon
         hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card);
+        hide(mode6Card); hide(mode7Card);
         hide(stencilStudio);
         if (go === 'hub') { hide(toolSwitcher); hide(modeBack); show(toolHeader); show(aiHub); window.scrollTo({top:0,behavior:'smooth'}); return; }
         if (go === '2') activateMode2();
         if (go === '3') activateMode3();
         if (go === '4') activateMode4();
         if (go === '5') activateMode5();
+        if (go === '6') activateMode6();
+        if (go === '7') activateMode7();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
+
+    // ── MODE 6 : LETTERING STUDIO ───────────────────────
+    (function letteringStudio() {
+      const txt   = document.getElementById('m6-text');
+      const det   = document.getElementById('m6-details');
+      const gen   = document.getElementById('m6-btn-generate');
+      const stat  = document.getElementById('m6-status');
+      const resEl = document.getElementById('m6-result');
+      const img   = document.getElementById('m6-result-img');
+      let font = 'finescript', lastUrl = '';
+
+      document.querySelectorAll('[data-m6font]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('[data-m6font]').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected'); font = b.dataset.m6font;
+      }));
+      txt.addEventListener('input', () => { gen.disabled = !txt.value.trim(); });
+
+      async function generate() {
+        if (!txt.value.trim()) return;
+        gen.disabled = true; hide(resEl);
+        setLoading(stat, 'Lettering your text… (under 60s)');
+        try {
+          const fd = new FormData();
+          fd.append('text', txt.value.trim());
+          fd.append('font', font);
+          fd.append('details', det.value.trim());
+          const resp = await fetch('/lettering', { method: 'POST', body: fd, credentials: 'include' });
+          const data = await readJson(resp);
+          { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
+          if (!resp.ok) throw new Error(data.error || 'Server error.');
+          if (data.credits != null) updateCredits(data.credits);
+          lastUrl = data.imageUrl;
+          img.src = lastUrl;
+          hideStatus(stat); show(resEl);
+          resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          saveProject({ type: 'lettering', imageUrl: lastUrl, params: { sujet: txt.value.trim(), style: font } });
+        } catch (e) { setError(stat, e.message); }
+        finally { gen.disabled = !txt.value.trim(); }
+      }
+      gen.addEventListener('click', generate);
+      document.getElementById('m6-btn-regen').addEventListener('click', generate);
+      document.getElementById('m6-btn-dl').addEventListener('click', () =>
+        gatedDownload(`/download?url=${encodeURIComponent(lastUrl)}&filename=lettering-tattoo.jpg`, 'lettering-tattoo.jpg'));
+    })();
+
+    // ── MODE 7 : COVER-UP STUDIO ────────────────────────
+    (function coverupStudio() {
+      const inp    = document.getElementById('m7-photo-input');
+      const area   = document.getElementById('m7-photo-area');
+      const prevW  = document.getElementById('m7-photo-preview-wrap');
+      const prevI  = document.getElementById('m7-photo-preview-img');
+      const det    = document.getElementById('m7-details');
+      const gen    = document.getElementById('m7-btn-generate');
+      const stat   = document.getElementById('m7-status');
+      const resEl  = document.getElementById('m7-result');
+      const img    = document.getElementById('m7-result-img');
+      let style = 'blackgrey', photoFile = null, lastUrl = '';
+
+      document.querySelectorAll('[data-m7style]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('[data-m7style]').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected'); style = b.dataset.m7style;
+      }));
+
+      inp.addEventListener('change', () => {
+        const f = inp.files[0]; if (!f) return;
+        photoFile = f;
+        const r = new FileReader();
+        r.onload = e => { prevI.src = e.target.result; hide(area); show(prevW); gen.disabled = false; };
+        r.readAsDataURL(f);
+      });
+      document.getElementById('m7-btn-remove-photo').addEventListener('click', () => {
+        photoFile = null; inp.value = '';
+        hide(prevW); show(area); gen.disabled = true;
+      });
+
+      async function generate() {
+        if (!photoFile) return;
+        gen.disabled = true; hide(resEl);
+        setLoading(stat, 'Designing your cover-up… (1–2 min)');
+        try {
+          const fd = new FormData();
+          fd.append('photo', await resizeImage(photoFile));
+          fd.append('style', style);
+          fd.append('details', det.value.trim());
+          const resp = await fetch('/coverup', { method: 'POST', body: fd, credentials: 'include' });
+          const data = await readJson(resp);
+          { const ace = handleAuthCreditError(resp.status); if (ace) throw new Error(ace); }
+          if (!resp.ok) throw new Error(data.error || 'Server error.');
+          if (data.credits != null) updateCredits(data.credits);
+          lastUrl = data.imageUrl;
+          img.src = lastUrl;
+          hideStatus(stat); show(resEl);
+          resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          saveProject({ type: 'coverup', imageUrl: lastUrl, params: { style } });
+        } catch (e) { setError(stat, e.message); }
+        finally { gen.disabled = !photoFile; }
+      }
+      gen.addEventListener('click', generate);
+      document.getElementById('m7-btn-regen').addEventListener('click', generate);
+      document.getElementById('m7-btn-dl').addEventListener('click', () =>
+        gatedDownload(`/download?url=${encodeURIComponent(lastUrl)}&filename=coverup-tattoo.jpg`, 'coverup-tattoo.jpg'));
+    })();
 
     // ── AI HUB (chat central) ───────────────────────────
     (function(){
@@ -3478,6 +3705,7 @@
 
     modeBack.addEventListener('click', () => {
       hide(stepsEl); hide(mode1Card); hide(mode2Card); hide(mode3Card); hide(mode4Card); hide(modeBack);
+      hide(mode6Card); hide(mode7Card);
       hide(stencilStudio); hide(toolSwitcher);
       resetMode2();
       show(toolHeader); show(aiHub);
@@ -4838,7 +5066,13 @@
 
     const STYLE_LABELS = {
       concept: 'Concept', baroque: 'Baroque', japonais: 'Japanese',
-      geometrique: 'Geometric', realisme: 'Realism'
+      geometrique: 'Geometric', realisme: 'Realism',
+      // Lettering
+      finescript: 'Fine script', chicano: 'Chicano', gothic: 'Gothic',
+      oldenglish: 'Old English', minimal: 'Minimal',
+      // Cover-up
+      blackgrey: 'Black & Grey', floral: 'Dark floral',
+      japanese: 'Japanese', geometric: 'Blackwork',
     };
     const ZONE_LABELS = {
       'avant-bras': 'Forearm', 'bras-complet': 'Full arm',
@@ -4898,7 +5132,7 @@
       const input = document.getElementById('hub-input');
       if (!input) return;
       // Revenir à la vue chat central
-      ['mode1-card','mode2-card','mode3-card','mode4-card','stencil-studio','tool-switcher','mode-back'].forEach(id => {
+      ['mode1-card','mode2-card','mode3-card','mode4-card','mode6-card','mode7-card','stencil-studio','tool-switcher','mode-back'].forEach(id => {
         const e = document.getElementById(id); if (e) e.dataset.hidden = '';
       });
       const hub = document.getElementById('ai-hub'); if (hub) delete hub.dataset.hidden;
@@ -4912,16 +5146,19 @@
 
     // Dossiers (un par outil) — l'ordre définit l'affichage des onglets
     const HIST_FOLDERS = [
-      { key: 'all',      label: 'All',          types: null },
-      { key: 'design',   label: 'Designs',      types: ['design'] },
-      { key: 'stencil',  label: 'Stencils',     types: ['stencil'] },
-      { key: 'merge',    label: 'Fusions',      types: ['merge'] },
-      { key: 'pet',      label: 'Photo → Tattoo', types: ['pet'] },
-      { key: 'on-body',  label: 'On body',      types: ['on-body'] },
+      { key: 'all',       label: 'All',            types: null },
+      { key: 'design',    label: 'Designs',        types: ['design'] },
+      { key: 'lettering', label: 'Lettering',      types: ['lettering'] },
+      { key: 'coverup',   label: 'Cover-ups',      types: ['coverup'] },
+      { key: 'stencil',   label: 'Stencils',       types: ['stencil'] },
+      { key: 'merge',     label: 'Fusions',        types: ['merge'] },
+      { key: 'pet',       label: 'Photo → Tattoo', types: ['pet'] },
+      { key: 'on-body',   label: 'On body',        types: ['on-body'] },
     ];
     const TYPE_LABELS = {
       design: 'Design', stencil: 'Stencil', merge: 'Fusion',
       pet: 'Photo → Tattoo', 'on-body': 'On body',
+      lettering: 'Lettering', coverup: 'Cover-up',
     };
     let _histProjects = [];
     let _histFolder = 'all';
@@ -5159,7 +5396,35 @@
       }
     }
 
-    // Injecte un bouton Share flottant sur chaque image de résultat
+    // ── Impression à taille réelle (le design calibré en cm, à poser sur la table du tatoueur) ──
+    function printAtSize(img) {
+      const raw = prompt('Print width in centimeters (real tattoo size):', '10');
+      if (raw === null) return;
+      const cm = Math.min(50, Math.max(2, parseFloat(String(raw).replace(',', '.')) || 10));
+      const w = window.open('', '_blank');
+      if (!w) { inkToast('Popup blocked — allow popups to print.'); return; }
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>INK.STUDIO — Print at ${cm} cm</title>
+        <style>
+          @page { margin: 1cm; }
+          body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 1cm; }
+          .head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #ccc; padding-bottom: 4mm; margin-bottom: 6mm; }
+          .brand { font-weight: 800; letter-spacing: 2px; font-size: 12pt; }
+          .size { font-size: 10pt; color: #555; }
+          img { width: ${cm}cm; display: block; }
+          .ruler { margin-top: 8mm; }
+          .ruler-bar { width: 5cm; height: 4mm; background: repeating-linear-gradient(90deg, #111 0, #111 1cm, #fff 1cm, #fff 2cm); border: 1px solid #111; }
+          .ruler p { font-size: 8pt; color: #555; margin: 2mm 0 0; }
+          .foot { margin-top: 10mm; font-size: 8pt; color: #888; }
+        </style></head><body>
+        <div class="head"><span class="brand">INK.STUDIO</span><span class="size">Real size: ${cm} cm wide</span></div>
+        <img src="${img.src}" onload="setTimeout(() => window.print(), 300)" />
+        <div class="ruler"><div class="ruler-bar"></div><p>Calibration check: this bar must measure exactly 5 cm. If not, set your printer to 100% scale (no "fit to page").</p></div>
+        <p class="foot">Designed on inkhay.com — bring this to your tattoo artist.</p>
+        </body></html>`);
+      w.document.close();
+    }
+
+    // Injecte les boutons Share + Print flottants sur chaque image de résultat
     document.querySelectorAll('img[id$="result-img"]').forEach(im => {
       const parent = im.parentElement;
       if (!parent) return;
@@ -5169,9 +5434,15 @@
       b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
       b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); shareDesign(im); });
       parent.appendChild(b);
+      const p = document.createElement('button');
+      p.type = 'button'; p.className = 'share-fab print-fab'; p.title = 'Print at real size (cm)';
+      p.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
+      p.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); printAtSize(im); });
+      parent.appendChild(p);
       const sync = () => {
         const ok = im.src && !im.src.endsWith('#') && im.src !== location.href;
         b.style.display = ok ? 'flex' : 'none';
+        p.style.display = ok ? 'flex' : 'none';
       };
       im.addEventListener('load', sync);
       sync();

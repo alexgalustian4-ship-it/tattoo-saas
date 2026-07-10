@@ -48,7 +48,7 @@ function isBlockedUrl(u){
 // Crédits par plan (1 génération = 10 crédits → gros chiffres, même rentabilité)
 const PLAN_CREDITS = { free: 30, starter: 150, pro: 400, studio: 1500, studioplus: 4000, atelier: 10000 };
 // Coût en crédits par action (minimum 10 par outil)
-const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10 };
+const CREDIT_COST = { design: 10, body: 15, place: 15, stencil: 10, merge: 15, pet: 10, rework: 10, lettering: 10, coverup: 15 };
 const OWNER_EMAIL = 'alexgalustian4@gmail.com';
 // ⚠️ MODE DÉMO : false = génération SANS compte (pas de login, pas de débit).
 // Remettre à true pour réactiver la protection (compte requis + crédits).
@@ -2464,6 +2464,104 @@ app.post('/merge-tattoos', genLimiter, upload.fields([
   }
 });
 
+// ─────────────────────────────────────────────────
+// POST /lettering — Lettering Studio (prénoms, dates, citations)
+// Body : text, font, details (opt.)
+// Retour: { imageUrl, credits }
+// ─────────────────────────────────────────────────
+const LETTERING_FONTS = {
+  finescript: 'elegant fine-line cursive script, single-needle delicate flowing calligraphy, thin graceful strokes with subtle flourishes',
+  gothic:     'bold gothic blackletter lettering, dramatic angular fraktur style, strong dark strokes, medieval calligraphy',
+  chicano:    'smooth chicano script lettering, west-coast style flowing cursive with confident thick-and-thin shading, classic barrio calligraphy',
+  minimal:    'ultra-minimalist thin sans-serif lettering, clean geometric letterforms, precise even strokes, modern and understated',
+  oldenglish: 'ornate old english lettering, traditional tattoo blackletter with decorative serifs and sharp pointed terminals',
+};
+app.post('/lettering', genLimiter, upload.none(), async (req, res) => {
+  const text    = (req.body.text    || '').trim();
+  const font    = LETTERING_FONTS[req.body.font] ? req.body.font : 'finescript';
+  const details = (req.body.details || '').trim();
+  if (!text) return res.status(400).json({ error: 'Please enter the text to letter.' });
+  if (text.length > 80) return res.status(400).json({ error: 'Text too long (80 characters max).' });
+  if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY not configured.' });
+
+  let gate = null;
+  try {
+    gate = await checkCredits(req, res, 'lettering');
+    if (!gate) return;
+    console.log('\n✒️ Lettering:', font, '—', text.slice(0, 40));
+
+    const prompt =
+      `Tattoo lettering design of the exact text "${text}" in ${LETTERING_FONTS[font]}. ` +
+      `The text must be spelled EXACTLY as written, letter-perfect: "${text}". ` +
+      (details ? `Additional direction: ${details}. ` : '') +
+      `Black ink only, flat 2D tattoo lettering isolated on a pure solid white background (#FFFFFF). ` +
+      `Perfectly legible, balanced composition, centered, professional tattoo lettering artist quality, high resolution. ` +
+      `No skin, no mockup, no frame — lettering artwork only.`;
+
+    // Génération texte pure (le point fort de gpt-image-2), format paysage adapté au lettering
+    let imageUrl = await generateWithOpenAI(prompt, null, '1536x1024');
+    imageUrl = await brandIfFree(gate, imageUrl);
+
+    const credits = await chargeAfter(gate);
+    try { if (gate.user) await saveGeneration(gate.user.id, 'lettering', imageUrl, { sujet: text, style: font, details }); } catch {}
+    res.json({ imageUrl, credits });
+  } catch (err) {
+    await refundCredits(gate);
+    console.error('❌ /lettering :', err.message);
+    res.status(500).json({ error: clientError(err) });
+  }
+});
+
+// ─────────────────────────────────────────────────
+// POST /coverup — Cover-Up Studio (recouvrir un ancien tatouage)
+// File : photo (le tatouage actuel sur la peau)
+// Body : style, details (opt.)
+// Retour: { imageUrl, credits }
+// ─────────────────────────────────────────────────
+const COVERUP_STYLES = {
+  blackgrey: 'dense black and grey realism with deep rich shading and strong dark areas',
+  baroque:   'ornate baroque black and grey composition — classical figures, drapery and dramatic chiaroscuro shading',
+  floral:    'large dark peony and rose florals with dense petals and deep black shading',
+  japanese:  'traditional japanese irezumi with waves, smoke and dense background shading',
+  geometric: 'bold blackwork geometry with solid black fields, dotwork gradients and mandala patterns',
+};
+app.post('/coverup', genLimiter, upload.single('photo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No photo received.' });
+  const style   = COVERUP_STYLES[req.body.style] ? req.body.style : 'blackgrey';
+  const details = (req.body.details || '').trim();
+
+  const photoPath = req.file.path + '.jpg';
+  fs.renameSync(req.file.path, photoPath);
+
+  let gate = null;
+  try {
+    gate = await checkCredits(req, res, 'coverup');
+    if (!gate) return;
+    console.log('\n🩹 Cover-up — style:', style);
+
+    const prompt =
+      `The photo shows a person's skin with an existing tattoo they want covered up. ` +
+      `Design and apply a professional COVER-UP tattoo over it: a new, larger design in ${COVERUP_STYLES[style]} ` +
+      `that COMPLETELY hides and integrates the old tattoo underneath — no trace of the original ink may remain visible. ` +
+      (details ? `The client wants: ${details}. ` : '') +
+      `Cover-up best practices: the new design must be significantly larger and darker than the old tattoo, ` +
+      `using dense shading and strategic dark areas exactly where the old ink sits. ` +
+      `Preserve the person's skin, anatomy, pose, lighting and the photo's framing exactly — ` +
+      `only the tattoo area changes. Photorealistic healed-tattoo result, professional cover-up artist quality.`;
+
+    const imageUrl = await brandIfFree(gate, await openAIEditMulti(prompt, [photoPath], 'auto'));
+
+    const credits = await chargeAfter(gate);
+    try { if (gate.user) await saveGeneration(gate.user.id, 'coverup', imageUrl, { style, details }); } catch {}
+    res.json({ imageUrl, credits });
+  } catch (err) {
+    await refundCredits(gate);
+    console.error('❌ /coverup :', err.message);
+    res.status(500).json({ error: clientError(err) });
+  } finally {
+    if (fs.existsSync(photoPath)) try { fs.unlinkSync(photoPath); } catch {}
+  }
+});
 
 // ─────────────────────────────────────────────────
 // Remove background (remove.bg)
