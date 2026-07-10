@@ -1862,56 +1862,6 @@ app.get('/admin/create-promo', async (req, res) => {
   }
 });
 
-// ── TEMP (owner) : génère les visuels de démo via le VRAI pipeline du site — à RETIRER après usage ──
-// Visite /admin/gen-demos une fois : crée demo-design / demo-lettering / demo-coverup-after dans /gens.
-app.get('/admin/gen-demos', async (req, res) => {
-  const user = await getSessionUser(req);
-  if (!user || user.email !== OWNER_EMAIL) return res.status(403).json({ error: 'forbidden' });
-  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'OPENAI_API_KEY absente' });
-  const out = {};
-  const saveAs = (name, dataUrl) => {
-    const b64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-    fs.writeFileSync(path.join(GENS_DIR, name), Buffer.from(b64, 'base64'));
-    return '/gens/' + name;
-  };
-  // 1) Design — template officiel "realisme", sujet lion lauré
-  try {
-    const st = getStyle('realisme');
-    const prompt = (st.template || '').replace(/\$\{SUBJECT\}/g, 'a roaring lion wearing a laurel crown');
-    let img = await generateWithOpenAI(prompt, null, sizeForFormat(st.defaultFormat));
-    img = await finishImage(img, { grayscale: true });
-    out.design = saveAs('demo-design.png', img);
-  } catch (e) { out.design = 'ERREUR: ' + e.message; }
-  // 2) Lettering — prompt exact de l'outil, fine script
-  try {
-    const text = 'Amara';
-    const prompt =
-      `Tattoo lettering design of the exact text "${text}" in ${LETTERING_FONTS.finescript}. ` +
-      `The text must be spelled EXACTLY as written, letter-perfect: "${text}". ` +
-      `Additional direction: with the date "14 . 02 . 2019" below in smaller refined minimal lettering. ` +
-      `Black ink only, flat 2D tattoo lettering isolated on a pure solid white background (#FFFFFF). ` +
-      `Perfectly legible, balanced composition, centered, professional tattoo lettering artist quality, high resolution. ` +
-      `No skin, no mockup, no frame — lettering artwork only.`;
-    const img = await generateWithOpenAI(prompt, null, '1536x1024');
-    out.lettering = saveAs('demo-lettering.png', img);
-  } catch (e) { out.lettering = 'ERREUR: ' + e.message; }
-  // 3) Cover-up "après" — le VRAI pipeline coverup sur la photo avant embarquée dans le repo
-  try {
-    const beforePath = path.join(__dirname, 'images', 'coverup-before.jpg');
-    const prompt =
-      `The photo shows a person's skin with an existing tattoo they want covered up. ` +
-      `Design and apply a professional COVER-UP tattoo over it: a new, larger design in ${COVERUP_STYLES.baroque} ` +
-      `that COMPLETELY hides and integrates the old tattoo underneath — no trace of the original ink may remain visible. ` +
-      `Cover-up best practices: the new design must be significantly larger and darker than the old tattoo, ` +
-      `using dense shading and strategic dark areas exactly where the old ink sits. ` +
-      `Preserve the person's skin, anatomy, pose, lighting and the photo's framing exactly — ` +
-      `only the tattoo area changes. Photorealistic healed-tattoo result, professional cover-up artist quality.`;
-    const img = await openAIEditMulti(prompt, [beforePath], 'auto');
-    out.coverup = saveAs('demo-coverup-after.png', img);
-  } catch (e) { out.coverup = 'ERREUR: ' + e.message; }
-  res.json({ ok: true, message: 'Envoie ce bloc dans le chat.', demos: out });
-});
-
 // ── Synchronisation de l'abonnement (fallback fiable, ne dépend pas du webhook) ──
 // Interroge Stripe directement et applique le plan correspondant à l'abonnement actif.
 app.post('/sync-subscription', async (req, res) => {
