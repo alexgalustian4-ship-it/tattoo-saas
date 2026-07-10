@@ -3812,10 +3812,12 @@
     // Pré-sélectionne le mode si ?mode= présent dans l'URL
     const urlMode = new URLSearchParams(window.location.search).get('mode');
     // 'create' = le hub central (par défaut), pas besoin d'activer un mode
-    if (urlMode === 'body')    activateMode2();
-    if (urlMode === 'pet')     activateMode3();
-    if (urlMode === 'merge')   activateMode4();
-    if (urlMode === 'stencil') activateMode5();
+    if (urlMode === 'body')      activateMode2();
+    if (urlMode === 'pet')       activateMode3();
+    if (urlMode === 'merge')     activateMode4();
+    if (urlMode === 'stencil')   activateMode5();
+    if (urlMode === 'lettering') activateMode6();
+    if (urlMode === 'coverup')   activateMode7();
 
     // ── MODE 3 — PET PORTRAIT ────────────────────────────
     let m3Style = 'realism';
