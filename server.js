@@ -2089,7 +2089,10 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       console.log('   Moteur  : OpenAI gpt-image-1');
       // Format : zone si fournie, sinon format par défaut du style
       const size = zone ? openAISizeForZone(zone) : sizeForFormat(getStyle(style).defaultFormat);
-      const bw   = !wantsColor(sujet) && !getStyle(style).colorByDefault;
+      // Choix d'encre explicite du client (chips du hub) : bw | color | redaccent.
+      // Absent → comportement historique (N&B sauf demande couleur dans le texte / style couleur).
+      const ink = ['bw', 'color', 'redaccent'].includes(req.body.ink) ? req.body.ink : null;
+      const bw  = ink ? (ink === 'bw') : (!wantsColor(sujet) && !getStyle(style).colorByDefault);
 
       // Construction du prompt final.
       const styleObj = getStyle(style);
@@ -2108,6 +2111,13 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
       } else {
         // FREE PROMPT : texte brut de l'utilisateur.
         openaiPrompt = buildRenderWrapper(prompt, { bw });
+      }
+
+      // ── Directive d'encre explicite (ajoutée en fin de prompt, ne touche pas au défaut N&B) ──
+      if (ink === 'color') {
+        openaiPrompt += ' Render the tattoo in FULL COLOR: a rich, professional tattoo color palette with saturated pigments and clean color blending. Keep the background pure white.';
+      } else if (ink === 'redaccent') {
+        openaiPrompt += ' Render the tattoo strictly in black and grey with SELECTIVE DEEP CRIMSON RED ACCENTS on a few key elements only — no other colors. Keep the background pure white.';
       }
 
       // ── Log du PROMPT FINAL EXACT envoyé à gpt-image-1 (audit / debug) ──
@@ -2133,7 +2143,7 @@ app.post('/generate', genLimiter, upload.array('inspiration', 4), async (req, re
     const creditsLeft = await chargeAfter(gate);
     let savedUrl = null;
     if (db && sessionUser) {
-      savedUrl = await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, finalPrompt });
+      savedUrl = await saveGeneration(sessionUser.id, 'design', imageUrl, { sujet, style, ambiance, zone, ink: req.body.ink || 'bw', finalPrompt });
     }
     // Retourner l'URL /gens/ sauvegardée si dispo (évite d'envoyer une data URL géante au front)
     const responseUrl = savedUrl || imageUrl;

@@ -1124,6 +1124,8 @@
       cursor: pointer; transition: all 0.2s;
     }
     .ai-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .ink-chip { padding: 7px 14px 7px 9px; }
+    .ink-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,0.18); flex-shrink: 0; }
     .ai-chip:hover { border-color: var(--silver-dim); color: var(--text); }
     .ai-chip.active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.06); }
 
@@ -1426,6 +1428,13 @@
         <button class="ai-chip rv" style="--rv-delay:0.59s" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
         <button class="ai-chip rv" style="--rv-delay:0.66s" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
         <button class="ai-chip rv" style="--rv-delay:0.73s" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
+      </div>
+
+      <!-- Choix de l'encre -->
+      <div class="ai-styles" id="hub-inks" style="margin-top:10px">
+        <button class="ai-chip ink-chip active rv" style="--rv-delay:0.80s" data-ink="bw"><span class="ink-dot" style="background:linear-gradient(135deg,#f2f3f7 50%,#16161a 50%)"></span>Black &amp; Grey</button>
+        <button class="ai-chip ink-chip rv" style="--rv-delay:0.86s" data-ink="color"><span class="ink-dot" style="background:conic-gradient(#e05252,#e0b152,#52b788,#5277e0,#a052e0,#e05252)"></span>Full color</button>
+        <button class="ai-chip ink-chip rv" style="--rv-delay:0.92s" data-ink="redaccent"><span class="ink-dot" style="background:linear-gradient(135deg,#16161a 55%,#a3232a 55%)"></span>Red accent</button>
       </div>
 
       <!-- Status + result -->
@@ -3405,6 +3414,12 @@
       const resWrap  = document.getElementById('hub-result');
       const resImg   = document.getElementById('hub-result-img');
       let hubStyle = 'realisme';
+      let hubInk = 'bw';   // bw | color | redaccent — choix d'encre (chips)
+      document.querySelectorAll('[data-ink]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('[data-ink]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        hubInk = b.dataset.ink;
+      }));
 
       input.addEventListener('input', () => { gen.disabled = !input.value.trim(); });
 
@@ -3518,6 +3533,7 @@
           const fd = new FormData();
           fd.append('sujet', prompt);
           fd.append('style', hubStyle);
+          fd.append('ink', hubInk);
           fd.append('ambiance', 'epique');
           fd.append('zone', '');
           fd.append('freePrompt', '0');
