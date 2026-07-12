@@ -1386,6 +1386,14 @@ function verifyResultPage(msg, ok) {
 }
 
 // Confirme le token, débloque les 30 crédits gratuits
+// ── Liens bio traqués par réseau social ──
+// inkhay.com/ig (Instagram) · /tt (TikTok) · /yt (YouTube) · /x (X/Twitter)
+// Sert l'accueil SUR ce chemin (pas de redirection) → le beacon Cloudflare Analytics
+// enregistre la vue sur /ig, /tt… → tu vois quel réseau amène du trafic, par chemin.
+for (const bioPath of ['/ig', '/tt', '/yt', '/x']) {
+  app.get(bioPath, (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+}
+
 app.get('/verify', async (req, res) => {
   if (!db) return res.status(503).send(verifyResultPage('Service unavailable.', false));
   const token = (req.query.token || '').toString();

@@ -5,5 +5,9 @@ Disallow: /verify
 Disallow: /gens/
 Disallow: /404.html
 Disallow: /boutique.html
+Disallow: /ig
+Disallow: /tt
+Disallow: /yt
+Disallow: /x
 
 Sitemap: https://inkhay.com/sitemap.xml
