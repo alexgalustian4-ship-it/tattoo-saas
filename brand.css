@@ -143,6 +143,30 @@
   animation: progSlide 1.4s var(--ease-out) infinite;
 }
 
+/* ═══ NAV — souligné qui pousse depuis la gauche ═══ */
+.nav-links a { position: relative; }
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; bottom: -5px;
+  width: 100%; height: 1px; background: var(--silver);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.35s var(--ease-out);
+}
+.nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+
+/* ═══ TILT 3D léger (class="tilt" — activé par brand.js, desktop uniquement) ═══ */
+.tilt { transform-style: preserve-3d; will-change: transform; }
+
+/* ═══ Balayage lumineux des grands titres au reveal (class="title-shine") ═══ */
+.title-shine.visible, .title-shine.in {
+  background-image: linear-gradient(110deg, currentColor 42%, #ffffff 50%, currentColor 58%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleSweep 1.4s var(--ease-out) 0.35s 1 both;
+}
+@keyframes titleSweep { from { background-position: 120% 0; } to { background-position: -30% 0; } }
+@media (prefers-reduced-motion: reduce) { .title-shine.visible, .title-shine.in { animation: none; -webkit-text-fill-color: currentColor; background: none; } }
+
 /* ═══ ERREURS — shake bref (feedback immédiat) ═══ */
 @keyframes shakeX {
   0%, 100% { transform: translateX(0); }

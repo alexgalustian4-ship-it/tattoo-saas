@@ -79,8 +79,27 @@
     requestAnimationFrame(tick);
   };
 
+  /* ── 3bis. TILT 3D léger sur .tilt (desktop, max ±3°) ── */
+  function initTilt() {
+    if (reduced || window.matchMedia('(hover: none)').matches) return;
+    document.querySelectorAll('.tilt').forEach(function (el) {
+      if (el._tilt) return; el._tilt = true;
+      el.addEventListener('mousemove', function (ev) {
+        var r = el.getBoundingClientRect();
+        var rx = ((ev.clientY - r.top) / r.height - 0.5) * -6;   // ±3°
+        var ry = ((ev.clientX - r.left) / r.width - 0.5) * 6;
+        el.style.transform = 'perspective(900px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+      });
+      el.addEventListener('mouseleave', function () {
+        el.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1)';
+        el.style.transform = '';
+        setTimeout(function () { el.style.transition = ''; }, 500);
+      });
+    });
+  }
+
   /* ── 4. API publique : rescanner après injection dynamique ── */
-  window.inkReveal = function () { prepareStagger(); observeAll(); initMagnetic(); };
+  window.inkReveal = function () { prepareStagger(); observeAll(); initMagnetic(); initTilt(); };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.inkReveal);
