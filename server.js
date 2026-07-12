@@ -28,6 +28,7 @@ const genLimiter      = mkLimiter(15 * 60 * 1000, 40,  { error: 'too_many_reques
 const authLimiter     = mkLimiter(15 * 60 * 1000, 25,  { error: 'too_many_requests' });
 const registerLimiter = mkLimiter(60 * 60 * 1000, 8,   { error: 'too_many_accounts' });
 const downloadLimiter = mkLimiter(15 * 60 * 1000, 150, undefined);
+const chatLimiter     = mkLimiter(15 * 60 * 1000, 30,  { error: 'too_many_requests' });
 
 // Bloque les URL internes/privées (anti-SSRF) pour le proxy /download
 function isBlockedUrl(u){
@@ -2621,6 +2622,50 @@ app.post('/coverup', genLimiter, upload.single('photo'), async (req, res) => {
     res.status(500).json({ error: clientError(err) });
   } finally {
     if (fs.existsSync(photoPath)) try { fs.unlinkSync(photoPath); } catch {}
+  }
+});
+
+// ─────────────────────────────────────────────────
+// POST /chat — Concierge IA du site (gpt-4o-mini, rate-limité)
+// Body: { messages: [{role:'user'|'assistant', content}] } (10 max, 500 chars/msg)
+// ─────────────────────────────────────────────────
+const CHAT_SYSTEM = `You are INK, the friendly concierge of INK.STUDIO (inkhay.com), a premium AI tattoo design studio.
+Answer ONLY questions about INK.STUDIO, its tools, credits, plans and tattoo design guidance. If asked about anything else, politely steer back to INK.STUDIO.
+Reply in the user's language. Be warm, concise (2-4 short sentences), never invent facts.
+
+FACTS:
+- Tools (in the Studio, inkhay.com/outil.html): Generate a design (10 credits), Lettering Studio for names/dates/quotes with 5 script styles (10), Cover-Up Studio that ANALYZES an old tattoo photo then designs a feasible cover-up (15), Instant Stencil (10), Merge 2-4 designs (15), Place on skin — see the tattoo on your own photo (15), Photo→Tattoo (10), Rework/inpainting (10). Ink options: Black & Grey (default), Full color, Red accent. Every result can be downloaded, shared, or printed at REAL size in cm with a calibration ruler.
+- Free account: 30 free credits after confirming your email. No card required. Free-plan images carry a small INK.STUDIO watermark; paid plans have none.
+- Plans (credits renew monthly, UNUSED CREDITS ROLL OVER on paid plans): Starter 7,99€/mo (150 cr), Pro 14,99€/mo (400 cr), Studio 39,99€/mo (1500 cr), Studio+ 89,99€/mo (4000 cr), Atelier 199,99€/mo (10000 cr). Annual billing = about 2 months free (e.g. Starter 79,90€/yr, Pro 149,90€/yr). Credit packs (one-time): Mini 50 cr = 5,99€, Standard 150 cr = 14,99€, Maxi 500 cr = 44,99€.
+- Payments are processed securely by Stripe. Cancel anytime in one click from My account. Failed generations are automatically refunded in credits.
+- Forgot password: "Forgot password?" link in the sign-in window.
+- Human support: contact@inkhay.com. You cannot issue refunds or change accounts yourself — direct such requests to that email.`;
+
+app.post('/chat', chatLimiter, async (req, res) => {
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'chat_unavailable' });
+  const raw = Array.isArray(req.body && req.body.messages) ? req.body.messages : [];
+  const messages = raw.slice(-10).map(m => ({
+    role: m && m.role === 'assistant' ? 'assistant' : 'user',
+    content: String(m && m.content || '').slice(0, 500),
+  })).filter(m => m.content.trim());
+  if (!messages.length) return res.status(400).json({ error: 'empty' });
+  try {
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: CHAT_SYSTEM }, ...messages],
+        temperature: 0.5, max_tokens: 320,
+      }),
+    });
+    const data = await r.json();
+    const reply = data.choices?.[0]?.message?.content;
+    if (!reply) throw new Error(data.error?.message || 'no reply');
+    res.json({ reply: reply.trim() });
+  } catch (e) {
+    console.error('❌ /chat:', e.message);
+    res.status(500).json({ error: 'chat_error' });
   }
 });
 
