@@ -1144,9 +1144,14 @@
     .ink-chip { padding: 7px 14px 7px 9px; }
     .ink-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,0.18); flex-shrink: 0; }
     .ai-chip:hover { border-color: var(--silver-dim); color: var(--text); }
-    /* Sélection inversée : fond blanc, texte noir — le choix actif saute aux yeux */
-    .ai-chip.active { border-color: #fff; color: #0a0a0e; background: #f2f3f7; font-weight: 600; }
-    .ai-chip.active::before { content: '✓'; font-size: 0.7rem; font-weight: 800; margin-right: -2px; }
+    /* Sélection sombre & pro : charbon profond, liseré argent, halo discret */
+    .ai-chip.active {
+      border-color: rgba(207,210,220,0.75); color: #fff;
+      background: linear-gradient(180deg, #1e1e26, #14141a);
+      font-weight: 600;
+      box-shadow: 0 0 0 1px rgba(207,210,220,0.12), 0 0 18px rgba(207,210,220,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .ai-chip.active::before { content: '✓'; font-size: 0.7rem; font-weight: 800; color: var(--silver); margin-right: -2px; }
 
     /* Example prompts */
     .ai-examples { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
