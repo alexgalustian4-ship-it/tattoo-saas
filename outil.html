@@ -2184,6 +2184,10 @@
       <button class="btn btn-primary" id="m7-btn-generate" disabled>🩹 Design my cover-up <span style="opacity:.65;font-weight:500">· 15 credits</span></button>
       <div class="status" id="m7-status"></div>
       <div data-hidden id="m7-result" style="margin-top:16px">
+        <div id="m7-analysis" style="display:none;margin:0 0 12px;padding:13px 16px;background:rgba(207,210,220,0.04);border:1px solid #222;border-left:2px solid var(--silver);border-radius:12px">
+          <p style="margin:0 0 4px;font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--silver)">🔎 Artist analysis</p>
+          <p id="m7-analysis-txt" style="margin:0;font-size:0.8rem;color:#c9cad2;line-height:1.6"></p>
+        </div>
         <div class="result-img-wrap">
           <img id="m7-result-img" src="" alt="Cover-up result" />
         </div>
@@ -3391,6 +3395,18 @@
           if (data.credits != null) updateCredits(data.credits);
           lastUrl = data.imageUrl;
           img.src = lastUrl;
+          // Analyse pro de l'ancien tatouage (renvoyée par le serveur)
+          const anBox = document.getElementById('m7-analysis');
+          const anTxt = document.getElementById('m7-analysis-txt');
+          if (data.analysis && data.analysis.tattoo) {
+            anTxt.textContent = 'Existing tattoo: ' + data.analysis.tattoo +
+              (data.analysis.density ? ' · ' + data.analysis.density + ' density' : '') +
+              (data.analysis.darkness ? ' · ' + data.analysis.darkness + ' ink' : '') +
+              (data.analysis.strategy ? '. Strategy: ' + data.analysis.strategy : '');
+            anBox.style.display = 'block';
+          } else {
+            anBox.style.display = 'none';
+          }
           hideStatus(stat); show(resEl);
           resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
           saveProject({ type: 'coverup', imageUrl: lastUrl, params: { style } });

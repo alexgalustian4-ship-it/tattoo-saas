@@ -2535,6 +2535,44 @@ const COVERUP_STYLES = {
   japanese:  'traditional japanese irezumi with waves, smoke and dense background shading',
   geometric: 'bold blackwork geometry with solid black fields, dotwork gradients and mandala patterns',
 };
+
+// Analyse professionnelle du tatouage existant (vision gpt-4o).
+// Comme un vrai artiste cover-up : identifie le tatouage, sa densité, et la stratégie de recouvrement FAISABLE.
+// Fail-open : null si erreur → le prompt générique prend le relais.
+async function analyzeOldTattoo(photoPath) {
+  const apiKey = process.env.OPENAI_API_KEY || '';
+  if (!apiKey) return null;
+  try {
+    const b64 = fs.readFileSync(photoPath).toString('base64');
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content:
+            `You are a master cover-up tattoo artist analyzing a client's photo. Respond ONLY with compact JSON: ` +
+            `{"tattoo":"what the existing tattoo depicts (5-12 words)","placement":"body part","density":"light|medium|dense",` +
+            `"darkness":"faded|medium|dark","strategy":"one professional sentence: HOW to cover it feasibly (where the darkest zones of the new piece must sit, minimum size vs the old one)"}. ` +
+            `If no tattoo is visible, return {"tattoo":"none"}.` },
+          { role: 'user', content: [
+            { type: 'text', text: 'Analyze this tattoo for a cover-up.' },
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + b64, detail: 'low' } },
+          ] },
+        ],
+        temperature: 0.3, max_tokens: 220,
+      }),
+    });
+    const data = await resp.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    return json && json.tattoo && json.tattoo !== 'none' ? json : null;
+  } catch (e) {
+    console.warn('⚠ analyzeOldTattoo:', e.message);
+    return null;
+  }
+}
+
 app.post('/coverup', genLimiter, upload.single('photo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No photo received.' });
   const style   = COVERUP_STYLES[req.body.style] ? req.body.style : 'blackgrey';
@@ -2549,21 +2587,34 @@ app.post('/coverup', genLimiter, upload.single('photo'), async (req, res) => {
     if (!gate) return;
     console.log('\n🩹 Cover-up — style:', style);
 
+    // ── Étape 1 : ANALYSE de l'ancien tatouage (comme un vrai artiste) ──
+    const an = await analyzeOldTattoo(photoPath);
+    if (an) console.log('   🔎 Analyse:', an.tattoo, '|', an.density, '/', an.darkness);
+
+    // ── Étape 2 : conception du cover-up FAISABLE, informée par l'analyse + la demande du client ──
+    const oldDesc = an
+      ? `The existing tattoo is: ${an.tattoo} (on the ${an.placement || 'skin'}, ${an.density || 'medium'} ink density, ${an.darkness || 'medium'} darkness). ` +
+        `Professional cover-up strategy for THIS tattoo: ${an.strategy || 'place the darkest zones of the new design directly over the old ink.'} `
+      : `The photo shows a person's skin with an existing tattoo they want covered up. `;
+
     const prompt =
-      `The photo shows a person's skin with an existing tattoo they want covered up. ` +
-      `Design and apply a professional COVER-UP tattoo over it: a new, larger design in ${COVERUP_STYLES[style]} ` +
-      `that COMPLETELY hides and integrates the old tattoo underneath — no trace of the original ink may remain visible. ` +
-      (details ? `The client wants: ${details}. ` : '') +
-      `Cover-up best practices: the new design must be significantly larger and darker than the old tattoo, ` +
-      `using dense shading and strategic dark areas exactly where the old ink sits. ` +
-      `Preserve the person's skin, anatomy, pose, lighting and the photo's framing exactly — ` +
-      `only the tattoo area changes. Photorealistic healed-tattoo result, professional cover-up artist quality.`;
+      oldDesc +
+      `Design and apply a professional, REALISTICALLY FEASIBLE cover-up tattoo over it` +
+      (details ? `, based on the client's request: "${details}"` : '') +
+      `, executed in ${COVERUP_STYLES[style]}. ` +
+      `Feasibility rules a real artist follows: the new design must be at least 2-3x larger than the old tattoo; ` +
+      `its darkest, densest elements must sit EXACTLY over the old ink's darkest lines; ` +
+      `busy detail and texture go where the old tattoo is, open skin and negative space go elsewhere; ` +
+      `no trace of the original ink may remain visible. ` +
+      `Preserve the person's skin, anatomy, pose, lighting and the photo's framing exactly — only the tattoo area changes. ` +
+      `Photorealistic healed-tattoo result, professional cover-up artist quality.`;
 
     const imageUrl = await brandIfFree(gate, await openAIEditMulti(prompt, [photoPath], 'auto'));
 
     const credits = await chargeAfter(gate);
-    try { if (gate.user) await saveGeneration(gate.user.id, 'coverup', imageUrl, { style, details }); } catch {}
-    res.json({ imageUrl, credits });
+    try { if (gate.user) await saveGeneration(gate.user.id, 'coverup', imageUrl, { style, details, analysis: an || undefined }); } catch {}
+    // L'analyse est renvoyée au front → affichée au client (crédibilité pro)
+    res.json({ imageUrl, credits, analysis: an || null });
   } catch (err) {
     await refundCredits(gate);
     console.error('❌ /coverup :', err.message);
