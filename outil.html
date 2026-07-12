@@ -1116,6 +1116,23 @@
 
     /* Style chips */
     .ai-styles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+
+    /* Rangées étiquetées (Style / Ink) — structure claire au lieu de pastilles flottantes */
+    .chip-row {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      margin-top: 16px; max-width: 720px; margin-left: auto; margin-right: auto;
+    }
+    .chip-row .chip-row-label {
+      flex-shrink: 0; width: 44px; text-align: right;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--silver-dim);
+    }
+    .chip-row .ai-styles { margin-top: 0; justify-content: flex-start; flex: 1; }
+    @media (max-width: 560px) {
+      .chip-row { flex-direction: column; gap: 8px; }
+      .chip-row .chip-row-label { width: auto; text-align: center; }
+      .chip-row .ai-styles { justify-content: center; }
+    }
     .ai-chip {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 7px 14px 7px 7px; border-radius: 30px;
@@ -1266,7 +1283,16 @@
     }
     .ai-tool-pill:hover { border-color: var(--silver-dim); color: #fff; transform: translateY(-2px); }
     .ai-tool-pill svg { width: 17px; height: 17px; color: var(--silver); }
-    .ai-tools-label { text-align: center; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin: 38px 0 0; }
+    .ai-tools-label {
+      text-align: center; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text-muted); margin: 44px auto 0; max-width: 460px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .ai-tools-label::before, .ai-tools-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-hover));
+    }
+    .ai-tools-label::after { background: linear-gradient(90deg, var(--border-hover), transparent); }
 
     /* Hub result */
     .ai-result { max-width: 520px; margin: 28px auto 0; display: none; }
@@ -1464,20 +1490,26 @@
         </div>
       </div>
 
-      <!-- Style chips -->
-      <div class="ai-styles" id="hub-styles" data-stagger="0.07">
-        <button class="ai-chip active rv" style="--rv-delay:0.45s" data-style="realisme"><img src="images/style-realisme.png" alt="">Realism</button>
-        <button class="ai-chip rv" style="--rv-delay:0.52s" data-style="concept"><img src="images/style-concept.png" alt="">Concept</button>
-        <button class="ai-chip rv" style="--rv-delay:0.59s" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
-        <button class="ai-chip rv" style="--rv-delay:0.66s" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
-        <button class="ai-chip rv" style="--rv-delay:0.73s" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
+      <!-- Style chips (rangée étiquetée) -->
+      <div class="chip-row rv" style="--rv-delay:0.45s">
+        <span class="chip-row-label">Style</span>
+        <div class="ai-styles" id="hub-styles">
+          <button class="ai-chip active" data-style="realisme"><img src="images/style-realisme.png" alt="">Realism</button>
+          <button class="ai-chip" data-style="concept"><img src="images/style-concept.png" alt="">Concept</button>
+          <button class="ai-chip" data-style="baroque"><img src="images/style-baroque.png" alt="">Baroque</button>
+          <button class="ai-chip" data-style="japonais"><img src="images/style-japonais.png" alt="">Japanese</button>
+          <button class="ai-chip" data-style="geometrique"><img src="images/style-geometrique.png" alt="">Geometric</button>
+        </div>
       </div>
 
-      <!-- Choix de l'encre -->
-      <div class="ai-styles" id="hub-inks" style="margin-top:10px">
-        <button class="ai-chip ink-chip active rv" style="--rv-delay:0.80s" data-ink="bw"><span class="ink-dot" style="background:linear-gradient(135deg,#f2f3f7 50%,#16161a 50%)"></span>Black &amp; Grey</button>
-        <button class="ai-chip ink-chip rv" style="--rv-delay:0.86s" data-ink="color"><span class="ink-dot" style="background:conic-gradient(#e05252,#e0b152,#52b788,#5277e0,#a052e0,#e05252)"></span>Full color</button>
-        <button class="ai-chip ink-chip rv" style="--rv-delay:0.92s" data-ink="redaccent"><span class="ink-dot" style="background:linear-gradient(135deg,#16161a 55%,#a3232a 55%)"></span>Red accent</button>
+      <!-- Choix de l'encre (rangée étiquetée) -->
+      <div class="chip-row rv" style="--rv-delay:0.58s">
+        <span class="chip-row-label">Ink</span>
+        <div class="ai-styles" id="hub-inks">
+          <button class="ai-chip ink-chip active" data-ink="bw"><span class="ink-dot" style="background:linear-gradient(135deg,#f2f3f7 50%,#16161a 50%)"></span>Black &amp; Grey</button>
+          <button class="ai-chip ink-chip" data-ink="color"><span class="ink-dot" style="background:conic-gradient(#e05252,#e0b152,#52b788,#5277e0,#a052e0,#e05252)"></span>Full color</button>
+          <button class="ai-chip ink-chip" data-ink="redaccent"><span class="ink-dot" style="background:linear-gradient(135deg,#16161a 55%,#a3232a 55%)"></span>Red accent</button>
+        </div>
       </div>
 
       <!-- Status + result -->
@@ -5499,8 +5531,7 @@
         <img src="${img.src}" onload="setTimeout(() => window.print(), 300)" />
         <div class="ruler"><div class="ruler-bar"></div><p>Calibration check: this bar must measure exactly 5 cm. If not, set your printer to 100% scale (no "fit to page").</p></div>
         <p class="foot">Designed on inkhay.com — bring this to your tattoo artist.</p>
-          <script src="chatbot.js" defer></script>
-</body></html>`);
+        <\/body><\/html>`);
       w.document.close();
     }
 
@@ -5566,5 +5597,6 @@
     })();
   </script>
 
+  <script src="chatbot.js" defer></script>
 </body>
 </html>
